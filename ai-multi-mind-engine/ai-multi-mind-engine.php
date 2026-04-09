@@ -67,6 +67,9 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/minds/class-mind-dominator.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-automation-expert.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-storytelling-expert.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-batch-1.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-batch-2.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-batch-3.php';
 
 		// Managers
 		require_once AMM_PATH . 'includes/class-ai-provider-manager.php';

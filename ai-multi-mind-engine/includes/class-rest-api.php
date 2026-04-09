@@ -193,6 +193,21 @@ class AMM_REST_API {
 			array( 'id' => 'dominator', 'name' => 'Market Dominator' ),
 			array( 'id' => 'automation_expert', 'name' => 'Automation Architect' ),
 			array( 'id' => 'storyteller', 'name' => 'Master Storyteller' ),
+			array( 'id' => 'board_advisor', 'name' => 'Board Advisor' ),
+			array( 'id' => 'brand_authority', 'name' => 'Brand Authority Builder' ),
+			array( 'id' => 'objection_killer', 'name' => 'Objection Killer' ),
+			array( 'id' => 'negotiation_master', 'name' => 'Negotiation Master' ),
+			array( 'id' => 'systems_builder', 'name' => 'Systems Builder' ),
+			array( 'id' => 'pricing_strategist', 'name' => 'Pricing Strategist' ),
+			array( 'id' => 'cost_cutter', 'name' => 'Cost Cutter' ),
+			array( 'id' => 'product_strategist', 'name' => 'Product Strategist' ),
+			array( 'id' => 'ux_expert', 'name' => 'UX/UI Expert' ),
+			array( 'id' => 'saas_architect', 'name' => 'SaaS Architect' ),
+			array( 'id' => 'email_specialist', 'name' => 'Email Conversion Specialist' ),
+			array( 'id' => 'risk_analyst', 'name' => 'Risk Analyst' ),
+			array( 'id' => 'policy_generator', 'name' => 'Policy Generator' ),
+			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach' ),
+			array( 'id' => 'decision_expert', 'name' => 'Decision Expert' ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );

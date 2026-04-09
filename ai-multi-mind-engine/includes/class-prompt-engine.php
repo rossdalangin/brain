@@ -37,6 +37,10 @@ class AMM_Prompt_Engine {
 			'sales_script'   => "Format as a high-conversion Sales Script with objection handling and closing techniques.",
 			'sop'            => "Format as a step-by-step Standard Operating Procedure (SOP) with clear instructions and checklists.",
 			'proposal'       => "Format as a persuasive Project Proposal with scope, deliverables, and investment details.",
+			'report'         => "Format as a detailed Business Report with data analysis, key findings, and actionable conclusions.",
+			'blog_post'      => "Format as a high-authority Blog Post with an engaging title, SEO-optimized headers, and a clear call to action.",
+			'ad_copy'        => "Format as high-converting Ad Copy for platforms like Facebook or Google, focusing on hooks, benefits, and a strong CTA.",
+			'video_script'   => "Format as a Video Script with visual cues, a compelling hook, and a structured narrative arc.",
 		);
 
 		return $types[$type] ?? "Provide a structured, professional business response.";
@@ -76,6 +80,36 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_Automation_Expert();
 			case 'storyteller':
 				return new AMM_Mind_Storytelling_Expert();
+			case 'board_advisor':
+				return new AMM_Mind_Board_Advisor();
+			case 'brand_authority':
+				return new AMM_Mind_Brand_Authority();
+			case 'objection_killer':
+				return new AMM_Mind_Objection_Killer();
+			case 'negotiation_master':
+				return new AMM_Mind_Negotiation_Master();
+			case 'systems_builder':
+				return new AMM_Mind_Systems_Builder();
+			case 'pricing_strategist':
+				return new AMM_Mind_Pricing_Strategist();
+			case 'cost_cutter':
+				return new AMM_Mind_Cost_Cutter();
+			case 'product_strategist':
+				return new AMM_Mind_Product_Strategist();
+			case 'ux_expert':
+				return new AMM_Mind_UX_Expert();
+			case 'saas_architect':
+				return new AMM_Mind_SaaS_Architect();
+			case 'email_specialist':
+				return new AMM_Mind_Email_Specialist();
+			case 'risk_analyst':
+				return new AMM_Mind_Risk_Analyst();
+			case 'policy_generator':
+				return new AMM_Mind_Policy_Generator();
+			case 'leadership_coach':
+				return new AMM_Mind_Leadership_Coach();
+			case 'decision_expert':
+				return new AMM_Mind_Decision_Expert();
 		}
 
 		// Otherwise, look for it in the CPT

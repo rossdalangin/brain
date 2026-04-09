@@ -23,7 +23,10 @@ class AMM_Shortcodes {
 		<div id="amm-dashboard-root" class="amm-dashboard">
 			<header class="amm-header">
 				<h2>AI Multi-Mind SaaS Engine</h2>
-				<div id="amm-user-stats">Loading stats...</div>
+				<div style="display:flex; align-items:center; gap:15px;">
+					<button id="amm-theme-toggle" class="button">🌓 Toggle Mode</button>
+					<div id="amm-user-stats">Loading stats...</div>
+				</div>
 			</header>
 
 			<div class="amm-grid">
@@ -39,6 +42,10 @@ class AMM_Shortcodes {
 						<option value="marketing_plan">Marketing Plan</option>
 						<option value="sales_script">Sales Script</option>
 						<option value="sop">SOP</option>
+						<option value="report">Business Report</option>
+						<option value="blog_post">Blog Post</option>
+						<option value="ad_copy">Ad Copy</option>
+						<option value="video_script">Video Script</option>
 					</select>
 				</aside>
 
@@ -94,6 +101,12 @@ class AMM_Shortcodes {
 		<script>
 		document.addEventListener('DOMContentLoaded', function() {
 			const btn = document.getElementById('amm-generate-btn');
+			const themeToggle = document.getElementById('amm-theme-toggle');
+			const dashboard = document.getElementById('amm-dashboard-root');
+
+			themeToggle.addEventListener('click', () => {
+				dashboard.classList.toggle('dark-mode');
+			});
 			const output = document.getElementById('amm-output');
 			const stats = document.getElementById('amm-user-stats');
 			const apiRoot = '<?php echo esc_url_raw( rest_url( 'amm/v1' ) ); ?>';
@@ -210,13 +223,18 @@ class AMM_Shortcodes {
 		</script>
 
 		<style>
-		.amm-dashboard { font-family: sans-serif; max-width: 1000px; margin: 20px auto; background: #f9f9f9; padding: 20px; border-radius: 8px; }
+		.amm-dashboard { font-family: sans-serif; max-width: 1000px; margin: 20px auto; background: #f9f9f9; color: #333; padding: 20px; border-radius: 8px; transition: all 0.3s; }
+		.amm-dashboard.dark-mode { background: #1a1a1a; color: #f1f1f1; }
 		.amm-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+		.dark-mode .amm-header { border-bottom-color: #333; }
 		.amm-grid { display: grid; grid-template-columns: 250px 1fr; gap: 20px; }
 		.amm-sidebar select { width: 100%; margin-bottom: 20px; }
 		.amm-main textarea { width: 100%; height: 150px; margin-bottom: 10px; padding: 10px; }
 		.amm-output-box { background: #fff; border: 1px solid #ddd; padding: 15px; min-height: 200px; white-space: pre-wrap; }
+		.dark-mode .amm-output-box { background: #2d2d2d; border-color: #444; color: #eee; }
 		.amm-generate-btn { background: #007cba; color: #fff; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+		.amm-plan-card { background: #fff; }
+		.dark-mode .amm-plan-card { background: #2d2d2d; color: #eee; }
 		</style>
 		<?php
 		return ob_get_clean();
