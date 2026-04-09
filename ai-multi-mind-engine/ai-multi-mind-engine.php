@@ -60,6 +60,9 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/minds/class-mind-copywriter.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-sales-closer.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-profit-maximizer.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-offer-creator.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-sop-architect.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-viral-creator.php';
 
 		// Managers
 		require_once AMM_PATH . 'includes/class-ai-provider-manager.php';

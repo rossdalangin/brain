@@ -62,6 +62,12 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_Sales_Closer();
 			case 'profit_maximizer':
 				return new AMM_Mind_Profit_Maximizer();
+			case 'offer_creator':
+				return new AMM_Mind_Offer_Creator();
+			case 'sop_architect':
+				return new AMM_Mind_SOP_Architect();
+			case 'viral_creator':
+				return new AMM_Mind_Viral_Creator();
 		}
 
 		// Otherwise, look for it in the CPT

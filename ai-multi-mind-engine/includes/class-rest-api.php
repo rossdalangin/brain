@@ -46,6 +46,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_all_minds' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Workspace Outputs Endpoint
+		register_rest_route( $namespace, '/outputs', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_user_outputs' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -108,6 +115,30 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Get user's saved outputs
+	 */
+	public function get_user_outputs() {
+		$user_id = get_current_user_id();
+		$outputs = get_posts( array(
+			'post_type'      => 'ai_outputs',
+			'post_author'    => $user_id,
+			'posts_per_page' => 20,
+		));
+
+		$data = array();
+		foreach ( $outputs as $output ) {
+			$data[] = array(
+				'id'      => $output->ID,
+				'title'   => $output->post_title,
+				'date'    => get_the_date( 'Y-m-d', $output->ID ),
+				'content' => $output->post_content,
+			);
+		}
+
+		return rest_ensure_response( $data );
+	}
+
+	/**
 	 * Get all available Minds (Core + CPT)
 	 */
 	public function get_all_minds() {
@@ -119,6 +150,9 @@ class AMM_REST_API {
 			array( 'id' => 'copywriter', 'name' => 'Copywriting Master' ),
 			array( 'id' => 'sales_closer', 'name' => 'Sales Closer' ),
 			array( 'id' => 'profit_maximizer', 'name' => 'Profit Maximizer' ),
+			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi)' ),
+			array( 'id' => 'sop_architect', 'name' => 'SOP Architect' ),
+			array( 'id' => 'viral_creator', 'name' => 'Viral Creator' ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );

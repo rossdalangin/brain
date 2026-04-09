@@ -52,6 +52,20 @@ class AMM_Shortcodes {
 							Your AI-generated business output will appear here...
 						</div>
 					</div>
+
+					<div id="amm-workspace-container" style="margin-top: 40px;">
+						<h3>My Workspace (Saved Outputs)</h3>
+						<div id="amm-workspace-list" class="amm-workspace-box">
+							Loading saved outputs...
+						</div>
+					</div>
+
+					<div id="amm-team-container" style="margin-top: 40px; display:none;">
+						<h3>My Team</h3>
+						<div id="amm-team-list" class="amm-team-box">
+							Loading team members...
+						</div>
+					</div>
 				</main>
 			</div>
 		</div>
@@ -82,6 +96,40 @@ class AMM_Shortcodes {
 				mindSelect.innerHTML = minds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 			});
 
+			// Fetch Workspace
+			const workspaceList = document.getElementById('amm-workspace-list');
+			function refreshWorkspace() {
+				fetch(apiRoot + '/outputs', {
+					headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
+				})
+				.then(res => res.json())
+				.then(outputs => {
+					if (outputs.length === 0) {
+						workspaceList.innerHTML = 'No saved outputs yet.';
+						return;
+					}
+					workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
+						'<tr><th>Date</th><th>Title</th><th>Actions</th></tr>' +
+						outputs.map(o => `<tr><td>${o.date}</td><td>${o.title}</td><td><button onclick="alert(\`Content: \\n\\n\` + ${JSON.stringify(o.content)})">View</button></td></tr>`).join('') +
+						'</table>';
+				});
+			}
+			refreshWorkspace();
+
+			// Fetch Team
+			const teamContainer = document.getElementById('amm-team-container');
+			const teamList = document.getElementById('amm-team-list');
+			fetch(apiRoot + '/teams', {
+				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
+			})
+			.then(res => res.json())
+			.then(teams => {
+				if (teams && teams.length > 0) {
+					teamContainer.style.display = 'block';
+					teamList.innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (Role: ${t.role})</div>`).join('');
+				}
+			});
+
 			// Handle Generation
 			btn.addEventListener('click', function() {
 				const mindId = document.getElementById('amm-mind-select').value;
@@ -108,6 +156,7 @@ class AMM_Shortcodes {
 					if (data.success) {
 						output.innerHTML = data.content;
 						stats.innerHTML = `Plan: ${data.plan || '...'} | Usage: ${data.usage}/${data.limit || '...'} credits`;
+						refreshWorkspace();
 					} else {
 						output.innerHTML = 'Error: ' + data.message;
 					}
