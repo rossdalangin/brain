@@ -39,6 +39,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_teams' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// All Minds Endpoint
+		register_rest_route( $namespace, '/minds', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_all_minds' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -98,6 +105,28 @@ class AMM_REST_API {
 			'limit'     => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' ),
 			'plan'      => get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free',
 		));
+	}
+
+	/**
+	 * Get all available Minds (Core + CPT)
+	 */
+	public function get_all_minds() {
+		$core_minds = array(
+			array( 'id' => 'ceo', 'name' => 'Elite CEO' ),
+			array( 'id' => 'strategist', 'name' => 'Blue Ocean Strategist' ),
+			array( 'id' => 'funnel_builder', 'name' => 'Funnel Architect' ),
+			array( 'id' => 'growth_hacker', 'name' => 'Growth Hacker' ),
+			array( 'id' => 'copywriter', 'name' => 'Copywriting Master' ),
+			array( 'id' => 'sales_closer', 'name' => 'Sales Closer' ),
+			array( 'id' => 'profit_maximizer', 'name' => 'Profit Maximizer' ),
+		);
+
+		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
+		foreach ( $cpt_minds as $mind ) {
+			$core_minds[] = array( 'id' => $mind->post_name, 'name' => $mind->post_title . ' (Custom)' );
+		}
+
+		return rest_ensure_response( $core_minds );
 	}
 
 	/**

@@ -58,6 +58,10 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_Growth_Hacker();
 			case 'copywriter':
 				return new AMM_Mind_Copywriting_Master();
+			case 'sales_closer':
+				return new AMM_Mind_Sales_Closer();
+			case 'profit_maximizer':
+				return new AMM_Mind_Profit_Maximizer();
 		}
 
 		// Otherwise, look for it in the CPT

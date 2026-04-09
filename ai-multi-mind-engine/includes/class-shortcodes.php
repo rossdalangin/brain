@@ -30,9 +30,7 @@ class AMM_Shortcodes {
 				<aside class="amm-sidebar">
 					<h3>Select Mind</h3>
 					<select id="amm-mind-select">
-						<option value="ceo">Elite CEO</option>
-						<option value="strategist">Strategist</option>
-						<option value="funnel_builder">Funnel Builder</option>
+						<option value="">Loading minds...</option>
 					</select>
 
 					<h3>Output Type</h3>
@@ -72,6 +70,16 @@ class AMM_Shortcodes {
 			.then(res => res.json())
 			.then(data => {
 				stats.innerHTML = `Plan: ${data.plan} | Usage: ${data.usage.used}/${data.usage.limit} credits`;
+			});
+
+			// Fetch Minds Library
+			const mindSelect = document.getElementById('amm-mind-select');
+			fetch(apiRoot + '/minds', {
+				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
+			})
+			.then(res => res.json())
+			.then(minds => {
+				mindSelect.innerHTML = minds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 			});
 
 			// Handle Generation

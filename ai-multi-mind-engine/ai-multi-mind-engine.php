@@ -58,6 +58,8 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/minds/class-mind-funnel-builder.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-growth-hacker.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-copywriter.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-sales-closer.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-profit-maximizer.php';
 
 		// Managers
 		require_once AMM_PATH . 'includes/class-ai-provider-manager.php';
@@ -76,6 +78,7 @@ class AI_Multi_Mind_Engine {
 		// Admin
 		if ( is_admin() ) {
 			require_once AMM_PATH . 'includes/class-admin-settings.php';
+			require_once AMM_PATH . 'includes/class-admin-meta-boxes.php';
 		}
 	}
 
@@ -94,6 +97,7 @@ class AI_Multi_Mind_Engine {
 
 	public function init_admin() {
 		new AMM_Admin_Settings();
+		new AMM_Admin_Meta_Boxes();
 	}
 
 	public function init_shortcodes() {
