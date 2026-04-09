@@ -63,6 +63,10 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/minds/class-mind-offer-creator.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-sop-architect.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-viral-creator.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-visionary.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-dominator.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-automation-expert.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-storytelling-expert.php';
 
 		// Managers
 		require_once AMM_PATH . 'includes/class-ai-provider-manager.php';
@@ -126,6 +130,12 @@ class AI_Multi_Mind_Engine {
 			'show_in_rest' => true,
 			'supports' => array( 'title', 'editor', 'author' ),
 			'menu_icon' => 'dashicons-media-text',
+		));
+
+		register_taxonomy( 'amm_folder', 'ai_outputs', array(
+			'labels' => array( 'name' => 'Folders', 'singular_name' => 'Folder' ),
+			'hierarchical' => true,
+			'show_in_rest' => true,
 		));
 	}
 

@@ -68,6 +68,14 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_SOP_Architect();
 			case 'viral_creator':
 				return new AMM_Mind_Viral_Creator();
+			case 'visionary':
+				return new AMM_Mind_Visionary();
+			case 'dominator':
+				return new AMM_Mind_Dominator();
+			case 'automation_expert':
+				return new AMM_Mind_Automation_Expert();
+			case 'storyteller':
+				return new AMM_Mind_Storytelling_Expert();
 		}
 
 		// Otherwise, look for it in the CPT

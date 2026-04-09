@@ -66,6 +66,27 @@ class AMM_Shortcodes {
 							Loading team members...
 						</div>
 					</div>
+
+					<div id="amm-billing-container" style="margin-top: 40px;">
+						<h3>Upgrade Your Plan</h3>
+						<div class="amm-billing-grid" style="display:flex; gap:10px;">
+							<div class="amm-plan-card" style="border:1px solid #ddd; padding:15px; flex:1;">
+								<h4>Starter</h4>
+								<p>$19/mo</p>
+								<button onclick="ammCheckout('starter')">Select</button>
+							</div>
+							<div class="amm-plan-card" style="border:1px solid #ddd; padding:15px; flex:1; border-color:#007cba;">
+								<h4>Pro</h4>
+								<p>$49/mo</p>
+								<button onclick="ammCheckout('pro')">Select</button>
+							</div>
+							<div class="amm-plan-card" style="border:1px solid #ddd; padding:15px; flex:1;">
+								<h4>Agency</h4>
+								<p>$199/mo</p>
+								<button onclick="ammCheckout('agency')">Select</button>
+							</div>
+						</div>
+					</div>
 				</main>
 			</div>
 		</div>
@@ -129,6 +150,26 @@ class AMM_Shortcodes {
 					teamList.innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (Role: ${t.role})</div>`).join('');
 				}
 			});
+
+			// Handle Checkout
+			window.ammCheckout = function(planId) {
+				fetch(apiRoot + '/checkout', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+					},
+					body: JSON.stringify({ plan_id: planId, gateway: 'stripe' })
+				})
+				.then(res => res.json())
+				.then(data => {
+					if (data.url) {
+						window.location.href = data.url;
+					} else {
+						alert('Checkout error: ' + (data.message || 'Unknown error'));
+					}
+				});
+			};
 
 			// Handle Generation
 			btn.addEventListener('click', function() {

@@ -53,6 +53,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_user_outputs' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Checkout Endpoint
+		register_rest_route( $namespace, '/checkout', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_checkout' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -104,6 +111,12 @@ class AMM_REST_API {
 			'post_author'  => $user_id,
 		));
 
+		// Handle Folder assignment if provided
+		$folder_id = $params['folder_id'] ?? 0;
+		if ( $folder_id ) {
+			wp_set_post_terms( $output_id, array( (int)$folder_id ), 'amm_folder' );
+		}
+
 		return rest_ensure_response( array(
 			'success'   => true,
 			'output_id' => $output_id,
@@ -112,6 +125,28 @@ class AMM_REST_API {
 			'limit'     => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' ),
 			'plan'      => get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free',
 		));
+	}
+
+	/**
+	 * Handle checkout initiation
+	 */
+	public function handle_checkout( $request ) {
+		$params = $request->get_json_params();
+		$plan_id = $params['plan_id'] ?? '';
+		$gateway = $params['gateway'] ?? 'stripe';
+		$user_id = get_current_user_id();
+
+		if ( $gateway === 'stripe' ) {
+			$stripe = new AMM_Stripe_Handler();
+			$url = $stripe->create_checkout_session( $user_id, $plan_id );
+		} else {
+			$paypal = new AMM_PayPal_Handler();
+			$url = $paypal->create_subscription( $user_id, $plan_id );
+		}
+
+		if ( is_wp_error( $url ) ) return $url;
+
+		return rest_ensure_response( array( 'success' => true, 'url' => $url ) );
 	}
 
 	/**
@@ -132,6 +167,7 @@ class AMM_REST_API {
 				'title'   => $output->post_title,
 				'date'    => get_the_date( 'Y-m-d', $output->ID ),
 				'content' => $output->post_content,
+				'folders' => wp_get_post_terms( $output->ID, 'amm_folder', array( 'fields' => 'names' ) ),
 			);
 		}
 
@@ -153,6 +189,10 @@ class AMM_REST_API {
 			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi)' ),
 			array( 'id' => 'sop_architect', 'name' => 'SOP Architect' ),
 			array( 'id' => 'viral_creator', 'name' => 'Viral Creator' ),
+			array( 'id' => 'visionary', 'name' => 'Visionary Founder' ),
+			array( 'id' => 'dominator', 'name' => 'Market Dominator' ),
+			array( 'id' => 'automation_expert', 'name' => 'Automation Architect' ),
+			array( 'id' => 'storyteller', 'name' => 'Master Storyteller' ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
