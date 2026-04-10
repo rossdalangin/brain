@@ -60,6 +60,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_checkout' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Affiliate Data Endpoint
+		register_rest_route( $namespace, '/affiliate', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_affiliate_info' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -212,10 +219,34 @@ class AMM_REST_API {
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
 		foreach ( $cpt_minds as $mind ) {
-			$core_minds[] = array( 'id' => $mind->post_name, 'name' => $mind->post_title . ' (Custom)' );
+			$core_minds[] = array(
+				'id' => $mind->post_name,
+				'name' => $mind->post_title . ' (Custom)',
+				'premium' => get_post_meta( $mind->ID, 'amm_is_premium', true ) === 'yes'
+			);
 		}
 
 		return rest_ensure_response( $core_minds );
+	}
+
+	/**
+	 * Get affiliate info for the user
+	 */
+	public function get_affiliate_info() {
+		$user_id = get_current_user_id();
+		$aff_manager = new AMM_Affiliate_Manager();
+		$data = $aff_manager->get_affiliate_data( $user_id );
+
+		if ( ! $data ) {
+			$code = $aff_manager->register_affiliate( $user_id );
+			$data = $aff_manager->get_affiliate_data( $user_id );
+		}
+
+		return rest_ensure_response( array(
+			'code' => $data->affiliate_code,
+			'commissions' => $data->total_commissions,
+			'link' => home_url( '/?ref=' . $data->affiliate_code ),
+		));
 	}
 
 	/**

@@ -74,6 +74,7 @@ class AI_Multi_Mind_Engine {
 		// Managers
 		require_once AMM_PATH . 'includes/class-ai-provider-manager.php';
 		require_once AMM_PATH . 'includes/class-team-manager.php';
+		require_once AMM_PATH . 'includes/class-affiliate-manager.php';
 		require_once AMM_PATH . 'includes/class-prompt-engine.php';
 		require_once AMM_PATH . 'includes/class-usage-tracker.php';
 
@@ -196,6 +197,30 @@ class AI_Multi_Mind_Engine {
 			team_id bigint(20) NOT NULL,
 			user_id bigint(20) NOT NULL,
 			role varchar(20) NOT NULL,
+			PRIMARY KEY  (id)
+		) $charset_collate;";
+		dbDelta( $sql );
+
+		// Affiliates Table
+		$table_name = $wpdb->prefix . 'amm_affiliates';
+		$sql = "CREATE TABLE $table_name (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) NOT NULL,
+			affiliate_code varchar(50) NOT NULL,
+			total_commissions decimal(10,2) DEFAULT 0.00 NOT NULL,
+			PRIMARY KEY  (id)
+		) $charset_collate;";
+		dbDelta( $sql );
+
+		// Referrals Table
+		$table_name = $wpdb->prefix . 'amm_referrals';
+		$sql = "CREATE TABLE $table_name (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			affiliate_id bigint(20) NOT NULL,
+			referred_user_id bigint(20) NOT NULL,
+			status varchar(20) NOT NULL,
+			commission_amount decimal(10,2) NOT NULL,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
 			PRIMARY KEY  (id)
 		) $charset_collate;";
 		dbDelta( $sql );

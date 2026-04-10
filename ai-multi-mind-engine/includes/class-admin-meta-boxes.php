@@ -30,6 +30,7 @@ class AMM_Admin_Meta_Boxes {
 		$framework = get_post_meta( $post->ID, 'amm_mind_framework', true );
 		$style     = get_post_meta( $post->ID, 'amm_mind_style', true );
 		$structure = get_post_meta( $post->ID, 'amm_mind_structure', true );
+		$is_premium = get_post_meta( $post->ID, 'amm_is_premium', true );
 
 		wp_nonce_field( 'amm_save_mind_meta', 'amm_mind_nonce' );
 
@@ -50,6 +51,13 @@ class AMM_Admin_Meta_Boxes {
 			<label for="amm_mind_structure"><strong>Output Structure:</strong></label><br />
 			<input type="text" id="amm_mind_structure" name="amm_mind_structure" value="<?php echo esc_attr( $structure ); ?>" style="width:100%;" placeholder="e.g. Executive Summary, Roadmap" />
 		</p>
+		<p>
+			<label for="amm_is_premium"><strong>Premium Mind?</strong></label>
+			<select id="amm_is_premium" name="amm_is_premium">
+				<option value="no" <?php selected( $is_premium, 'no' ); ?>>No (Standard)</option>
+				<option value="yes" <?php selected( $is_premium, 'yes' ); ?>>Yes (Marketplace/Pro)</option>
+			</select>
+		</p>
 		<p><em>The post content will be used as the **Hidden Prompt Engineering Layer**.</em></p>
 		<?php
 	}
@@ -67,7 +75,7 @@ class AMM_Admin_Meta_Boxes {
 			return;
 		}
 
-		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure' );
+		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure', 'amm_is_premium' );
 		foreach ( $fields as $field ) {
 			if ( isset( $_POST[$field] ) ) {
 				update_post_meta( $post_id, $field, sanitize_text_field( $_POST[$field] ) );

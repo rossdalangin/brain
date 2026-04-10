@@ -74,6 +74,13 @@ class AMM_Shortcodes {
 						</div>
 					</div>
 
+					<div id="amm-affiliate-container" style="margin-top: 40px;">
+						<h3>Affiliate Program</h3>
+						<div id="amm-affiliate-info" class="amm-workspace-box">
+							Loading affiliate info...
+						</div>
+					</div>
+
 					<div id="amm-billing-container" style="margin-top: 40px;">
 						<h3>Upgrade Your Plan</h3>
 						<div class="amm-billing-grid" style="display:flex; gap:10px;">
@@ -162,6 +169,20 @@ class AMM_Shortcodes {
 					teamContainer.style.display = 'block';
 					teamList.innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (Role: ${t.role})</div>`).join('');
 				}
+			});
+
+			// Fetch Affiliate Info
+			const affInfo = document.getElementById('amm-affiliate-info');
+			fetch(apiRoot + '/affiliate', {
+				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
+			})
+			.then(res => res.json())
+			.then(data => {
+				affInfo.innerHTML = `
+					<p><strong>Your Affiliate Code:</strong> ${data.code}</p>
+					<p><strong>Referral Link:</strong> <input type="text" value="${data.link}" readonly style="width:100%;"></p>
+					<p><strong>Total Commissions:</strong> $${data.commissions}</p>
+				`;
 			});
 
 			// Handle Checkout
