@@ -111,6 +111,8 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_Leadership_Coach();
 			case 'decision_expert':
 				return new AMM_Mind_Decision_Expert();
+			case 'magic_bff':
+				return new AMM_Mind_Magic_BFF();
 		}
 
 		// Otherwise, look for it in the CPT

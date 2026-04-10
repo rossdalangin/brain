@@ -137,6 +137,7 @@ class AMM_Shortcodes {
 							</select>
 							<textarea id="amm-input" placeholder="Enter your context, goals, and constraints here..."></textarea>
 							<button id="amm-generate-btn" class="amm-primary-btn">IGNITE ENGINE</button>
+					<button id="amm-refine-btn" class="amm-secondary-btn" style="margin-top:10px; background:#e1f5fe; color:#039be5;">✨ Refine with Magic BFF</button>
 						</div>
 						<div class="amm-output-container">
 							<div class="amm-output-header">
@@ -530,6 +531,28 @@ class AMM_Shortcodes {
 						alert('Folder Created!');
 						refreshWorkspace();
 					}
+				});
+			});
+
+			// Handle Refine Prompt
+			document.getElementById('amm-refine-btn').addEventListener('click', () => {
+				const input = document.getElementById('amm-input');
+				if(!input.value) return;
+
+				document.getElementById('amm-refine-btn').innerText = 'Magic in progress...';
+				fetch(apiRoot + '/refine-prompt', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ user_input: input.value })
+				})
+				.then(res => res.json())
+				.then(data => {
+					if(data.refined_prompt) {
+						input.value = data.refined_prompt;
+					}
+				})
+				.finally(() => {
+					document.getElementById('amm-refine-btn').innerText = '✨ Refine with Magic BFF';
 				});
 			});
 

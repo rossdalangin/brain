@@ -158,6 +158,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_pending_invites' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Refine Prompt Endpoint
+		register_rest_route( $namespace, '/refine-prompt', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_refine_prompt' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -369,6 +376,7 @@ class AMM_REST_API {
 			array( 'id' => 'policy_generator', 'name' => 'Policy Generator' ),
 			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach' ),
 			array( 'id' => 'decision_expert', 'name' => 'Decision Expert' ),
+			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)' ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
@@ -546,6 +554,24 @@ class AMM_REST_API {
 		));
 
 		return rest_ensure_response( array( 'success' => true, 'template_id' => $post_id ) );
+	}
+
+	/**
+	 * Handle prompt refinement using AI
+	 */
+	public function handle_refine_prompt( $request ) {
+		$params = $request->get_json_params();
+		$user_input = $params['user_input'] ?? '';
+		$provider = get_option( 'amm_default_ai_provider', 'gemini' );
+
+		$system_prompt = "You are a Master Prompt Engineer. Take the user's short request and expand it into a high-quality, detailed prompt that will get the best possible result from an AI. Output ONLY the refined prompt.";
+
+		$ai_manager = new AMM_AI_Provider_Manager();
+		$response = $ai_manager->generate_response( $provider, $system_prompt, $user_input );
+
+		if ( is_wp_error( $response ) ) return $response;
+
+		return rest_ensure_response( array( 'success' => true, 'refined_prompt' => $response ) );
 	}
 
 	/**
