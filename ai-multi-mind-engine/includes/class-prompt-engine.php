@@ -12,12 +12,13 @@ class AMM_Prompt_Engine {
 	/**
 	 * Prepare the final system and user prompts
 	 */
-	public function prepare_prompts( $mind_id, $output_type, $user_input ) {
+	public function prepare_prompts( $mind_id, $output_type, $user_input, $language = 'English' ) {
 		$mind = $this->get_mind_instance( $mind_id );
 		if ( ! $mind ) return new WP_Error( 'invalid_mind', 'The selected AI Mind is invalid.' );
 
 		$system_prompt = $mind->get_system_prompt();
 		$system_prompt .= "\n\nREQUIRED OUTPUT TYPE: " . $this->get_output_type_instructions( $output_type );
+		$system_prompt .= "\n\nCRITICAL: The entire output MUST be written in {$language}.";
 
 		$user_prompt = $mind->format_request( $user_input );
 

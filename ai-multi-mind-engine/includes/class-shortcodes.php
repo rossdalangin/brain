@@ -45,6 +45,7 @@ class AMM_Shortcodes {
 		<div id="amm-dashboard-root" class="amm-dashboard">
 			<aside class="amm-app-sidebar">
 				<div class="amm-logo">AI Multi-Mind</div>
+				<div id="amm-user-profile" style="margin-bottom:20px; font-size:12px; color:#888;"></div>
 				<nav class="amm-nav">
 					<a href="#" class="amm-nav-item active" data-tab="generate">🚀 Ignite Mind</a>
 					<a href="#" class="amm-nav-item" data-tab="library">📚 Minds Library</a>
@@ -84,6 +85,15 @@ class AMM_Shortcodes {
 								<option value="blog_post">Blog Post</option>
 								<option value="ad_copy">Ad Copy</option>
 								<option value="video_script">Video Script</option>
+							</select>
+							<label>Output Language</label>
+							<select id="amm-language-select">
+								<option value="English">English</option>
+								<option value="Spanish">Spanish</option>
+								<option value="French">French</option>
+								<option value="German">German</option>
+								<option value="Portuguese">Portuguese</option>
+								<option value="Italian">Italian</option>
 							</select>
 							<label>Task Template</label>
 							<select id="amm-template-select">
@@ -166,6 +176,8 @@ class AMM_Shortcodes {
 						<input type="text" id="amm-set-webhook" placeholder="https://hooks.zapier.com/..." style="width:100%; margin-bottom:20px;">
 						<label>Default AI Mind</label>
 						<select id="amm-set-default-mind" style="width:100%; margin-bottom:20px;"></select>
+						<label>Knowledge Base (Your Company Context)</label>
+						<textarea id="amm-set-kb" placeholder="About my business, products, target audience..." style="width:100%; height:150px; margin-bottom:20px;"></textarea>
 						<button id="amm-save-settings-btn" class="amm-primary-btn">Save Preferences</button>
 					</div>
 				</section>
@@ -222,6 +234,7 @@ class AMM_Shortcodes {
 						const limit = data.usage.limit;
 						const pct = Math.min(100, (used / limit) * 100);
 
+						document.getElementById('amm-user-profile').innerText = `Welcome, ${data.user_name}`;
 						document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${used}/${limit} credits`;
 						document.getElementById('amm-usage-bar').style.width = pct + '%';
 
@@ -231,6 +244,7 @@ class AMM_Shortcodes {
 						// Populate Settings
 						document.getElementById('amm-set-webhook').value = data.settings.webhook_url || '';
 						document.getElementById('amm-set-default-mind').value = data.settings.default_mind || 'ceo';
+						document.getElementById('amm-set-kb').value = data.settings.knowledge_base || '';
 					});
 
 				// Templates
@@ -293,7 +307,12 @@ class AMM_Shortcodes {
 				fetch(apiRoot + '/generate', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
-					body: JSON.stringify({ mind_id: document.getElementById('amm-mind-select').value, output_type: document.getElementById('amm-type-select').value, user_input: document.getElementById('amm-input').value })
+					body: JSON.stringify({
+						mind_id: document.getElementById('amm-mind-select').value,
+						output_type: document.getElementById('amm-type-select').value,
+						user_input: document.getElementById('amm-input').value,
+						language: document.getElementById('amm-language-select').value
+					})
 				})
 				.then(res => res.json())
 				.then(data => {
@@ -395,7 +414,8 @@ class AMM_Shortcodes {
 					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
 					body: JSON.stringify({
 						webhook_url: document.getElementById('amm-set-webhook').value,
-						default_mind: document.getElementById('amm-set-default-mind').value
+						default_mind: document.getElementById('amm-set-default-mind').value,
+						knowledge_base: document.getElementById('amm-set-kb').value
 					})
 				}).then(res => res.json()).then(data => { if(data.success) alert('Settings Saved!'); });
 			});
