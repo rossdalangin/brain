@@ -121,7 +121,10 @@ class AMM_Shortcodes {
 
 				<!-- Workspace Tab -->
 				<section id="tab-workspace" class="amm-tab-content">
-					<h2>My Workspace</h2>
+					<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+						<h2>My Workspace</h2>
+						<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
+					</div>
 					<div id="amm-workspace-list" class="amm-form-card">Loading saved outputs...</div>
 				</section>
 
@@ -133,6 +136,16 @@ class AMM_Shortcodes {
 						<input type="email" id="amm-invite-email" placeholder="email@example.com" style="width:70%;">
 						<button id="amm-invite-btn" class="amm-primary-btn" style="width:25%;">Invite</button>
 					</div>
+
+					<div id="amm-branding-container" class="amm-form-card" style="margin-bottom:20px; display:none;">
+						<h3>Agency White-Labeling</h3>
+						<label>Custom Logo URL</label>
+						<input type="text" id="amm-branding-logo" style="width:100%; margin-bottom:10px;">
+						<label>Primary Brand Color</label>
+						<input type="color" id="amm-branding-color" style="width:100%; margin-bottom:10px;">
+						<button id="amm-branding-btn" class="amm-secondary-btn">Apply Branding</button>
+					</div>
+
 					<div id="amm-team-list" class="amm-form-card">No team members found.</div>
 				</section>
 
@@ -204,6 +217,7 @@ class AMM_Shortcodes {
 					.then(res => res.json()).then(data => {
 						document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${data.usage.used}/${data.usage.limit} credits`;
 						if (data.plan === 'pro' || data.plan === 'agency') document.getElementById('amm-builder-container').style.display = 'block';
+						if (data.plan === 'agency') document.getElementById('amm-branding-container').style.display = 'block';
 
 						// Populate Settings
 						document.getElementById('amm-set-webhook').value = data.settings.webhook_url || '';
@@ -231,6 +245,7 @@ class AMM_Shortcodes {
 								<strong>${m.name}</strong>
 								<p>${m.premium ? 'Premium Mind' : 'Core Mind'}</p>
 								<button class="amm-secondary-btn" onclick="document.getElementById('amm-mind-select').value='${m.id}'; document.querySelector('[data-tab=generate]').click();">Use Mind</button>
+								${m.premium ? '<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout(\'pro\')">Upgrade to Unlock</button>' : ''}
 							</div>
 						`).join('');
 					});
@@ -317,6 +332,36 @@ class AMM_Shortcodes {
 				win.print();
 			});
 		});
+
+			// Handle New Folder
+			document.getElementById('amm-new-folder-btn').addEventListener('click', () => {
+				const name = prompt('Enter folder name:');
+				if(!name) return;
+
+				fetch(apiRoot + '/create-folder', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ name })
+				}).then(res => res.json()).then(data => {
+					if(data.success) {
+						alert('Folder Created!');
+						refreshWorkspace();
+					}
+				});
+			});
+
+			// Handle Branding
+			document.getElementById('amm-branding-btn').addEventListener('click', () => {
+				fetch(apiRoot + '/update-branding', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({
+						team_id: window.ammActiveTeamId,
+						logo: document.getElementById('amm-branding-logo').value,
+						color: document.getElementById('amm-branding-color').value
+					})
+				}).then(res => res.json()).then(data => { if(data.success) alert('Branding Updated!'); });
+			});
 
 			// Handle Invite
 			document.getElementById('amm-invite-btn').addEventListener('click', () => {

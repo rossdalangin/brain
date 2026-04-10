@@ -109,6 +109,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_templates' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Create Folder Endpoint
+		register_rest_route( $namespace, '/create-folder', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_create_folder' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -387,6 +394,19 @@ class AMM_REST_API {
 			'success' => true,
 			'invite_url' => home_url( '/join-team/?token=' . $token )
 		));
+	}
+
+	/**
+	 * Handle folder creation
+	 */
+	public function handle_create_folder( $request ) {
+		$params = $request->get_json_params();
+		$name = sanitize_text_field( $params['name'] );
+
+		$term = wp_insert_term( $name, 'amm_folder' );
+		if ( is_wp_error( $term ) ) return $term;
+
+		return rest_ensure_response( array( 'success' => true, 'term_id' => $term['term_id'] ) );
 	}
 
 	/**
