@@ -469,8 +469,21 @@ class AMM_REST_API {
 	public function get_templates() {
 		$posts = get_posts( array( 'post_type' => 'ai_templates', 'posts_per_page' => -1 ) );
 		$data = array();
+		$user_id = get_current_user_id();
+		$user_plan = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+		$plans = array( 'free' => 0, 'starter' => 1, 'pro' => 2, 'agency' => 3 );
+
 		foreach ( $posts as $p ) {
-			$data[] = array( 'id' => $p->ID, 'title' => $p->post_title, 'content' => $p->post_content );
+			$min_plan = get_post_meta( $p->ID, 'amm_min_plan', true ) ?: 'free';
+			$is_locked = ( $plans[$user_plan] ?? 0 ) < ( $plans[$min_plan] ?? 0 );
+
+			$data[] = array(
+				'id' => $p->ID,
+				'title' => $p->post_title,
+				'content' => $is_locked ? '' : $p->post_content,
+				'locked' => $is_locked,
+				'min_plan' => $min_plan
+			);
 		}
 		return rest_ensure_response( $data );
 	}
@@ -520,6 +533,10 @@ class AMM_REST_API {
 				'used'  => $tracker->get_current_month_usage( $user_id ),
 				'limit' => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' ),
 			),
+			'insights' => array(
+				'total_generations' => count( get_posts( array( 'post_type' => 'ai_outputs', 'author' => $user_id, 'posts_per_page' => -1 ) ) ),
+				'referral_count' => 0, // Placeholder for real referral count
+			)
 		));
 	}
 }

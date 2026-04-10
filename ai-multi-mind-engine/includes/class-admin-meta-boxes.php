@@ -23,6 +23,30 @@ class AMM_Admin_Meta_Boxes {
 			'normal',
 			'high'
 		);
+
+		add_meta_box(
+			'amm_template_details',
+			'Template Configuration',
+			array( $this, 'render_template_meta_box' ),
+			'ai_templates',
+			'normal',
+			'high'
+		);
+	}
+
+	public function render_template_meta_box( $post ) {
+		wp_nonce_field( 'amm_save_template_meta', 'amm_template_nonce' );
+		?>
+		<p>
+			<label for="amm_min_plan"><strong>Minimum Plan Required:</strong></label>
+			<select id="amm_min_plan" name="amm_min_plan">
+				<option value="free" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'free' ); ?>>Free</option>
+				<option value="starter" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'starter' ); ?>>Starter</option>
+				<option value="pro" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'pro' ); ?>>Pro</option>
+				<option value="agency" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'agency' ); ?>>Agency</option>
+			</select>
+		</p>
+		<?php
 	}
 
 	public function render_mind_meta_box( $post ) {
@@ -72,6 +96,14 @@ class AMM_Admin_Meta_Boxes {
 	}
 
 	public function save_minds_meta_data( $post_id ) {
+		// Template Meta
+		if ( isset( $_POST['amm_template_nonce'] ) && wp_verify_nonce( $_POST['amm_template_nonce'], 'amm_save_template_meta' ) ) {
+			if ( isset( $_POST['amm_min_plan'] ) ) {
+				update_post_meta( $post_id, 'amm_min_plan', sanitize_text_field( $_POST['amm_min_plan'] ) );
+			}
+		}
+
+		// Mind Meta
 		if ( ! isset( $_POST['amm_mind_nonce'] ) || ! wp_verify_nonce( $_POST['amm_mind_nonce'], 'amm_save_mind_meta' ) ) {
 			return;
 		}

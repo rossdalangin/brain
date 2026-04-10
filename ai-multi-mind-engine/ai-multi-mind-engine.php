@@ -101,6 +101,8 @@ class AI_Multi_Mind_Engine {
 	private function init_hooks() {
 		add_action( 'init', array( $this, 'register_post_types' ) );
 		add_action( 'init', array( $this, 'init_shortcodes' ) );
+		add_action( 'init', array( $this, 'track_referral' ) );
+		add_action( 'user_register', array( $this, 'on_user_register' ) );
 		register_activation_hook( __FILE__, array( $this, 'activate' ) );
 
 		if ( is_admin() ) {
@@ -115,6 +117,19 @@ class AI_Multi_Mind_Engine {
 
 	public function init_shortcodes() {
 		new AMM_Shortcodes();
+	}
+
+	public function track_referral() {
+		if ( isset( $_GET['ref'] ) ) {
+			setcookie( 'amm_referral_code', sanitize_text_field( $_GET['ref'] ), time() + ( 86400 * 30 ), '/' );
+		}
+	}
+
+	public function on_user_register( $user_id ) {
+		if ( isset( $_COOKIE['amm_referral_code'] ) ) {
+			$aff_manager = new AMM_Affiliate_Manager();
+			$aff_manager->record_referral( $_COOKIE['amm_referral_code'], $user_id, 0 ); // Initial 0 commission for free registration
+		}
 	}
 
 	/**

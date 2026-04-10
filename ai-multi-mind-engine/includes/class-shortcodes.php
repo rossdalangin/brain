@@ -47,6 +47,7 @@ class AMM_Shortcodes {
 				<div class="amm-logo">AI Multi-Mind</div>
 				<div id="amm-user-profile" style="margin-bottom:20px; font-size:12px; color:#888;"></div>
 				<nav class="amm-nav">
+					<a href="#" class="amm-nav-item" data-tab="dashboard">📊 Dashboard</a>
 					<a href="#" class="amm-nav-item active" data-tab="generate">🚀 Ignite Mind</a>
 					<a href="#" class="amm-nav-item" data-tab="library">📚 Minds Library</a>
 					<a href="#" class="amm-nav-item" data-tab="workspace">📁 My Workspace</a>
@@ -65,6 +66,21 @@ class AMM_Shortcodes {
 			</aside>
 
 			<main class="amm-app-content">
+				<!-- Dashboard Tab -->
+				<section id="tab-dashboard" class="amm-tab-content">
+					<h2>Elite Insights</h2>
+					<div class="amm-grid-layout" style="margin-top:20px;">
+						<div class="amm-form-card">
+							<strong>Total Strategies Generated</strong><br>
+							<span id="amm-insight-gens" style="font-size:32px; color:#007cba;">0</span>
+						</div>
+						<div class="amm-form-card">
+							<strong>Referral Network</strong><br>
+							<span id="amm-insight-refs" style="font-size:32px; color:#007cba;">0</span>
+						</div>
+					</div>
+				</section>
+
 				<!-- Generate Tab -->
 				<section id="tab-generate" class="amm-tab-content active">
 					<header class="amm-tab-header">
@@ -245,6 +261,12 @@ class AMM_Shortcodes {
 						document.getElementById('amm-set-webhook').value = data.settings.webhook_url || '';
 						document.getElementById('amm-set-default-mind').value = data.settings.default_mind || 'ceo';
 						document.getElementById('amm-set-kb').value = data.settings.knowledge_base || '';
+
+						// Populate Insights
+						if (document.getElementById('amm-insight-gens')) {
+							document.getElementById('amm-insight-gens').innerText = data.insights.total_generations;
+							document.getElementById('amm-insight-refs').innerText = data.insights.referral_count;
+						}
 					});
 
 				// Templates
@@ -252,7 +274,7 @@ class AMM_Shortcodes {
 					.then(res => res.json()).then(templates => {
 						if(templates.length) {
 							const select = document.getElementById('amm-template-select');
-							select.innerHTML += templates.map(t => `<option value="${t.content}">${t.title}</option>`).join('');
+							select.innerHTML += templates.map(t => `<option value="${t.content}" ${t.locked ? 'disabled' : ''}>${t.title}${t.locked ? ' (Locked)' : ''}</option>`).join('');
 						}
 					});
 
