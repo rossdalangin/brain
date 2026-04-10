@@ -159,6 +159,12 @@ class AI_Multi_Mind_Engine {
 			'show_in_rest' => true,
 		));
 
+		register_taxonomy( 'amm_mind_category', 'ai_minds', array(
+			'labels' => array( 'name' => 'Mind Categories', 'singular_name' => 'Mind Category' ),
+			'hierarchical' => true,
+			'show_in_rest' => true,
+		));
+
 		register_post_type( 'ai_templates', array(
 			'labels' => array( 'name' => 'Task Templates', 'singular_name' => 'Task Template' ),
 			'public' => false,

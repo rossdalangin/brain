@@ -116,6 +116,20 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_create_folder' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Billing History Endpoint
+		register_rest_route( $namespace, '/billing-history', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_billing_history' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Feedback Endpoint
+		register_rest_route( $namespace, '/feedback', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_feedback' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -324,11 +338,39 @@ class AMM_REST_API {
 			$core_minds[] = array(
 				'id' => $mind->post_name,
 				'name' => $mind->post_title . ' (Custom)',
-				'premium' => get_post_meta( $mind->ID, 'amm_is_premium', true ) === 'yes'
+				'premium' => get_post_meta( $mind->ID, 'amm_is_premium', true ) === 'yes',
+				'category' => wp_get_post_terms( $mind->ID, 'amm_mind_category', array( 'fields' => 'names' ) )[0] ?? 'Custom'
 			);
 		}
 
 		return rest_ensure_response( $core_minds );
+	}
+
+	/**
+	 * Get billing history for the user
+	 */
+	public function get_billing_history() {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		$history = $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}amm_subscriptions WHERE user_id = %d ORDER BY created_at DESC",
+			$user_id
+		));
+
+		return rest_ensure_response( $history );
+	}
+
+	/**
+	 * Handle AI Output feedback
+	 */
+	public function handle_feedback( $request ) {
+		$params = $request->get_json_params();
+		$post_id = (int)$params['post_id'];
+		$rating = sanitize_text_field( $params['rating'] ); // 'up' or 'down'
+
+		update_post_meta( $post_id, 'amm_user_rating', $rating );
+
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**

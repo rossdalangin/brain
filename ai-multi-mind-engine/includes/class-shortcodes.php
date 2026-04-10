@@ -134,7 +134,12 @@ class AMM_Shortcodes {
 
 				<!-- Library Tab -->
 				<section id="tab-library" class="amm-tab-content">
-					<h2>AI Minds Library</h2>
+					<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+						<h2>AI Minds Library</h2>
+						<select id="amm-category-filter" style="width:200px;">
+							<option value="">All Categories</option>
+						</select>
+					</div>
 					<div id="amm-marketplace-grid" class="amm-grid-layout">Loading library...</div>
 
 					<div id="amm-builder-container" style="display:none; margin-top:40px;">
@@ -211,6 +216,11 @@ class AMM_Shortcodes {
 							<p>Buy 50 extra credits for just $10.</p>
 							<button onclick="ammCheckout('topup_50')" class="amm-secondary-btn" style="width:200px;">Buy Top-up</button>
 						</div>
+
+						<div style="margin-top:40px;">
+							<h3>Billing History</h3>
+							<div id="amm-billing-history" class="amm-form-card">Loading history...</div>
+						</div>
 				</section>
 			</main>
 		</div>
@@ -281,24 +291,39 @@ class AMM_Shortcodes {
 				// Minds
 				fetch(apiRoot + '/minds', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(minds => {
+						window.ammAllMinds = minds;
 						const options = minds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 						document.getElementById('amm-mind-select').innerHTML = options;
 						document.getElementById('amm-set-default-mind').innerHTML = options;
 
-						document.getElementById('amm-marketplace-grid').innerHTML = minds.map(m => `
-							<div class="amm-plan-card ${m.premium ? 'premium' : ''}">
-								<strong>${m.name}</strong>
-								<p>${m.premium ? 'Premium Mind' : 'Core Mind'}</p>
-								<button class="amm-secondary-btn" onclick="document.getElementById('amm-mind-select').value='${m.id}'; document.querySelector('[data-tab=generate]').click();">Use Mind</button>
-								${m.premium ? '<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout(\'pro\')">Upgrade to Unlock</button>' : ''}
-							</div>
-						`).join('');
+						const categories = [...new Set(minds.map(m => m.category).filter(Boolean))];
+						document.getElementById('amm-category-filter').innerHTML += categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+						renderMindGrid(minds);
 					});
+
+				function renderMindGrid(minds) {
+					document.getElementById('amm-marketplace-grid').innerHTML = minds.map(m => `
+						<div class="amm-plan-card ${m.premium ? 'premium' : ''}">
+							<strong>${m.name}</strong>
+							<p style="font-size:10px; color:#888;">${m.category || 'Core'}</p>
+							<p>${m.premium ? 'Premium Mind' : 'Core Mind'}</p>
+							<button class="amm-secondary-btn" onclick="document.getElementById('amm-mind-select').value='${m.id}'; document.querySelector('[data-tab=generate]').click();">Use Mind</button>
+							${m.premium ? '<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout(\'pro\')">Upgrade to Unlock</button>' : ''}
+						</div>
+					`).join('');
+				}
+
+				document.getElementById('amm-category-filter').addEventListener('change', (e) => {
+					const cat = e.target.value;
+					const filtered = cat ? window.ammAllMinds.filter(m => m.category === cat) : window.ammAllMinds;
+					renderMindGrid(filtered);
+				});
 
 				// Workspace
 				fetch(apiRoot + '/outputs', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(outputs => {
-						document.getElementById('amm-workspace-list').innerHTML = outputs.length ? '<table style="width:100%">' + outputs.map(o => `<tr><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button></td></tr>`).join('') + '</table>' : 'No outputs saved.';
+						document.getElementById('amm-workspace-list').innerHTML = outputs.length ? '<table style="width:100%">' + outputs.map(o => `<tr><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') + '</table>' : 'No outputs saved.';
 					});
 
 				// Team
@@ -308,6 +333,20 @@ class AMM_Shortcodes {
 							window.ammActiveTeamId = teams[0].id;
 							document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role})</div>`).join('');
 						}
+					});
+
+				// Billing History
+				fetch(apiRoot + '/billing-history', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(history => {
+						const historyBox = document.getElementById('amm-billing-history');
+						if (history.length === 0) {
+							historyBox.innerHTML = 'No payment history found.';
+							return;
+						}
+						historyBox.innerHTML = '<table style="width:100%">' +
+							'<tr><th>Date</th><th>Plan</th><th>Gateway</th><th>Status</th></tr>' +
+							history.map(h => `<tr><td>${h.created_at}</td><td>${h.plan_id.toUpperCase()}</td><td>${h.gateway}</td><td>${h.status}</td></tr>`).join('') +
+							'</table>';
 					});
 
 				// Affiliate
@@ -357,6 +396,15 @@ class AMM_Shortcodes {
 					}
 				});
 			});
+
+			// Feedback Logic
+			window.ammFeedback = function(id, rating) {
+				fetch(apiRoot + '/feedback', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ post_id: id, rating: rating })
+				}).then(res => res.json()).then(data => { if(data.success) alert('Feedback recorded. Thank you!'); });
+			};
 
 			// Share Logic
 			window.ammShare = function(id) {
