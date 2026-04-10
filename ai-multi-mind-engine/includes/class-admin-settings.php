@@ -28,6 +28,7 @@ class AMM_Admin_Settings {
 	public function register_settings() {
 		register_setting( 'amm_settings_group', 'amm_gemini_api_key', array( 'sanitize_callback' => array( $this, 'encrypt_key' ) ) );
 		register_setting( 'amm_settings_group', 'amm_openai_api_key', array( 'sanitize_callback' => array( $this, 'encrypt_key' ) ) );
+		register_setting( 'amm_settings_group', 'amm_claude_api_key', array( 'sanitize_callback' => array( $this, 'encrypt_key' ) ) );
 		register_setting( 'amm_settings_group', 'amm_default_ai_provider' );
 		register_setting( 'amm_settings_group', 'amm_stripe_secret_key' );
 		register_setting( 'amm_settings_group', 'amm_stripe_webhook_secret' );
@@ -55,6 +56,7 @@ class AMM_Admin_Settings {
 							<select name="amm_default_ai_provider">
 								<option value="gemini" <?php selected( get_option('amm_default_ai_provider'), 'gemini' ); ?>>Gemini (Free)</option>
 								<option value="openai" <?php selected( get_option('amm_default_ai_provider'), 'openai' ); ?>>OpenAI (GPT-4)</option>
+								<option value="claude" <?php selected( get_option('amm_default_ai_provider'), 'claude' ); ?>>Anthropic Claude</option>
 							</select>
 						</td>
 					</tr>
@@ -65,6 +67,10 @@ class AMM_Admin_Settings {
 					<tr valign="top">
 						<th scope="row">OpenAI API Key</th>
 						<td><input type="password" name="amm_openai_api_key" value="<?php echo esc_attr( get_option('amm_openai_api_key') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">Claude API Key</th>
+						<td><input type="password" name="amm_claude_api_key" value="<?php echo esc_attr( base64_decode(get_option('amm_claude_api_key')) ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Secret Key</th>

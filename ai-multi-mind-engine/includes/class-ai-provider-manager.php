@@ -40,9 +40,44 @@ class AMM_AI_Provider_Manager {
 				return $this->call_gemini( $system_prompt, $user_prompt );
 			case 'openai':
 				return $this->call_openai( $system_prompt, $user_prompt );
+			case 'claude':
+				return $this->call_claude( $system_prompt, $user_prompt );
 			default:
 				return new WP_Error( 'invalid_provider', 'Selected AI provider is not supported.' );
 		}
+	}
+
+	/**
+	 * Call Anthropic Claude API
+	 */
+	private function call_claude( $system_prompt, $user_prompt ) {
+		$api_key = $this->api_keys['claude'];
+		if ( ! $api_key ) return new WP_Error( 'missing_key', 'Claude API key missing.' );
+
+		$url = "https://api.anthropic.com/v1/messages";
+
+		$body = array(
+			'model' => 'claude-3-opus-20240229',
+			'max_tokens' => 1024,
+			'system' => $system_prompt,
+			'messages' => array(
+				array( 'role' => 'user', 'content' => $user_prompt ),
+			)
+		);
+
+		$response = wp_remote_post( $url, array(
+			'body'    => json_encode( $body ),
+			'headers' => array(
+				'Content-Type'      => 'application/json',
+				'x-api-key'         => $api_key,
+				'anthropic-version' => '2023-06-01'
+			),
+		));
+
+		if ( is_wp_error( $response ) ) return $response;
+
+		$data = json_decode( wp_remote_retrieve_body( $response ), true );
+		return $data['content'][0]['text'] ?? 'AI response error';
 	}
 
 	/**

@@ -67,6 +67,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_affiliate_info' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Create Mind Endpoint (Pro/Agency only)
+		register_rest_route( $namespace, '/create-mind', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_create_mind' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -227,6 +234,43 @@ class AMM_REST_API {
 		}
 
 		return rest_ensure_response( $core_minds );
+	}
+
+	/**
+	 * Handle custom mind creation
+	 */
+	public function handle_create_mind( $request ) {
+		$user_id = get_current_user_id();
+		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+
+		if ( ! in_array( $plan_id, array( 'pro', 'agency' ) ) ) {
+			return new WP_Error( 'rest_forbidden', 'Mind creation is a PRO feature.', array( 'status' => 403 ) );
+		}
+
+		$params = $request->get_json_params();
+		$name      = sanitize_text_field( $params['name'] );
+		$role      = sanitize_text_field( $params['role'] );
+		$framework = sanitize_text_field( $params['framework'] );
+		$style     = sanitize_text_field( $params['style'] );
+		$structure = sanitize_text_field( $params['structure'] );
+		$prompt    = sanitize_textarea_field( $params['prompt'] );
+
+		$post_id = wp_insert_post( array(
+			'post_title'   => $name,
+			'post_content' => $prompt,
+			'post_status'  => 'publish',
+			'post_type'    => 'ai_minds',
+			'post_author'  => $user_id,
+		));
+
+		if ( is_wp_error( $post_id ) ) return $post_id;
+
+		update_post_meta( $post_id, 'amm_mind_role', $role );
+		update_post_meta( $post_id, 'amm_mind_framework', $framework );
+		update_post_meta( $post_id, 'amm_mind_style', $style );
+		update_post_meta( $post_id, 'amm_mind_structure', $structure );
+
+		return rest_ensure_response( array( 'success' => true, 'mind_id' => $post_id ) );
 	}
 
 	/**

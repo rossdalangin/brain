@@ -54,7 +54,10 @@ class AMM_Shortcodes {
 					<button id="amm-generate-btn" class="button button-primary">IGNITE MIND</button>
 
 					<div id="amm-output-container">
-						<h3>Output</h3>
+						<div style="display:flex; justify-content:space-between; align-items:center;">
+							<h3>Output</h3>
+							<button id="amm-export-btn" class="button" style="display:none;">📄 Export to PDF</button>
+						</div>
 						<div id="amm-output" class="amm-output-box">
 							Your AI-generated business output will appear here...
 						</div>
@@ -78,6 +81,23 @@ class AMM_Shortcodes {
 						<h3>Affiliate Program</h3>
 						<div id="amm-affiliate-info" class="amm-workspace-box">
 							Loading affiliate info...
+						</div>
+					</div>
+
+					<div id="amm-builder-container" style="margin-top: 40px; display:none;">
+						<h3>Custom AI Mind Builder (PRO)</h3>
+						<div class="amm-workspace-box">
+							<input type="text" id="amm-new-mind-name" placeholder="Mind Name" style="width:100%; margin-bottom:10px;">
+							<input type="text" id="amm-new-mind-role" placeholder="Role (e.g. Sales Expert)" style="width:100%; margin-bottom:10px;">
+							<textarea id="amm-new-mind-prompt" placeholder="Hidden Prompt Engineering Layer..." style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+							<button id="amm-create-mind-btn" class="button button-primary">Create Elite Mind</button>
+						</div>
+					</div>
+
+					<div id="amm-marketplace-container" style="margin-top: 40px;">
+						<h3>Premium Mind Marketplace</h3>
+						<div id="amm-marketplace-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:15px;">
+							Loading marketplace...
 						</div>
 					</div>
 
@@ -125,16 +145,27 @@ class AMM_Shortcodes {
 			.then(res => res.json())
 			.then(data => {
 				stats.innerHTML = `Plan: ${data.plan} | Usage: ${data.usage.used}/${data.usage.limit} credits`;
+				if (data.plan === 'pro' || data.plan === 'agency') {
+					document.getElementById('amm-builder-container').style.display = 'block';
+				}
 			});
 
-			// Fetch Minds Library
+			// Fetch Minds Library & Marketplace
 			const mindSelect = document.getElementById('amm-mind-select');
+			const marketplaceGrid = document.getElementById('amm-marketplace-grid');
 			fetch(apiRoot + '/minds', {
 				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
 			})
 			.then(res => res.json())
 			.then(minds => {
-				mindSelect.innerHTML = minds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+				mindSelect.innerHTML = minds.map(m => `<option value="${m.id}">${m.name}${m.premium ? ' (Premium)' : ''}</option>`).join('');
+
+				marketplaceGrid.innerHTML = minds.filter(m => m.premium).map(m => `
+					<div class="amm-plan-card" style="border:1px solid gold; padding:10px; text-align:center;">
+						<strong>${m.name}</strong>
+						<button class="button" onclick="alert('Access this mind with a PRO plan!')">Unlock</button>
+					</div>
+				`).join('') || 'No premium minds currently listed.';
 			});
 
 			// Fetch Workspace
@@ -205,6 +236,40 @@ class AMM_Shortcodes {
 				});
 			};
 
+			// Handle Create Mind
+			document.getElementById('amm-create-mind-btn').addEventListener('click', function() {
+				const name = document.getElementById('amm-new-mind-name').value;
+				const role = document.getElementById('amm-new-mind-role').value;
+				const prompt = document.getElementById('amm-new-mind-prompt').value;
+
+				fetch(apiRoot + '/create-mind', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+					},
+					body: JSON.stringify({ name, role, prompt, framework: 'Custom', style: 'Custom', structure: 'Custom' })
+				})
+				.then(res => res.json())
+				.then(data => {
+					if (data.success) {
+						alert('Mind Created Successfully!');
+						location.reload();
+					} else {
+						alert('Error: ' + data.message);
+					}
+				});
+			});
+
+			// Handle Export
+			document.getElementById('amm-export-btn').addEventListener('click', function() {
+				const content = output.innerText;
+				const win = window.open('', '_blank');
+				win.document.write(`<html><head><title>AI Output</title><style>body{font-family:serif; line-height:1.6; padding:40px; max-width:800px; margin:auto; white-space:pre-wrap;}</style></head><body><h1>AI Multi-Mind Export</h1><hr/>${content}</body></html>`);
+				win.document.close();
+				win.print();
+			});
+
 			// Handle Generation
 			btn.addEventListener('click', function() {
 				const mindId = document.getElementById('amm-mind-select').value;
@@ -230,6 +295,7 @@ class AMM_Shortcodes {
 				.then(data => {
 					if (data.success) {
 						output.innerHTML = data.content;
+						document.getElementById('amm-export-btn').style.display = 'block';
 						stats.innerHTML = `Plan: ${data.plan || '...'} | Usage: ${data.usage}/${data.limit || '...'} credits`;
 						refreshWorkspace();
 					} else {
