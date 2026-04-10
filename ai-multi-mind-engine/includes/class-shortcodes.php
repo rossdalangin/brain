@@ -86,6 +86,9 @@ class AMM_Shortcodes {
 						<div class="amm-form-card">
 							<strong>Total Strategies Generated</strong><br>
 							<span id="amm-insight-gens" style="font-size:32px; color:#007cba;">0</span>
+							<div style="background:#eee; height:10px; margin-top:10px; border-radius:5px;">
+								<div id="amm-insight-gens-bar" style="background:#007cba; height:100%; width:0%; border-radius:5px;"></div>
+							</div>
 						</div>
 						<div class="amm-form-card">
 							<strong>Referral Network</strong><br>
@@ -156,12 +159,19 @@ class AMM_Shortcodes {
 					<div id="amm-marketplace-grid" class="amm-grid-layout">Loading library...</div>
 
 					<div id="amm-builder-container" style="display:none; margin-top:40px;">
-						<h3>Custom Mind Builder (PRO)</h3>
-						<div class="amm-form-card">
+						<h3>Elite Mind & Template Builder (PRO)</h3>
+						<div class="amm-form-card" style="margin-bottom:20px;">
+							<strong>Custom Mind</strong>
 							<input type="text" id="amm-new-mind-name" placeholder="Mind Name (e.g. Real Estate Guru)">
 							<input type="text" id="amm-new-mind-role" placeholder="Role Description">
 							<textarea id="amm-new-mind-prompt" placeholder="Hidden Prompt Engineering Layer (The 'Brain' of the mind)"></textarea>
 							<button id="amm-create-mind-btn" class="amm-primary-btn">Create Custom Mind</button>
+						</div>
+						<div class="amm-form-card">
+							<strong>Task Template</strong>
+							<input type="text" id="amm-new-template-title" placeholder="Template Title (e.g. YouTube Script Pro)">
+							<textarea id="amm-new-template-content" placeholder="The actual prompt instructions for this template..."></textarea>
+							<button id="amm-create-template-btn" class="amm-secondary-btn">Create Template</button>
 						</div>
 					</div>
 				</section>
@@ -197,7 +207,10 @@ class AMM_Shortcodes {
 						<button id="amm-branding-btn" class="amm-secondary-btn">Apply Branding</button>
 					</div>
 
-					<div id="amm-team-list" class="amm-form-card">No team members found.</div>
+					<div id="amm-team-list" class="amm-form-card" style="margin-bottom:20px;">No team members found.</div>
+
+					<h3>Pending Invitations</h3>
+					<div id="amm-invite-list" class="amm-form-card">No pending invites.</div>
 				</section>
 
 				<!-- Affiliate Tab -->
@@ -216,6 +229,7 @@ class AMM_Shortcodes {
 						<select id="amm-set-default-mind" style="width:100%; margin-bottom:20px;"></select>
 						<label>Knowledge Base (Your Company Context)</label>
 						<textarea id="amm-set-kb" placeholder="About my business, products, target audience..." style="width:100%; height:150px; margin-bottom:20px;"></textarea>
+						<p><input type="checkbox" id="amm-set-alerts"> Enable 90% Credit Usage Email Alerts</p>
 						<button id="amm-save-settings-btn" class="amm-primary-btn">Save Preferences</button>
 					</div>
 				</section>
@@ -297,10 +311,13 @@ class AMM_Shortcodes {
 						document.getElementById('amm-set-webhook').value = data.settings.webhook_url || '';
 						document.getElementById('amm-set-default-mind').value = data.settings.default_mind || 'ceo';
 						document.getElementById('amm-set-kb').value = data.settings.knowledge_base || '';
+						document.getElementById('amm-set-alerts').checked = data.settings.usage_alerts;
 
 						// Populate Insights
 						if (document.getElementById('amm-insight-gens')) {
-							document.getElementById('amm-insight-gens').innerText = data.insights.total_generations;
+							const gens = data.insights.total_generations;
+							document.getElementById('amm-insight-gens').innerText = gens;
+							document.getElementById('amm-insight-gens-bar').style.width = Math.min(100, (gens / 50) * 100) + '%';
 							document.getElementById('amm-insight-refs').innerText = data.insights.referral_count;
 						}
 					});
@@ -364,12 +381,20 @@ class AMM_Shortcodes {
 						});
 					});
 
-				// Team
+				// Team & Invites
 				fetch(apiRoot + '/teams', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(teams => {
 						if(teams.length) {
 							window.ammActiveTeamId = teams[0].id;
 							document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role})</div>`).join('');
+
+							// Fetch Invites
+							fetch(apiRoot + '/pending-invites?team_id=' + teams[0].id, { headers: { 'X-WP-Nonce': nonce } })
+								.then(res => res.json()).then(invites => {
+									if(invites.length) {
+										document.getElementById('amm-invite-list').innerHTML = invites.map(i => `<div>${i.email} <button class="amm-secondary-btn" onclick="ammRevokeInvite(${i.id})" style="background:#ff4444; color:#fff;">Revoke</button></div>`).join('');
+									}
+								});
 						}
 					});
 
@@ -508,6 +533,20 @@ class AMM_Shortcodes {
 				});
 			});
 
+			// Handle Create Template
+			if (document.getElementById('amm-create-template-btn')) {
+				document.getElementById('amm-create-template-btn').addEventListener('click', () => {
+					fetch(apiRoot + '/create-template', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+						body: JSON.stringify({
+							title: document.getElementById('amm-new-template-title').value,
+							content: document.getElementById('amm-new-template-content').value
+						})
+					}).then(res => res.json()).then(data => { if(data.success) { alert('Template Created!'); location.reload(); } });
+				});
+			}
+
 			// Handle Branding
 			document.getElementById('amm-branding-btn').addEventListener('click', () => {
 				fetch(apiRoot + '/update-branding', {
@@ -520,6 +559,15 @@ class AMM_Shortcodes {
 					})
 				}).then(res => res.json()).then(data => { if(data.success) alert('Branding Updated!'); });
 			});
+
+			// Handle Revoke Invite
+			window.ammRevokeInvite = function(id) {
+				fetch(apiRoot + '/revoke-invite', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ id })
+				}).then(res => res.json()).then(data => { if(data.success) location.reload(); });
+			};
 
 			// Handle Invite
 			document.getElementById('amm-invite-btn').addEventListener('click', () => {
@@ -545,7 +593,8 @@ class AMM_Shortcodes {
 					body: JSON.stringify({
 						webhook_url: document.getElementById('amm-set-webhook').value,
 						default_mind: document.getElementById('amm-set-default-mind').value,
-						knowledge_base: document.getElementById('amm-set-kb').value
+						knowledge_base: document.getElementById('amm-set-kb').value,
+						usage_alerts: document.getElementById('amm-set-alerts').checked
 					})
 				}).then(res => res.json()).then(data => { if(data.success) alert('Settings Saved!'); });
 			});

@@ -27,6 +27,7 @@ class AMM_Usage_Tracker {
 	public function track_generation( $user_id ) {
 		global $wpdb;
 		$month = date( 'Y-m' );
+		$this->check_usage_alerts( $user_id );
 		$table = $wpdb->prefix . 'amm_usage';
 
 		$exists = $wpdb->get_var( $wpdb->prepare(
@@ -60,6 +61,22 @@ class AMM_Usage_Tracker {
 		);
 
 		return $limits[$plan_id] ?? 5;
+	}
+
+	/**
+	 * Check and send usage alerts
+	 */
+	private function check_usage_alerts( $user_id ) {
+		$alerts_enabled = get_user_meta( $user_id, 'amm_usage_alerts', true ) === 'yes';
+		if ( ! $alerts_enabled ) return;
+
+		$used = $this->get_current_month_usage( $user_id );
+		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+		$limit = $this->get_plan_limit( $plan_id );
+
+		if ( $used >= ( $limit * 0.9 ) && $used < $limit ) {
+			// In production: wp_mail( get_userdata($user_id)->user_email, 'AI Multi-Mind: Usage Alert', 'You have used 90% of your credits.' );
+		}
 	}
 
 	/**

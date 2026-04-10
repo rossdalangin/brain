@@ -137,6 +137,27 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_bulk_action' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Create Template Endpoint
+		register_rest_route( $namespace, '/create-template', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_create_template' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Revoke Invite Endpoint
+		register_rest_route( $namespace, '/revoke-invite', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_revoke_invite' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Pending Invites Endpoint
+		register_rest_route( $namespace, '/pending-invites', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_pending_invites' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -448,6 +469,23 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Handle invite revocation
+	 */
+	public function handle_revoke_invite( $request ) {
+		global $wpdb;
+		$params = $request->get_json_params();
+		$invite_id = (int)$params['id'];
+
+		$wpdb->update(
+			$wpdb->prefix . 'amm_invites',
+			array( 'status' => 'revoked' ),
+			array( 'id' => $invite_id )
+		);
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
 	 * Handle team invite
 	 */
 	public function handle_invite( $request ) {
@@ -485,6 +523,32 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Handle custom template creation
+	 */
+	public function handle_create_template( $request ) {
+		$user_id = get_current_user_id();
+		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+
+		if ( ! in_array( $plan_id, array( 'pro', 'agency' ) ) ) {
+			return new WP_Error( 'forbidden', 'Template creation is a PRO feature.', array( 'status' => 403 ) );
+		}
+
+		$params = $request->get_json_params();
+		$title   = sanitize_text_field( $params['title'] );
+		$content = sanitize_textarea_field( $params['content'] );
+
+		$post_id = wp_insert_post( array(
+			'post_title'   => $title,
+			'post_content' => $content,
+			'post_status'  => 'publish',
+			'post_type'    => 'ai_templates',
+			'post_author'  => $user_id,
+		));
+
+		return rest_ensure_response( array( 'success' => true, 'template_id' => $post_id ) );
+	}
+
+	/**
 	 * Handle folder creation
 	 */
 	public function handle_create_folder( $request ) {
@@ -514,6 +578,10 @@ class AMM_REST_API {
 
 		if ( isset( $params['knowledge_base'] ) ) {
 			update_user_meta( $user_id, 'amm_knowledge_base', sanitize_textarea_field( $params['knowledge_base'] ) );
+		}
+
+		if ( isset( $params['usage_alerts'] ) ) {
+			update_user_meta( $user_id, 'amm_usage_alerts', $params['usage_alerts'] ? 'yes' : 'no' );
 		}
 
 		return rest_ensure_response( array( 'success' => true ) );
@@ -567,6 +635,15 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Get pending invites for a team
+	 */
+	public function get_pending_invites( $request ) {
+		$team_id = (int)$request->get_param('team_id');
+		$team_manager = new AMM_Team_Manager();
+		return rest_ensure_response( $team_manager->get_pending_invites( $team_id ) );
+	}
+
+	/**
 	 * Get user teams
 	 */
 	public function get_teams() {
@@ -616,6 +693,7 @@ class AMM_REST_API {
 				'webhook_url' => get_user_meta( $user_id, 'amm_external_webhook_url', true ),
 				'default_mind' => get_user_meta( $user_id, 'amm_default_mind', true ) ?: 'ceo',
 				'knowledge_base' => get_user_meta( $user_id, 'amm_knowledge_base', true ),
+				'usage_alerts' => get_user_meta( $user_id, 'amm_usage_alerts', true ) === 'yes',
 			),
 			'usage'   => array(
 				'used'  => $tracker->get_current_month_usage( $user_id ),
