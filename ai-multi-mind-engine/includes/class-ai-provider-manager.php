@@ -41,6 +41,8 @@ class AMM_AI_Provider_Manager {
 	 */
 	public function generate_response( $provider, $system_prompt, $user_prompt ) {
 		switch ( $provider ) {
+			case 'free_jules':
+				return "The 'Free Jules' engine has processed your request. As a fallback expert, I suggest focusing on high-leverage activities and ensuring your unit economics are sound. (This is a mock fallback response).";
 			case 'gemini':
 				return $this->call_gemini( $system_prompt, $user_prompt );
 			case 'openai':

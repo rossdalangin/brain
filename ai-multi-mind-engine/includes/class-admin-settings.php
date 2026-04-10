@@ -60,6 +60,7 @@ class AMM_Admin_Settings {
 						<th scope="row">Default AI Provider</th>
 						<td>
 							<select name="amm_default_ai_provider">
+								<option value="free_jules" <?php selected( get_option('amm_default_ai_provider'), 'free_jules' ); ?>>Free Jules (Fallback)</option>
 								<option value="gemini" <?php selected( get_option('amm_default_ai_provider'), 'gemini' ); ?>>Gemini (Free)</option>
 								<option value="openai" <?php selected( get_option('amm_default_ai_provider'), 'openai' ); ?>>OpenAI (GPT-4)</option>
 								<option value="claude" <?php selected( get_option('amm_default_ai_provider'), 'claude' ); ?>>Anthropic Claude</option>
@@ -153,6 +154,27 @@ class AMM_Admin_Settings {
 					<span style="font-size:24px; color:#007cba;"><?php echo number_format($stats['active_subscriptions']); ?></span>
 				</div>
 			</div>
+
+			<h3>User Management & Credit Control</h3>
+			<table class="wp-list-table widefat fixed striped">
+				<thead><tr><th>User</th><th>Plan</th><th>Credits Used</th><th>Actions</th></tr></thead>
+				<tbody>
+					<?php
+					$users = get_users();
+					$tracker = new AMM_Usage_Tracker();
+					foreach($users as $u):
+						$used = $tracker->get_current_month_usage($u->ID);
+						$plan = get_user_meta($u->ID, 'amm_plan_id', true) ?: 'free';
+					?>
+						<tr>
+							<td><?php echo esc_html($u->display_name); ?></td>
+							<td><?php echo esc_html(strtoupper($plan)); ?></td>
+							<td><?php echo number_format($used); ?> / <?php echo $tracker->get_plan_limit($plan); ?></td>
+							<td><button class="button">Reset Credits</button> <button class="button">Change Plan</button></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
 
 			<h3>Mind Popularity (Total Generations)</h3>
 			<table class="wp-list-table widefat fixed striped">

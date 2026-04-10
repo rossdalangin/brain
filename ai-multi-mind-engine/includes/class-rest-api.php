@@ -130,6 +130,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_feedback' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Bulk Action Endpoint
+		register_rest_route( $namespace, '/bulk-action', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_bulk_action' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -446,6 +453,25 @@ class AMM_REST_API {
 			'success' => true,
 			'invite_url' => home_url( '/join-team/?token=' . $token )
 		));
+	}
+
+	/**
+	 * Handle bulk actions on outputs
+	 */
+	public function handle_bulk_action( $request ) {
+		$params = $request->get_json_params();
+		$ids = (array)$params['ids'];
+		$action = $params['action']; // 'delete'
+		$user_id = get_current_user_id();
+
+		foreach ( $ids as $id ) {
+			$post = get_post( $id );
+			if ( $post && (int)$post->post_author === $user_id ) {
+				if ( $action === 'delete' ) wp_delete_post( $id, true );
+			}
+		}
+
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**

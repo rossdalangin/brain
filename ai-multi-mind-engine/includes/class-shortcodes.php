@@ -42,6 +42,19 @@ class AMM_Shortcodes {
 
 		ob_start();
 		?>
+		<div id="amm-onboarding-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+			<div class="amm-form-card" style="max-width:500px; text-align:center;">
+				<h2>Welcome to AI Multi-Mind! 🚀</h2>
+				<p>Ready to access the world's most elite business minds? Here is how to get started:</p>
+				<ul style="text-align:left; margin:20px 0;">
+					<li><strong>1. Select a Mind</strong>: Choose from 30+ specialized AI personas.</li>
+					<li><strong>2. Define your Task</strong>: Use a template or write a custom request.</li>
+					<li><strong>3. Ignite</strong>: Watch the engine build your strategy in real-time.</li>
+				</ul>
+				<button onclick="closeOnboarding()" class="amm-primary-btn">Start My Journey</button>
+			</div>
+		</div>
+
 		<div id="amm-dashboard-root" class="amm-dashboard">
 			<aside class="amm-app-sidebar">
 				<div class="amm-logo">AI Multi-Mind</div>
@@ -241,6 +254,15 @@ class AMM_Shortcodes {
 				});
 			});
 
+			// Onboarding Logic
+			window.closeOnboarding = function() {
+				document.getElementById('amm-onboarding-overlay').style.display = 'none';
+				localStorage.setItem('amm_onboarded', 'yes');
+			};
+			if (!localStorage.getItem('amm_onboarded')) {
+				document.getElementById('amm-onboarding-overlay').style.display = 'flex';
+			}
+
 			// Theme Logic
 			document.getElementById('amm-theme-toggle').addEventListener('click', () => {
 				document.getElementById('amm-dashboard-root').classList.toggle('dark-mode');
@@ -323,7 +345,19 @@ class AMM_Shortcodes {
 				// Workspace
 				fetch(apiRoot + '/outputs', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(outputs => {
-						document.getElementById('amm-workspace-list').innerHTML = outputs.length ? '<table style="width:100%">' + outputs.map(o => `<tr><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') + '</table>' : 'No outputs saved.';
+						const workspaceList = document.getElementById('amm-workspace-list');
+						if (!outputs.length) {
+							workspaceList.innerHTML = 'No outputs saved.';
+							return;
+						}
+						workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
+							'<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Actions</th></tr>' +
+							outputs.map(o => `<tr><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+							'</table>';
+
+						document.getElementById('amm-select-all').addEventListener('change', (e) => {
+							document.querySelectorAll('.amm-out-check').forEach(c => c.checked = e.target.checked);
+						});
 					});
 
 				// Team
@@ -430,6 +464,18 @@ class AMM_Shortcodes {
 				win.print();
 			});
 		});
+
+			// Handle Bulk Delete
+			document.getElementById('amm-bulk-delete-btn').addEventListener('click', () => {
+				const ids = Array.from(document.querySelectorAll('.amm-out-check:checked')).map(c => c.value);
+				if(ids.length === 0 || !confirm('Delete selected?')) return;
+
+				fetch(apiRoot + '/bulk-action', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ ids, action: 'delete' })
+				}).then(res => res.json()).then(data => { if(data.success) refreshWorkspace(); });
+			});
 
 			// Handle New Folder
 			document.getElementById('amm-new-folder-btn').addEventListener('click', () => {
