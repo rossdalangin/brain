@@ -54,6 +54,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Public Share Endpoint
+		register_rest_route( $namespace, '/share', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_share' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Checkout Endpoint
 		register_rest_route( $namespace, '/checkout', array(
 			'methods'             => 'POST',
@@ -79,6 +86,13 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/update-branding', array(
 			'methods'             => 'POST',
 			'callback'            => array( $this, 'handle_branding_update' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Update User Settings Endpoint
+		register_rest_route( $namespace, '/update-settings', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_settings_update' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 	}
@@ -126,6 +140,13 @@ class AMM_REST_API {
 		$analytics->log_mind_usage( $mind_id );
 
 		// 5. Save Output (optional, but good for SaaS)
+		$webhook_manager = new AMM_Webhook_Manager();
+		$webhook_manager->push_to_webhook( $user_id, array(
+			'mind_id'     => $mind_id,
+			'output_type' => $output_type,
+			'content'     => $response
+		));
+
 		$output_id = wp_insert_post( array(
 			'post_title'   => "Output: " . ucfirst( str_replace( '_', ' ', $output_type ) ),
 			'post_content' => $response,
@@ -173,14 +194,48 @@ class AMM_REST_API {
 	}
 
 	/**
-	 * Get user's saved outputs
+	 * Handle output sharing
+	 */
+	public function handle_share( $request ) {
+		$params = $request->get_json_params();
+		$post_id = (int)$params['post_id'];
+		$user_id = get_current_user_id();
+
+		$post = get_post( $post_id );
+		if ( ! $post || (int)$post->post_author !== $user_id ) {
+			return new WP_Error( 'forbidden', 'You do not own this output.', array( 'status' => 403 ) );
+		}
+
+		$is_public = get_post_meta( $post_id, 'amm_is_public', true ) === 'yes';
+		update_post_meta( $post_id, 'amm_is_public', $is_public ? 'no' : 'yes' );
+
+		return rest_ensure_response( array(
+			'success' => true,
+			'is_public' => ! $is_public,
+			'share_url' => home_url( '/shared-intel/?id=' . $post_id )
+		));
+	}
+
+	/**
+	 * Get user's saved outputs (including team shared ones)
 	 */
 	public function get_user_outputs() {
 		$user_id = get_current_user_id();
+
+		// Get Team Member IDs
+		$team_manager = new AMM_Team_Manager();
+		$teams = $team_manager->get_user_teams( $user_id );
+		$author_ids = array( $user_id );
+
+		foreach ( $teams as $team ) {
+			$author_ids[] = $team->owner_id;
+			// Ideally, fetch all team member IDs here
+		}
+
 		$outputs = get_posts( array(
 			'post_type'      => 'ai_outputs',
-			'post_author'    => $user_id,
-			'posts_per_page' => 20,
+			'author__in'     => array_unique( $author_ids ),
+			'posts_per_page' => 50,
 		));
 
 		$data = array();
@@ -303,6 +358,24 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Handle user settings update
+	 */
+	public function handle_settings_update( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+
+		if ( isset( $params['webhook_url'] ) ) {
+			update_user_meta( $user_id, 'amm_external_webhook_url', esc_url_raw( $params['webhook_url'] ) );
+		}
+
+		if ( isset( $params['default_mind'] ) ) {
+			update_user_meta( $user_id, 'amm_default_mind', sanitize_text_field( $params['default_mind'] ) );
+		}
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
 	 * Handle branding update
 	 */
 	public function handle_branding_update( $request ) {
@@ -344,6 +417,10 @@ class AMM_REST_API {
 			'user_id' => $user_id,
 			'plan'    => get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free',
 			'status'  => get_user_meta( $user_id, 'amm_subscription_status', true ) ?: 'active',
+			'settings' => array(
+				'webhook_url' => get_user_meta( $user_id, 'amm_external_webhook_url', true ),
+				'default_mind' => get_user_meta( $user_id, 'amm_default_mind', true ) ?: 'ceo',
+			),
 			'usage'   => array(
 				'used'  => $tracker->get_current_month_usage( $user_id ),
 				'limit' => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' ),
