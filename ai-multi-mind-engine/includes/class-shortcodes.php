@@ -248,10 +248,8 @@ class AMM_Shortcodes {
 				<!-- Billing Tab -->
 				<section id="tab-billing" class="amm-tab-content">
 					<h2>Plans & Subscription</h2>
-					<div class="amm-billing-grid">
-						<div class="amm-plan-card"><h4>Starter</h4><p>$19/mo</p><button onclick="ammCheckout('starter')" class="amm-primary-btn">Select</button></div>
-						<div class="amm-plan-card featured"><h4>Pro</h4><p>$49/mo</p><button onclick="ammCheckout('pro')" class="amm-primary-btn">Select</button></div>
-						<div class="amm-plan-card"><h4>Agency</h4><p>$199/mo</p><button onclick="ammCheckout('agency')" class="amm-primary-btn">Select</button></div>
+					<div id="amm-plans-grid" class="amm-billing-grid">
+						Loading plans...
 					</div>
 
 						<div id="amm-portal-container" style="display:none; margin-top:20px; text-align:center;">
@@ -372,6 +370,7 @@ class AMM_Shortcodes {
 				function renderMindGrid(minds) {
 					document.getElementById('amm-marketplace-grid').innerHTML = minds.map(m => `
 						<div class="amm-plan-card ${m.premium ? 'premium' : ''}">
+							<div style="font-size:32px; margin-bottom:10px;">🧠</div>
 							<strong>${m.name}</strong>
 							<p style="font-size:10px; color:#888;">${m.category || 'Core'}</p>
 							<p>${m.premium ? 'Premium Mind' : 'Core Mind'}</p>
@@ -420,6 +419,19 @@ class AMM_Shortcodes {
 									}
 								});
 						}
+					});
+
+				// Plans
+				fetch(apiRoot + '/plans', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(plans => {
+						document.getElementById('amm-plans-grid').innerHTML = plans.map(p => `
+							<div class="amm-plan-card ${p.featured ? 'featured' : ''}">
+								<h4>${p.name}</h4>
+								<p>${p.price}/mo</p>
+								<p style="font-size:12px; color:#888;">${p.credits} Credits / mo</p>
+								<button onclick="ammCheckout('${p.id}')" class="amm-primary-btn">Select</button>
+							</div>
+						`).join('');
 					});
 
 				// Billing History

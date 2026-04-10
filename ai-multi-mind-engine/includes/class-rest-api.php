@@ -179,6 +179,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_billing_portal' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Pricing Plans Endpoint
+		register_rest_route( $namespace, '/plans', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_pricing_plans' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -420,6 +427,18 @@ class AMM_REST_API {
 		$url = $stripe->create_portal_session( $user_id );
 
 		return rest_ensure_response( array( 'url' => $url ) );
+	}
+
+	/**
+	 * Get pricing plans for the dashboard
+	 */
+	public function get_pricing_plans() {
+		$tracker = new AMM_Usage_Tracker();
+		return rest_ensure_response( array(
+			array( 'id' => 'starter', 'name' => 'Starter', 'price' => '$19', 'credits' => $tracker->get_plan_limit('starter') ),
+			array( 'id' => 'pro', 'name' => 'Pro', 'price' => '$49', 'credits' => $tracker->get_plan_limit('pro'), 'featured' => true ),
+			array( 'id' => 'agency', 'name' => 'Agency', 'price' => '$199', 'credits' => $tracker->get_plan_limit('agency') ),
+		));
 	}
 
 	/**

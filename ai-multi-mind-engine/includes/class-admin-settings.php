@@ -181,6 +181,26 @@ class AMM_Admin_Settings {
 				</tbody>
 			</table>
 
+			<h3>Affiliate Network Management</h3>
+			<table class="wp-list-table widefat fixed striped">
+				<thead><tr><th>Affiliate User</th><th>Code</th><th>Total Commissions</th><th>Referral Count</th></tr></thead>
+				<tbody>
+					<?php
+					global $wpdb;
+					$affiliates = $wpdb->get_results( "SELECT a.*, u.display_name FROM {$wpdb->prefix}amm_affiliates a JOIN wp_users u ON a.user_id = u.ID" );
+					foreach($affiliates as $a):
+						$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}amm_referrals WHERE affiliate_id = %d", $a->id ) );
+					?>
+						<tr>
+							<td><?php echo esc_html($a->display_name); ?></td>
+							<td><code><?php echo esc_html($a->affiliate_code); ?></code></td>
+							<td>$<?php echo number_format($a->total_commissions, 2); ?></td>
+							<td><?php echo (int)$count; ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+
 			<h3>Mind Popularity (Total Generations)</h3>
 			<table class="wp-list-table widefat fixed striped">
 				<thead><tr><th>Mind ID</th><th>Usage Count</th></tr></thead>
