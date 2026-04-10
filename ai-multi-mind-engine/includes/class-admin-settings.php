@@ -105,6 +105,11 @@ class AMM_Admin_Settings {
 						<th scope="row">Stripe Agency Price ID</th>
 						<td><input type="text" name="amm_stripe_price_agency" value="<?php echo esc_attr( get_option('amm_stripe_price_agency') ); ?>" class="regular-text" /></td>
 					</tr>
+					<tr valign="top">
+						<th scope="row">Global System Context</th>
+						<td><textarea name="amm_global_system_context" class="large-text" rows="5"><?php echo esc_textarea( get_option('amm_global_system_context') ); ?></textarea>
+						<p class="description">This ruleset will be applied to ALL AI Minds site-wide.</p></td>
+					</tr>
 				</table>
 				<?php submit_button(); ?>
 			</form>

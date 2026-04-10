@@ -39,16 +39,16 @@ class AMM_AI_Provider_Manager {
 	/**
 	 * Call the selected AI provider
 	 */
-	public function generate_response( $provider, $system_prompt, $user_prompt ) {
+	public function generate_response( $provider, $system_prompt, $user_prompt, $history = array() ) {
 		switch ( $provider ) {
 			case 'free_jules':
 				return "The 'Free Jules' engine has processed your request. As a fallback expert, I suggest focusing on high-leverage activities and ensuring your unit economics are sound. (This is a mock fallback response).";
 			case 'gemini':
-				return $this->call_gemini( $system_prompt, $user_prompt );
+				return $this->call_gemini( $system_prompt, $user_prompt, $history );
 			case 'openai':
-				return $this->call_openai( $system_prompt, $user_prompt );
+				return $this->call_openai( $system_prompt, $user_prompt, $history );
 			case 'claude':
-				return $this->call_claude( $system_prompt, $user_prompt );
+				return $this->call_claude( $system_prompt, $user_prompt, $history );
 			default:
 				return new WP_Error( 'invalid_provider', 'Selected AI provider is not supported.' );
 		}
@@ -120,18 +120,21 @@ class AMM_AI_Provider_Manager {
 	/**
 	 * Call OpenAI API
 	 */
-	private function call_openai( $system_prompt, $user_prompt ) {
+	private function call_openai( $system_prompt, $user_prompt, $history = array() ) {
 		$api_key = $this->api_keys['openai'];
 		if ( ! $api_key ) return new WP_Error( 'missing_key', 'OpenAI API key missing.' );
 
 		$url = "https://api.openai.com/v1/chat/completions";
 
+		$messages = array( array( 'role' => 'system', 'content' => $system_prompt ) );
+		foreach ( $history as $h ) {
+			$messages[] = array( 'role' => $h['role'], 'content' => $h['content'] );
+		}
+		$messages[] = array( 'role' => 'user', 'content' => $user_prompt );
+
 		$body = array(
 			'model' => 'gpt-4-turbo',
-			'messages' => array(
-				array( 'role' => 'system', 'content' => $system_prompt ),
-				array( 'role' => 'user', 'content' => $user_prompt ),
-			)
+			'messages' => $messages
 		);
 
 		$response = wp_remote_post( $url, array(

@@ -185,6 +185,7 @@ class AMM_REST_API {
 		$output_type = $params['output_type'] ?? 'business_plan';
 		$user_input  = $params['user_input'] ?? '';
 		$language    = $params['language'] ?? 'English';
+		$history     = $params['history'] ?? array();
 		$provider    = get_option( 'amm_default_ai_provider', 'gemini' );
 
 		// 0. Plan Access Check for Mind
@@ -220,7 +221,7 @@ class AMM_REST_API {
 
 		// 3. Call AI Provider
 		$ai_manager = new AMM_AI_Provider_Manager();
-		$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'] );
+		$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'], $history );
 
 		if ( is_wp_error( $response ) ) return $response;
 
@@ -381,10 +382,14 @@ class AMM_REST_API {
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
 		foreach ( $cpt_minds as $mind ) {
+			$is_premium = get_post_meta( $mind->ID, 'amm_is_premium', true ) === 'yes';
+			$has_access = $this->user_can_access_mind( $user_id, $mind->post_name );
+
 			$core_minds[] = array(
 				'id' => $mind->post_name,
 				'name' => $mind->post_title . ' (Custom)',
-				'premium' => get_post_meta( $mind->ID, 'amm_is_premium', true ) === 'yes',
+				'premium' => $is_premium,
+				'purchased' => $has_access,
 				'category' => wp_get_post_terms( $mind->ID, 'amm_mind_category', array( 'fields' => 'names' ) )[0] ?? 'Custom'
 			);
 		}

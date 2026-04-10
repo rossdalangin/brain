@@ -352,8 +352,8 @@ class AMM_Shortcodes {
 							<strong>${m.name}</strong>
 							<p style="font-size:10px; color:#888;">${m.category || 'Core'}</p>
 							<p>${m.premium ? 'Premium Mind' : 'Core Mind'}</p>
-							<button class="amm-secondary-btn" onclick="document.getElementById('amm-mind-select').value='${m.id}'; document.querySelector('[data-tab=generate]').click();">Use Mind</button>
-							${m.premium ? '<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout(\'pro\')">Upgrade to Unlock</button>' : ''}
+							<button class="amm-secondary-btn" onclick="document.getElementById('amm-mind-select').value='${m.id}'; document.querySelector('[data-tab=generate]').click();" ${m.premium && !m.purchased ? 'disabled' : ''}>Use Mind</button>
+							${m.premium && !m.purchased ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout('mind_${m.id}')">Unlock for $49</button>` : ''}
 						</div>
 					`).join('');
 				}
@@ -424,8 +424,10 @@ class AMM_Shortcodes {
 			// Generate Logic (Typewriter Effect)
 			const btn = document.getElementById('amm-generate-btn');
 			const outputBox = document.getElementById('amm-output');
+			window.ammChatHistory = [];
 
 			btn.addEventListener('click', () => {
+				const userInput = document.getElementById('amm-input').value;
 				btn.disabled = true;
 				outputBox.innerText = "The mind is thinking...";
 
@@ -435,8 +437,9 @@ class AMM_Shortcodes {
 					body: JSON.stringify({
 						mind_id: document.getElementById('amm-mind-select').value,
 						output_type: document.getElementById('amm-type-select').value,
-						user_input: document.getElementById('amm-input').value,
-						language: document.getElementById('amm-language-select').value
+						user_input: userInput,
+						language: document.getElementById('amm-language-select').value,
+						history: window.ammChatHistory
 					})
 				})
 				.then(res => res.json())
@@ -452,6 +455,8 @@ class AMM_Shortcodes {
 								clearInterval(interval);
 								btn.disabled = false;
 								document.getElementById('amm-export-btn').style.display = 'block';
+								window.ammChatHistory.push({ role: 'user', content: userInput });
+								window.ammChatHistory.push({ role: 'assistant', content: text });
 							}
 						}, 5);
 					} else {
