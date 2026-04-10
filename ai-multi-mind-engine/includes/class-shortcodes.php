@@ -21,307 +21,263 @@ class AMM_Shortcodes {
 		ob_start();
 		?>
 		<div id="amm-dashboard-root" class="amm-dashboard">
-			<header class="amm-header">
-				<h2>AI Multi-Mind SaaS Engine</h2>
-				<div style="display:flex; align-items:center; gap:15px;">
-					<button id="amm-theme-toggle" class="button">🌓 Toggle Mode</button>
-					<div id="amm-user-stats">Loading stats...</div>
+			<aside class="amm-app-sidebar">
+				<div class="amm-logo">AI Multi-Mind</div>
+				<nav class="amm-nav">
+					<a href="#" class="amm-nav-item active" data-tab="generate">🚀 Ignite Mind</a>
+					<a href="#" class="amm-nav-item" data-tab="library">📚 Minds Library</a>
+					<a href="#" class="amm-nav-item" data-tab="workspace">📁 My Workspace</a>
+					<a href="#" class="amm-nav-item" data-tab="team">👥 Team Hub</a>
+					<a href="#" class="amm-nav-item" data-tab="affiliate">💸 Affiliates</a>
+					<a href="#" class="amm-nav-item" data-tab="billing">💳 Billing</a>
+				</nav>
+				<div class="amm-user-block">
+					<div id="amm-user-stats-sidebar">Loading stats...</div>
+					<button id="amm-theme-toggle" class="amm-theme-btn">🌓 Toggle Mode</button>
 				</div>
-			</header>
+			</aside>
 
-			<div class="amm-grid">
-				<aside class="amm-sidebar">
-					<h3>Select Mind</h3>
-					<select id="amm-mind-select">
-						<option value="">Loading minds...</option>
-					</select>
-
-					<h3>Output Type</h3>
-					<select id="amm-type-select">
-						<option value="business_plan">Business Plan</option>
-						<option value="marketing_plan">Marketing Plan</option>
-						<option value="sales_script">Sales Script</option>
-						<option value="sop">SOP</option>
-						<option value="report">Business Report</option>
-						<option value="blog_post">Blog Post</option>
-						<option value="ad_copy">Ad Copy</option>
-						<option value="video_script">Video Script</option>
-					</select>
-				</aside>
-
-				<main class="amm-main">
-					<textarea id="amm-input" placeholder="Enter your request or context here..."></textarea>
-					<button id="amm-generate-btn" class="button button-primary">IGNITE MIND</button>
-
-					<div id="amm-output-container">
-						<div style="display:flex; justify-content:space-between; align-items:center;">
-							<h3>Output</h3>
-							<button id="amm-export-btn" class="button" style="display:none;">📄 Export to PDF</button>
+			<main class="amm-app-content">
+				<!-- Generate Tab -->
+				<section id="tab-generate" class="amm-tab-content active">
+					<header class="amm-tab-header">
+						<h2>Generate Elite Strategy</h2>
+						<p>Select a mind and an output type to begin the thinking process.</p>
+					</header>
+					<div class="amm-generate-layout">
+						<div class="amm-controls">
+							<label>Select Mind</label>
+							<select id="amm-mind-select"><option value="">Loading minds...</option></select>
+							<label>Output Type</label>
+							<select id="amm-type-select">
+								<option value="business_plan">Business Plan</option>
+								<option value="marketing_plan">Marketing Plan</option>
+								<option value="sales_script">Sales Script</option>
+								<option value="sop">SOP</option>
+								<option value="report">Business Report</option>
+								<option value="blog_post">Blog Post</option>
+								<option value="ad_copy">Ad Copy</option>
+								<option value="video_script">Video Script</option>
+							</select>
+							<label>Task Template</label>
+							<select id="amm-template-select">
+								<option value="">Custom Request...</option>
+								<option value="Create a $100M Grand Slam Offer for my service.">Grand Slam Offer ($100M)</option>
+								<option value="Design a Blue Ocean strategy to dominate my local market.">Blue Ocean Strategy</option>
+								<option value="Write an SOP for hiring and onboarding a new sales rep.">Sales Onboarding SOP</option>
+								<option value="Draft a high-ticket sales script for a $5k coaching program.">High-Ticket Sales Script</option>
+							</select>
+							<textarea id="amm-input" placeholder="Enter your context, goals, and constraints here..."></textarea>
+							<button id="amm-generate-btn" class="amm-primary-btn">IGNITE ENGINE</button>
 						</div>
-						<div id="amm-output" class="amm-output-box">
-							Your AI-generated business output will appear here...
-						</div>
-					</div>
-
-					<div id="amm-workspace-container" style="margin-top: 40px;">
-						<h3>My Workspace (Saved Outputs)</h3>
-						<div id="amm-workspace-list" class="amm-workspace-box">
-							Loading saved outputs...
-						</div>
-					</div>
-
-					<div id="amm-team-container" style="margin-top: 40px; display:none;">
-						<h3>My Team</h3>
-						<div id="amm-team-list" class="amm-team-box">
-							Loading team members...
-						</div>
-					</div>
-
-					<div id="amm-affiliate-container" style="margin-top: 40px;">
-						<h3>Affiliate Program</h3>
-						<div id="amm-affiliate-info" class="amm-workspace-box">
-							Loading affiliate info...
-						</div>
-					</div>
-
-					<div id="amm-builder-container" style="margin-top: 40px; display:none;">
-						<h3>Custom AI Mind Builder (PRO)</h3>
-						<div class="amm-workspace-box">
-							<input type="text" id="amm-new-mind-name" placeholder="Mind Name" style="width:100%; margin-bottom:10px;">
-							<input type="text" id="amm-new-mind-role" placeholder="Role (e.g. Sales Expert)" style="width:100%; margin-bottom:10px;">
-							<textarea id="amm-new-mind-prompt" placeholder="Hidden Prompt Engineering Layer..." style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-							<button id="amm-create-mind-btn" class="button button-primary">Create Elite Mind</button>
-						</div>
-					</div>
-
-					<div id="amm-marketplace-container" style="margin-top: 40px;">
-						<h3>Premium Mind Marketplace</h3>
-						<div id="amm-marketplace-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:15px;">
-							Loading marketplace...
-						</div>
-					</div>
-
-					<div id="amm-billing-container" style="margin-top: 40px;">
-						<h3>Upgrade Your Plan</h3>
-						<div class="amm-billing-grid" style="display:flex; gap:10px;">
-							<div class="amm-plan-card" style="border:1px solid #ddd; padding:15px; flex:1;">
-								<h4>Starter</h4>
-								<p>$19/mo</p>
-								<button onclick="ammCheckout('starter')">Select</button>
+						<div class="amm-output-container">
+							<div class="amm-output-header">
+								<h3>Generated Intelligence</h3>
+								<button id="amm-export-btn" class="amm-secondary-btn" style="display:none;">📄 Export PDF</button>
 							</div>
-							<div class="amm-plan-card" style="border:1px solid #ddd; padding:15px; flex:1; border-color:#007cba;">
-								<h4>Pro</h4>
-								<p>$49/mo</p>
-								<button onclick="ammCheckout('pro')">Select</button>
-							</div>
-							<div class="amm-plan-card" style="border:1px solid #ddd; padding:15px; flex:1;">
-								<h4>Agency</h4>
-								<p>$199/mo</p>
-								<button onclick="ammCheckout('agency')">Select</button>
-							</div>
+							<div id="amm-output" class="amm-output-box">The engine is waiting for your request...</div>
 						</div>
 					</div>
-				</main>
-			</div>
+				</section>
+
+				<!-- Library Tab -->
+				<section id="tab-library" class="amm-tab-content">
+					<h2>AI Minds Library</h2>
+					<div id="amm-marketplace-grid" class="amm-grid-layout">Loading library...</div>
+
+					<div id="amm-builder-container" style="display:none; margin-top:40px;">
+						<h3>Custom Mind Builder (PRO)</h3>
+						<div class="amm-form-card">
+							<input type="text" id="amm-new-mind-name" placeholder="Mind Name (e.g. Real Estate Guru)">
+							<input type="text" id="amm-new-mind-role" placeholder="Role Description">
+							<textarea id="amm-new-mind-prompt" placeholder="Hidden Prompt Engineering Layer (The 'Brain' of the mind)"></textarea>
+							<button id="amm-create-mind-btn" class="amm-primary-btn">Create Custom Mind</button>
+						</div>
+					</div>
+				</section>
+
+				<!-- Workspace Tab -->
+				<section id="tab-workspace" class="amm-tab-content">
+					<h2>My Workspace</h2>
+					<div id="amm-workspace-list" class="amm-form-card">Loading saved outputs...</div>
+				</section>
+
+				<!-- Team Tab -->
+				<section id="tab-team" class="amm-tab-content">
+					<h2>Team Collaboration Hub</h2>
+					<div id="amm-team-list" class="amm-form-card">No team members found.</div>
+				</section>
+
+				<!-- Affiliate Tab -->
+				<section id="tab-affiliate" class="amm-tab-content">
+					<h2>Affiliate Program</h2>
+					<div id="amm-affiliate-info" class="amm-form-card">Loading your data...</div>
+				</section>
+
+				<!-- Billing Tab -->
+				<section id="tab-billing" class="amm-tab-content">
+					<h2>Plans & Subscription</h2>
+					<div class="amm-billing-grid">
+						<div class="amm-plan-card"><h4>Starter</h4><p>$19/mo</p><button onclick="ammCheckout('starter')" class="amm-primary-btn">Select</button></div>
+						<div class="amm-plan-card featured"><h4>Pro</h4><p>$49/mo</p><button onclick="ammCheckout('pro')" class="amm-primary-btn">Select</button></div>
+						<div class="amm-plan-card"><h4>Agency</h4><p>$199/mo</p><button onclick="ammCheckout('agency')" class="amm-primary-btn">Select</button></div>
+					</div>
+				</section>
+			</main>
 		</div>
 
 		<script>
 		document.addEventListener('DOMContentLoaded', function() {
-			const btn = document.getElementById('amm-generate-btn');
-			const themeToggle = document.getElementById('amm-theme-toggle');
-			const dashboard = document.getElementById('amm-dashboard-root');
-
-			themeToggle.addEventListener('click', () => {
-				dashboard.classList.toggle('dark-mode');
-			});
-			const output = document.getElementById('amm-output');
-			const stats = document.getElementById('amm-user-stats');
 			const apiRoot = '<?php echo esc_url_raw( rest_url( 'amm/v1' ) ); ?>';
+			const nonce = '<?php echo wp_create_nonce("wp_rest"); ?>';
 
-			// Fetch User Stats
-			fetch(apiRoot + '/user', {
-				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
-			})
-			.then(res => res.json())
-			.then(data => {
-				stats.innerHTML = `Plan: ${data.plan} | Usage: ${data.usage.used}/${data.usage.limit} credits`;
-				if (data.plan === 'pro' || data.plan === 'agency') {
-					document.getElementById('amm-builder-container').style.display = 'block';
-				}
-			});
-
-			// Fetch Minds Library & Marketplace
-			const mindSelect = document.getElementById('amm-mind-select');
-			const marketplaceGrid = document.getElementById('amm-marketplace-grid');
-			fetch(apiRoot + '/minds', {
-				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
-			})
-			.then(res => res.json())
-			.then(minds => {
-				mindSelect.innerHTML = minds.map(m => `<option value="${m.id}">${m.name}${m.premium ? ' (Premium)' : ''}</option>`).join('');
-
-				marketplaceGrid.innerHTML = minds.filter(m => m.premium).map(m => `
-					<div class="amm-plan-card" style="border:1px solid gold; padding:10px; text-align:center;">
-						<strong>${m.name}</strong>
-						<button class="button" onclick="alert('Access this mind with a PRO plan!')">Unlock</button>
-					</div>
-				`).join('') || 'No premium minds currently listed.';
-			});
-
-			// Fetch Workspace
-			const workspaceList = document.getElementById('amm-workspace-list');
-			function refreshWorkspace() {
-				fetch(apiRoot + '/outputs', {
-					headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
-				})
-				.then(res => res.json())
-				.then(outputs => {
-					if (outputs.length === 0) {
-						workspaceList.innerHTML = 'No saved outputs yet.';
-						return;
-					}
-					workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
-						'<tr><th>Date</th><th>Title</th><th>Actions</th></tr>' +
-						outputs.map(o => `<tr><td>${o.date}</td><td>${o.title}</td><td><button onclick="alert(\`Content: \\n\\n\` + ${JSON.stringify(o.content)})">View</button></td></tr>`).join('') +
-						'</table>';
+			// Tab Logic
+			document.querySelectorAll('.amm-nav-item').forEach(item => {
+				item.addEventListener('click', (e) => {
+					e.preventDefault();
+					document.querySelectorAll('.amm-nav-item').forEach(i => i.classList.remove('active'));
+					document.querySelectorAll('.amm-tab-content').forEach(c => c.classList.remove('active'));
+					item.classList.add('active');
+					document.getElementById('tab-' + item.dataset.tab).classList.add('active');
 				});
+			});
+
+			// Theme Logic
+			document.getElementById('amm-theme-toggle').addEventListener('click', () => {
+				document.getElementById('amm-dashboard-root').classList.toggle('dark-mode');
+			});
+
+			// Template Logic
+			document.getElementById('amm-template-select').addEventListener('change', (e) => {
+				if(e.target.value) document.getElementById('amm-input').value = e.target.value;
+			});
+
+			// Fetch Data
+			function initApp() {
+				// User Stats
+				fetch(apiRoot + '/user', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(data => {
+						document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${data.usage.used}/${data.usage.limit} credits`;
+						if (data.plan === 'pro' || data.plan === 'agency') document.getElementById('amm-builder-container').style.display = 'block';
+					});
+
+				// Minds
+				fetch(apiRoot + '/minds', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(minds => {
+						document.getElementById('amm-mind-select').innerHTML = minds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+						document.getElementById('amm-marketplace-grid').innerHTML = minds.map(m => `
+							<div class="amm-plan-card ${m.premium ? 'premium' : ''}">
+								<strong>${m.name}</strong>
+								<p>${m.premium ? 'Premium Mind' : 'Core Mind'}</p>
+								<button class="amm-secondary-btn" onclick="document.getElementById('amm-mind-select').value='${m.id}'; document.querySelector('[data-tab=generate]').click();">Use Mind</button>
+							</div>
+						`).join('');
+					});
+
+				// Workspace
+				fetch(apiRoot + '/outputs', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(outputs => {
+						document.getElementById('amm-workspace-list').innerHTML = outputs.length ? '<table style="width:100%">' + outputs.map(o => `<tr><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button></td></tr>`).join('') + '</table>' : 'No outputs saved.';
+					});
+
+				// Team
+				fetch(apiRoot + '/teams', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(teams => {
+						if(teams.length) document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role})</div>`).join('');
+					});
+
+				// Affiliate
+				fetch(apiRoot + '/affiliate', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(data => {
+						document.getElementById('amm-affiliate-info').innerHTML = `<p>Referral Link: <code>${data.link}</code></p><p>Earnings: $${data.commissions}</p>`;
+					});
 			}
-			refreshWorkspace();
+			initApp();
 
-			// Fetch Team
-			const teamContainer = document.getElementById('amm-team-container');
-			const teamList = document.getElementById('amm-team-list');
-			fetch(apiRoot + '/teams', {
-				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
-			})
-			.then(res => res.json())
-			.then(teams => {
-				if (teams && teams.length > 0) {
-					teamContainer.style.display = 'block';
-					teamList.innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (Role: ${t.role})</div>`).join('');
-				}
-			});
+			// Generate Logic (Typewriter Effect)
+			const btn = document.getElementById('amm-generate-btn');
+			const outputBox = document.getElementById('amm-output');
 
-			// Fetch Affiliate Info
-			const affInfo = document.getElementById('amm-affiliate-info');
-			fetch(apiRoot + '/affiliate', {
-				headers: { 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' }
-			})
-			.then(res => res.json())
-			.then(data => {
-				affInfo.innerHTML = `
-					<p><strong>Your Affiliate Code:</strong> ${data.code}</p>
-					<p><strong>Referral Link:</strong> <input type="text" value="${data.link}" readonly style="width:100%;"></p>
-					<p><strong>Total Commissions:</strong> $${data.commissions}</p>
-				`;
-			});
-
-			// Handle Checkout
-			window.ammCheckout = function(planId) {
-				fetch(apiRoot + '/checkout', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
-					},
-					body: JSON.stringify({ plan_id: planId, gateway: 'stripe' })
-				})
-				.then(res => res.json())
-				.then(data => {
-					if (data.url) {
-						window.location.href = data.url;
-					} else {
-						alert('Checkout error: ' + (data.message || 'Unknown error'));
-					}
-				});
-			};
-
-			// Handle Create Mind
-			document.getElementById('amm-create-mind-btn').addEventListener('click', function() {
-				const name = document.getElementById('amm-new-mind-name').value;
-				const role = document.getElementById('amm-new-mind-role').value;
-				const prompt = document.getElementById('amm-new-mind-prompt').value;
-
-				fetch(apiRoot + '/create-mind', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
-					},
-					body: JSON.stringify({ name, role, prompt, framework: 'Custom', style: 'Custom', structure: 'Custom' })
-				})
-				.then(res => res.json())
-				.then(data => {
-					if (data.success) {
-						alert('Mind Created Successfully!');
-						location.reload();
-					} else {
-						alert('Error: ' + data.message);
-					}
-				});
-			});
-
-			// Handle Export
-			document.getElementById('amm-export-btn').addEventListener('click', function() {
-				const content = output.innerText;
-				const win = window.open('', '_blank');
-				win.document.write(`<html><head><title>AI Output</title><style>body{font-family:serif; line-height:1.6; padding:40px; max-width:800px; margin:auto; white-space:pre-wrap;}</style></head><body><h1>AI Multi-Mind Export</h1><hr/>${content}</body></html>`);
-				win.document.close();
-				win.print();
-			});
-
-			// Handle Generation
-			btn.addEventListener('click', function() {
-				const mindId = document.getElementById('amm-mind-select').value;
-				const outputType = document.getElementById('amm-type-select').value;
-				const userInput = document.getElementById('amm-input').value;
-
+			btn.addEventListener('click', () => {
 				btn.disabled = true;
-				output.innerHTML = 'Thinking...';
+				outputBox.innerText = "The mind is thinking...";
 
 				fetch(apiRoot + '/generate', {
 					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
-					},
-					body: JSON.stringify({
-						mind_id: mindId,
-						output_type: outputType,
-						user_input: userInput
-					})
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ mind_id: document.getElementById('amm-mind-select').value, output_type: document.getElementById('amm-type-select').value, user_input: document.getElementById('amm-input').value })
 				})
 				.then(res => res.json())
 				.then(data => {
-					if (data.success) {
-						output.innerHTML = data.content;
-						document.getElementById('amm-export-btn').style.display = 'block';
-						stats.innerHTML = `Plan: ${data.plan || '...'} | Usage: ${data.usage}/${data.limit || '...'} credits`;
-						refreshWorkspace();
+					if(data.success) {
+						outputBox.innerText = "";
+						let i = 0;
+						const text = data.content;
+						const interval = setInterval(() => {
+							outputBox.innerText += text[i];
+							i++;
+							if(i >= text.length) {
+								clearInterval(interval);
+								btn.disabled = false;
+								document.getElementById('amm-export-btn').style.display = 'block';
+							}
+						}, 5);
 					} else {
-						output.innerHTML = 'Error: ' + data.message;
+						outputBox.innerText = "Error: " + data.message;
+						btn.disabled = false;
 					}
-				})
-				.finally(() => {
-					btn.disabled = false;
 				});
 			});
+
+			// Export PDF
+			document.getElementById('amm-export-btn').addEventListener('click', () => {
+				const win = window.open('', '_blank');
+				win.document.write(`<html><body style="font-family:sans-serif; padding:50px;"><h1>AI Multi-Mind Output</h1><hr>${outputBox.innerText}</body></html>`);
+				win.print();
+			});
 		});
+
+		window.ammCheckout = function(planId) {
+			fetch('<?php echo esc_url_raw( rest_url( 'amm/v1' ) ); ?>/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>' },
+				body: JSON.stringify({ plan_id: planId, gateway: 'stripe' })
+			}).then(res => res.json()).then(data => { if(data.url) window.location.href = data.url; });
+		};
 		</script>
 
 		<style>
-		.amm-dashboard { font-family: sans-serif; max-width: 1000px; margin: 20px auto; background: #f9f9f9; color: #333; padding: 20px; border-radius: 8px; transition: all 0.3s; }
-		.amm-dashboard.dark-mode { background: #1a1a1a; color: #f1f1f1; }
-		.amm-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; margin-bottom: 20px; }
-		.dark-mode .amm-header { border-bottom-color: #333; }
-		.amm-grid { display: grid; grid-template-columns: 250px 1fr; gap: 20px; }
-		.amm-sidebar select { width: 100%; margin-bottom: 20px; }
-		.amm-main textarea { width: 100%; height: 150px; margin-bottom: 10px; padding: 10px; }
-		.amm-output-box { background: #fff; border: 1px solid #ddd; padding: 15px; min-height: 200px; white-space: pre-wrap; }
-		.dark-mode .amm-output-box { background: #2d2d2d; border-color: #444; color: #eee; }
-		.amm-generate-btn { background: #007cba; color: #fff; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
-		.amm-plan-card { background: #fff; }
-		.dark-mode .amm-plan-card { background: #2d2d2d; color: #eee; }
+		.amm-dashboard { display: grid; grid-template-columns: 260px 1fr; min-height: 800px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; background: #fff; color: #333; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+		.amm-app-sidebar { background: #f8f9fa; border-right: 1px solid #eee; padding: 30px 20px; display: flex; flex-direction: column; }
+		.amm-logo { font-size: 20px; font-weight: 800; color: #007cba; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
+		.amm-nav { flex-grow: 1; }
+		.amm-nav-item { display: block; padding: 12px 15px; color: #555; text-decoration: none; border-radius: 8px; margin-bottom: 5px; font-weight: 500; transition: 0.2s; }
+		.amm-nav-item:hover, .amm-nav-item.active { background: #007cba; color: #fff; }
+		.amm-app-content { padding: 40px; overflow-y: auto; background: #fff; }
+		.amm-tab-content { display: none; }
+		.amm-tab-content.active { display: block; }
+		.amm-generate-layout { display: grid; grid-template-columns: 350px 1fr; gap: 30px; margin-top: 30px; }
+		.amm-controls label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #888; }
+		.amm-controls select, .amm-controls textarea { width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+		.amm-controls textarea { height: 180px; }
+		.amm-primary-btn { width: 100%; background: #007cba; color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+		.amm-secondary-btn { background: #eee; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+		.amm-output-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; padding: 25px; min-height: 400px; white-space: pre-wrap; line-height: 1.6; }
+		.amm-grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+		.amm-plan-card { border: 1px solid #eee; padding: 20px; border-radius: 12px; text-align: center; background: #fff; }
+		.amm-plan-card.premium { border-color: gold; box-shadow: 0 5px 15px rgba(255,215,0,0.1); }
+		.amm-plan-card.featured { border: 2px solid #007cba; transform: scale(1.05); }
+		.amm-form-card { background: #f9f9f9; padding: 25px; border-radius: 12px; border: 1px solid #eee; }
+		.amm-user-block { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; }
+		.amm-theme-btn { margin-top: 15px; width: 100%; background: none; border: 1px solid #ddd; border-radius: 6px; padding: 8px; cursor: pointer; }
+
+		/* Dark Mode */
+		.dark-mode { background: #111; color: #eee; }
+		.dark-mode .amm-app-sidebar { background: #1a1a1a; border-right-color: #333; }
+		.dark-mode .amm-app-content { background: #111; }
+		.dark-mode .amm-nav-item { color: #aaa; }
+		.dark-mode .amm-output-box, .dark-mode .amm-form-card, .dark-mode .amm-plan-card { background: #1a1a1a; border-color: #333; color: #eee; }
+		.dark-mode .amm-controls select, .dark-mode .amm-controls textarea { background: #222; border-color: #444; color: #eee; }
 		</style>
 		<?php
 		return ob_get_clean();

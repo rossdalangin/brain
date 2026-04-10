@@ -124,6 +124,33 @@ class AMM_Admin_Settings {
 					</tr>
 				</tbody>
 			</table>
+
+			<hr>
+			<h2>SaaS Analytics & Insights</h2>
+			<?php
+			$analytics = new AMM_Analytics_Manager();
+			$stats = $analytics->get_stats();
+			?>
+			<div style="display:flex; gap:20px; margin-top:20px;">
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1;">
+					<strong>Total Credits Used</strong><br>
+					<span style="font-size:24px; color:#007cba;"><?php echo number_format($stats['total_credits_used']); ?></span>
+				</div>
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1;">
+					<strong>Active Subscriptions</strong><br>
+					<span style="font-size:24px; color:#007cba;"><?php echo number_format($stats['active_subscriptions']); ?></span>
+				</div>
+			</div>
+
+			<h3>Mind Popularity (Total Generations)</h3>
+			<table class="wp-list-table widefat fixed striped">
+				<thead><tr><th>Mind ID</th><th>Usage Count</th></tr></thead>
+				<tbody>
+					<?php foreach($stats['mind_popularity'] as $mind => $count): ?>
+						<tr><td><?php echo esc_html($mind); ?></td><td><?php echo number_format($count); ?></td></tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
 		</div>
 		<?php
 	}
