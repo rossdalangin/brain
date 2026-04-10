@@ -186,6 +186,20 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_pricing_plans' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Get Folders Endpoint
+		register_rest_route( $namespace, '/folders', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_folders' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Remove Member Endpoint
+		register_rest_route( $namespace, '/remove-member', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_remove_member' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -232,6 +246,16 @@ class AMM_REST_API {
 
 		// 2. Prepare Prompts
 		$prompt_engine = new AMM_Prompt_Engine();
+
+		// BFF Context Awareness
+		if ( $mind_id === 'magic_bff' ) {
+			$recent = get_posts( array( 'post_type' => 'ai_outputs', 'author' => $user_id, 'posts_per_page' => 3 ) );
+			if ( $recent ) {
+				$titles = array_map( function($p) { return $p->post_title; }, $recent );
+				$user_input = "RECENT TOPICS WE DISCUSSED:\n" . implode(', ', $titles) . "\n\nCURRENT REQUEST:\n" . $user_input;
+			}
+		}
+
 		$kb_context = get_user_meta( $user_id, 'amm_knowledge_base', true );
 		if ( $kb_context ) {
 			$user_input = "CONTEXT ABOUT MY BUSINESS:\n{$kb_context}\n\nUSER REQUEST:\n{$user_input}";
@@ -341,7 +365,10 @@ class AMM_REST_API {
 
 		foreach ( $teams as $team ) {
 			$author_ids[] = $team->owner_id;
-			// Ideally, fetch all team member IDs here
+
+			// Fetch all team member IDs
+			$members = $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$wpdb->prefix}amm_team_members WHERE team_id = %d", $team->id ) );
+			$author_ids = array_merge( $author_ids, $members );
 		}
 
 		$outputs = get_posts( array(
@@ -657,6 +684,18 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Get all workspace folders
+	 */
+	public function get_folders() {
+		$terms = get_terms( array( 'taxonomy' => 'amm_folder', 'hide_empty' => false ) );
+		$data = array();
+		foreach ( $terms as $t ) {
+			$data[] = array( 'id' => $t->term_id, 'name' => $t->name );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
 	 * Handle folder creation
 	 */
 	public function handle_create_folder( $request ) {
@@ -667,6 +706,27 @@ class AMM_REST_API {
 		if ( is_wp_error( $term ) ) return $term;
 
 		return rest_ensure_response( array( 'success' => true, 'term_id' => $term['term_id'] ) );
+	}
+
+	/**
+	 * Handle team member removal
+	 */
+	public function handle_remove_member( $request ) {
+		global $wpdb;
+		$params = $request->get_json_params();
+		$user_id_to_remove = (int)$params['user_id'];
+		$team_id = (int)$params['team_id'];
+		$owner_id = get_current_user_id();
+
+		// Verify ownership
+		$team = $wpdb->get_row( $wpdb->prepare( "SELECT owner_id FROM {$wpdb->prefix}amm_teams WHERE id = %d", $team_id ) );
+		if ( ! $team || (int)$team->owner_id !== $owner_id ) {
+			return new WP_Error( 'forbidden', 'Only team owners can remove members.', array( 'status' => 403 ) );
+		}
+
+		$wpdb->delete( $wpdb->prefix . 'amm_team_members', array( 'team_id' => $team_id, 'user_id' => $user_id_to_remove ) );
+
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**

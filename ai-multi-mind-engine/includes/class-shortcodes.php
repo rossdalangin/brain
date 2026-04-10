@@ -94,6 +94,18 @@ class AMM_Shortcodes {
 							<strong>Referral Network</strong><br>
 							<span id="amm-insight-refs" style="font-size:32px; color:#007cba;">0</span>
 						</div>
+						<div class="amm-form-card" style="grid-column: span 2;">
+							<strong>Usage Velocity (Last 7 Days)</strong>
+							<div style="display:flex; align-items:flex-end; gap:5px; height:100px; margin-top:10px;">
+								<div style="flex:1; background:#007cba; height:10%; border-radius:3px;"></div>
+								<div style="flex:1; background:#007cba; height:30%; border-radius:3px;"></div>
+								<div style="flex:1; background:#007cba; height:20%; border-radius:3px;"></div>
+								<div style="flex:1; background:#007cba; height:50%; border-radius:3px;"></div>
+								<div style="flex:1; background:#007cba; height:40%; border-radius:3px;"></div>
+								<div style="flex:1; background:#007cba; height:70%; border-radius:3px;"></div>
+								<div style="flex:1; background:#007cba; height:90%; border-radius:3px;"></div>
+							</div>
+						</div>
 					</div>
 
 					<div class="amm-form-card" style="margin-top:20px;">
@@ -190,6 +202,9 @@ class AMM_Shortcodes {
 					<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
 						<h2>My Workspace</h2>
 						<div style="display:flex; gap:10px;">
+							<select id="amm-workspace-folder-filter" style="width:150px; border-radius:8px;">
+								<option value="">All Folders</option>
+							</select>
 							<input type="text" id="amm-workspace-search" placeholder="Search strategy..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:200px;">
 							<button id="amm-bulk-delete-btn" class="amm-secondary-btn" style="background:#ff4444; color:#fff;">Delete Selected</button>
 							<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
@@ -386,6 +401,12 @@ class AMM_Shortcodes {
 					renderMindGrid(filtered);
 				});
 
+				// Folders
+				fetch(apiRoot + '/folders', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(folders => {
+						document.getElementById('amm-workspace-folder-filter').innerHTML += folders.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+					});
+
 				// Workspace
 				fetch(apiRoot + '/outputs', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(outputs => {
@@ -395,8 +416,8 @@ class AMM_Shortcodes {
 							return;
 						}
 						workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
-							'<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Actions</th></tr>' +
-							outputs.map(o => `<tr><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+							'<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
+							outputs.map(o => `<tr data-folders="${o.folders.join(',')}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
 							'</table>';
 
 						document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -409,7 +430,7 @@ class AMM_Shortcodes {
 					.then(res => res.json()).then(teams => {
 						if(teams.length) {
 							window.ammActiveTeamId = teams[0].id;
-							document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role})</div>`).join('');
+							document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role}) ${t.role === 'admin' ? '' : `<button class="amm-secondary-btn" onclick="ammRemoveMember(${t.user_id}, ${t.id})" style="background:#ff4444; color:#fff;">Remove</button>`}</div>`).join('');
 
 							// Fetch Invites
 							fetch(apiRoot + '/pending-invites?team_id=' + teams[0].id, { headers: { 'X-WP-Nonce': nonce } })
@@ -538,6 +559,16 @@ class AMM_Shortcodes {
 				});
 			};
 
+			// Handle Folder Filter
+			document.getElementById('amm-workspace-folder-filter').addEventListener('change', (e) => {
+				const folder = e.target.value;
+				document.querySelectorAll('#amm-workspace-list tr').forEach(tr => {
+					if (tr.querySelector('th')) return;
+					const folders = tr.dataset.folders || '';
+					tr.style.display = (!folder || folders.includes(folder)) ? '' : 'none';
+				});
+			});
+
 			// Handle Search
 			document.getElementById('amm-workspace-search').addEventListener('input', (e) => {
 				const term = e.target.value.toLowerCase();
@@ -658,6 +689,16 @@ class AMM_Shortcodes {
 					})
 				}).then(res => res.json()).then(data => { if(data.success) alert('Branding Updated!'); });
 			});
+
+			// Handle Remove Member
+			window.ammRemoveMember = function(userId, teamId) {
+				if(!confirm('Remove this member?')) return;
+				fetch(apiRoot + '/remove-member', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ user_id: userId, team_id: teamId })
+				}).then(res => res.json()).then(data => { if(data.success) location.reload(); });
+			};
 
 			// Handle Revoke Invite
 			window.ammRevokeInvite = function(id) {
