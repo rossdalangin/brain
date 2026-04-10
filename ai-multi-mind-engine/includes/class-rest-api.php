@@ -137,6 +137,11 @@ class AMM_REST_API {
 		$user_input  = $params['user_input'] ?? '';
 		$provider    = get_option( 'amm_default_ai_provider', 'gemini' );
 
+		// 0. Plan Access Check for Mind
+		if ( ! $this->user_can_access_mind( $user_id, $mind_id ) ) {
+			return new WP_Error( 'forbidden', 'Upgrade your plan to access this AI Mind.', array( 'status' => 403 ) );
+		}
+
 		// 1. Check Limits
 		$tracker = new AMM_Usage_Tracker();
 		if ( ! $tracker->can_user_generate( $user_id ) ) {
@@ -468,6 +473,20 @@ class AMM_REST_API {
 		$user_id = get_current_user_id();
 		$team_manager = new AMM_Team_Manager();
 		return rest_ensure_response( $team_manager->get_user_teams( $user_id ) );
+	}
+
+	/**
+	 * Verify if user can access a specific mind
+	 */
+	private function user_can_access_mind( $user_id, $mind_id ) {
+		$mind_post = get_page_by_path( $mind_id, OBJECT, 'ai_minds' );
+		if ( ! $mind_post ) return true; // Core minds are free for now
+
+		$min_plan = get_post_meta( $mind_post->ID, 'amm_min_plan', true ) ?: 'free';
+		$user_plan = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+
+		$plans = array( 'free' => 0, 'starter' => 1, 'pro' => 2, 'agency' => 3 );
+		return ( $plans[$user_plan] ?? 0 ) >= ( $plans[$min_plan] ?? 0 );
 	}
 
 	/**

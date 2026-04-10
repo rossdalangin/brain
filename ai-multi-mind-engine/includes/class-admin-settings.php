@@ -39,7 +39,13 @@ class AMM_Admin_Settings {
 
 	public function encrypt_key( $value ) {
 		if ( empty( $value ) ) return '';
-		return base64_encode( $value );
+
+		$encryption_key = defined('AUTH_SALT') ? AUTH_SALT : 'default_fallback_salt';
+		$iv_length = openssl_cipher_iv_length('aes-256-cbc');
+		$iv = openssl_random_pseudo_bytes($iv_length);
+
+		$encrypted = openssl_encrypt($value, 'aes-256-cbc', $encryption_key, 0, $iv);
+		return base64_encode($iv . $encrypted);
 	}
 
 	public function render_settings_page() {
@@ -60,17 +66,23 @@ class AMM_Admin_Settings {
 							</select>
 						</td>
 					</tr>
+					<?php
+					$ai_manager = new AMM_AI_Provider_Manager();
+					$ref = new ReflectionClass('AMM_AI_Provider_Manager');
+					$method = $ref->getMethod('get_decrypted_option');
+					$method->setAccessible(true);
+					?>
 					<tr valign="top">
 						<th scope="row">Gemini API Key</th>
-						<td><input type="password" name="amm_gemini_api_key" value="<?php echo esc_attr( get_option('amm_gemini_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_gemini_api_key" value="<?php echo esc_attr( $method->invoke($ai_manager, 'amm_gemini_api_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">OpenAI API Key</th>
-						<td><input type="password" name="amm_openai_api_key" value="<?php echo esc_attr( get_option('amm_openai_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_openai_api_key" value="<?php echo esc_attr( $method->invoke($ai_manager, 'amm_openai_api_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Claude API Key</th>
-						<td><input type="password" name="amm_claude_api_key" value="<?php echo esc_attr( base64_decode(get_option('amm_claude_api_key')) ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_claude_api_key" value="<?php echo esc_attr( $method->invoke($ai_manager, 'amm_claude_api_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Secret Key</th>

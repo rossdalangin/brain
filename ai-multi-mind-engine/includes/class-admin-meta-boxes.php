@@ -58,6 +58,15 @@ class AMM_Admin_Meta_Boxes {
 				<option value="yes" <?php selected( $is_premium, 'yes' ); ?>>Yes (Marketplace/Pro)</option>
 			</select>
 		</p>
+		<p>
+			<label for="amm_min_plan"><strong>Minimum Plan Required:</strong></label>
+			<select id="amm_min_plan" name="amm_min_plan">
+				<option value="free" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'free' ); ?>>Free</option>
+				<option value="starter" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'starter' ); ?>>Starter</option>
+				<option value="pro" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'pro' ); ?>>Pro</option>
+				<option value="agency" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'agency' ); ?>>Agency</option>
+			</select>
+		</p>
 		<p><em>The post content will be used as the **Hidden Prompt Engineering Layer**.</em></p>
 		<?php
 	}
@@ -75,7 +84,7 @@ class AMM_Admin_Meta_Boxes {
 			return;
 		}
 
-		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure', 'amm_is_premium' );
+		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure', 'amm_is_premium', 'amm_min_plan' );
 		foreach ( $fields as $field ) {
 			if ( isset( $_POST[$field] ) ) {
 				update_post_meta( $post_id, $field, sanitize_text_field( $_POST[$field] ) );

@@ -56,6 +56,9 @@ class AMM_Shortcodes {
 				</nav>
 				<div class="amm-user-block">
 					<div id="amm-user-stats-sidebar">Loading stats...</div>
+					<div class="amm-usage-bar-container" style="margin-top:10px; background:#ddd; height:8px; border-radius:4px; overflow:hidden;">
+						<div id="amm-usage-bar" style="background:#007cba; height:100%; width:0%; transition:width 0.5s;"></div>
+					</div>
 					<button id="amm-theme-toggle" class="amm-theme-btn">🌓 Toggle Mode</button>
 				</div>
 			</aside>
@@ -215,7 +218,13 @@ class AMM_Shortcodes {
 				// User Stats
 				fetch(apiRoot + '/user', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(data => {
-						document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${data.usage.used}/${data.usage.limit} credits`;
+						const used = data.usage.used;
+						const limit = data.usage.limit;
+						const pct = Math.min(100, (used / limit) * 100);
+
+						document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${used}/${limit} credits`;
+						document.getElementById('amm-usage-bar').style.width = pct + '%';
+
 						if (data.plan === 'pro' || data.plan === 'agency') document.getElementById('amm-builder-container').style.display = 'block';
 						if (data.plan === 'agency') document.getElementById('amm-branding-container').style.display = 'block';
 

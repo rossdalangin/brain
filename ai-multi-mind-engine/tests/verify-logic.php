@@ -6,8 +6,10 @@
 
 // Mock WordPress environment
 define( 'ABSPATH', true );
+define( 'OBJECT', 'OBJECT' );
 function add_action($tag, $callback) {}
 function get_option($key, $default = '') { return $default; }
+function get_page_by_path($p, $o, $t) { return null; }
 function update_user_meta($id, $key, $val) { echo "META UPDATED: $key -> $val\n"; }
 function get_user_meta($id, $key, $single = true) { return ''; }
 function is_user_logged_in() { return true; }

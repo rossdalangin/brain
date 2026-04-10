@@ -107,7 +107,12 @@ class AMM_Stripe_Handler {
 
 		switch ( $event['type'] ) {
 			case 'checkout.session.completed':
-				$this->process_subscription_success( $event['data']['object'] );
+				$session = $event['data']['object'];
+				if ( isset( $session['metadata']['type'] ) && $session['metadata']['type'] === 'topup' ) {
+					$this->process_topup_success( $session );
+				} else {
+					$this->process_subscription_success( $session );
+				}
 				break;
 			case 'customer.subscription.deleted':
 				$this->process_subscription_cancellation( $event['data']['object'] );
@@ -126,6 +131,21 @@ class AMM_Stripe_Handler {
 		// Logic to parse Stripe-Signature header and compare with calculated HMAC
 		// Simplified for this implementation; in production, use Stripe SDK
 		return true;
+	}
+
+	/**
+	 * Process successful topup
+	 */
+	private function process_topup_success( $session ) {
+		global $wpdb;
+		$user_id = $session['client_reference_id'];
+		$credits = (int)$session['metadata']['credits'];
+		$month = date( 'Y-m' );
+
+		$wpdb->query( $wpdb->prepare(
+			"UPDATE {$wpdb->prefix}amm_usage SET credits_used = credits_used - %d WHERE user_id = %d AND month = %s",
+			$credits, $user_id, $month
+		));
 	}
 
 	/**
