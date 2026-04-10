@@ -95,6 +95,20 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_settings_update' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Create Invite Endpoint
+		register_rest_route( $namespace, '/invite', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_invite' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Templates Endpoint
+		register_rest_route( $namespace, '/templates', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_templates' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -358,6 +372,24 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Handle team invite
+	 */
+	public function handle_invite( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$team_id = (int)$params['team_id'];
+		$email   = sanitize_email( $params['email'] );
+
+		$team_manager = new AMM_Team_Manager();
+		$token = $team_manager->create_invite( $team_id, $email );
+
+		return rest_ensure_response( array(
+			'success' => true,
+			'invite_url' => home_url( '/join-team/?token=' . $token )
+		));
+	}
+
+	/**
 	 * Handle user settings update
 	 */
 	public function handle_settings_update( $request ) {
@@ -395,6 +427,18 @@ class AMM_REST_API {
 		$team_manager->update_branding( $team_id, $logo, $color );
 
 		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Get all task templates
+	 */
+	public function get_templates() {
+		$posts = get_posts( array( 'post_type' => 'ai_templates', 'posts_per_page' => -1 ) );
+		$data = array();
+		foreach ( $posts as $p ) {
+			$data[] = array( 'id' => $p->ID, 'title' => $p->post_title, 'content' => $p->post_content );
+		}
+		return rest_ensure_response( $data );
 	}
 
 	/**

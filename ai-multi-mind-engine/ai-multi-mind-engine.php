@@ -143,6 +143,15 @@ class AI_Multi_Mind_Engine {
 			'hierarchical' => true,
 			'show_in_rest' => true,
 		));
+
+		register_post_type( 'ai_templates', array(
+			'labels' => array( 'name' => 'Task Templates', 'singular_name' => 'Task Template' ),
+			'public' => false,
+			'show_ui' => true,
+			'show_in_rest' => true,
+			'supports' => array( 'title', 'editor' ),
+			'menu_icon' => 'dashicons-forms',
+		));
 	}
 
 	/**
@@ -224,6 +233,19 @@ class AI_Multi_Mind_Engine {
 			referred_user_id bigint(20) NOT NULL,
 			status varchar(20) NOT NULL,
 			commission_amount decimal(10,2) NOT NULL,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			PRIMARY KEY  (id)
+		) $charset_collate;";
+		dbDelta( $sql );
+
+		// Team Invites Table
+		$table_name = $wpdb->prefix . 'amm_invites';
+		$sql = "CREATE TABLE $table_name (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			team_id bigint(20) NOT NULL,
+			email varchar(100) NOT NULL,
+			token varchar(50) NOT NULL,
+			status varchar(20) DEFAULT 'pending' NOT NULL,
 			created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
 			PRIMARY KEY  (id)
 		) $charset_collate;";

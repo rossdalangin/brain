@@ -128,6 +128,11 @@ class AMM_Shortcodes {
 				<!-- Team Tab -->
 				<section id="tab-team" class="amm-tab-content">
 					<h2>Team Collaboration Hub</h2>
+					<div class="amm-form-card" style="margin-bottom:20px;">
+						<h3>Invite Team Member</h3>
+						<input type="email" id="amm-invite-email" placeholder="email@example.com" style="width:70%;">
+						<button id="amm-invite-btn" class="amm-primary-btn" style="width:25%;">Invite</button>
+					</div>
 					<div id="amm-team-list" class="amm-form-card">No team members found.</div>
 				</section>
 
@@ -157,6 +162,11 @@ class AMM_Shortcodes {
 						<div class="amm-plan-card featured"><h4>Pro</h4><p>$49/mo</p><button onclick="ammCheckout('pro')" class="amm-primary-btn">Select</button></div>
 						<div class="amm-plan-card"><h4>Agency</h4><p>$199/mo</p><button onclick="ammCheckout('agency')" class="amm-primary-btn">Select</button></div>
 					</div>
+						<div class="amm-form-card" style="margin-top:20px; text-align:center;">
+							<h3>Need more credits?</h3>
+							<p>Buy 50 extra credits for just $10.</p>
+							<button onclick="ammCheckout('topup_50')" class="amm-secondary-btn" style="width:200px;">Buy Top-up</button>
+						</div>
 				</section>
 			</main>
 		</div>
@@ -200,6 +210,15 @@ class AMM_Shortcodes {
 						document.getElementById('amm-set-default-mind').value = data.settings.default_mind || 'ceo';
 					});
 
+				// Templates
+				fetch(apiRoot + '/templates', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(templates => {
+						if(templates.length) {
+							const select = document.getElementById('amm-template-select');
+							select.innerHTML += templates.map(t => `<option value="${t.content}">${t.title}</option>`).join('');
+						}
+					});
+
 				// Minds
 				fetch(apiRoot + '/minds', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(minds => {
@@ -225,7 +244,10 @@ class AMM_Shortcodes {
 				// Team
 				fetch(apiRoot + '/teams', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(teams => {
-						if(teams.length) document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role})</div>`).join('');
+						if(teams.length) {
+							window.ammActiveTeamId = teams[0].id;
+							document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role})</div>`).join('');
+						}
 					});
 
 				// Affiliate
@@ -295,6 +317,22 @@ class AMM_Shortcodes {
 				win.print();
 			});
 		});
+
+			// Handle Invite
+			document.getElementById('amm-invite-btn').addEventListener('click', () => {
+				const email = document.getElementById('amm-invite-email').value;
+				if(!email) return;
+
+				fetch(apiRoot + '/invite', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ team_id: window.ammActiveTeamId, email })
+				}).then(res => res.json()).then(data => {
+					if(data.success) {
+						prompt('Invite link generated! Send this to your team member:', data.invite_url);
+					}
+				});
+			});
 
 			// Handle Save Settings
 			document.getElementById('amm-save-settings-btn').addEventListener('click', () => {

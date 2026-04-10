@@ -18,9 +18,13 @@ class AMM_Stripe_Handler {
 	}
 
 	/**
-	 * Create a Checkout Session for a plan
+	 * Create a Checkout Session for a plan or Top-up
 	 */
 	public function create_checkout_session( $user_id, $plan_id ) {
+		if ( $plan_id === 'topup_50' ) {
+			return $this->create_topup_session( $user_id, 50, 'price_topup_50' );
+		}
+
 		$prices = array(
 			'starter' => get_option('amm_stripe_price_starter'),
 			'pro'     => get_option('amm_stripe_price_pro'),
@@ -55,6 +59,27 @@ class AMM_Stripe_Handler {
 
 		if ( is_wp_error( $response ) ) return $response;
 
+		$session = json_decode( wp_remote_retrieve_body( $response ), true );
+		return $session['url'] ?? '';
+	}
+
+	/**
+	 * Create one-time topup session
+	 */
+	private function create_topup_session( $user_id, $credits, $price_id ) {
+		$url = "https://api.stripe.com/v1/checkout/sessions";
+		$body = array(
+			'success_url' => home_url( '/dashboard/?success=topup' ),
+			'cancel_url'  => home_url( '/billing/' ),
+			'mode'        => 'payment',
+			'client_reference_id' => $user_id,
+			'line_items'  => array( array( 'price' => $price_id, 'quantity' => 1 ) ),
+			'metadata' => array( 'type' => 'topup', 'credits' => $credits )
+		);
+		$response = wp_remote_post( $url, array(
+			'headers' => array( 'Authorization' => 'Bearer ' . $this->secret_key, 'Content-Type' => 'application/x-www-form-urlencoded' ),
+			'body' => http_build_query( $body )
+		));
 		$session = json_decode( wp_remote_retrieve_body( $response ), true );
 		return $session['url'] ?? '';
 	}

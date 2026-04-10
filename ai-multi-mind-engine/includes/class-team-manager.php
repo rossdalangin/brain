@@ -57,4 +57,29 @@ class AMM_Team_Manager {
 			array( 'id' => $team_id )
 		);
 	}
+
+	/**
+	 * Create an invitation
+	 */
+	public function create_invite( $team_id, $email ) {
+		global $wpdb;
+		$token = wp_generate_password( 20, false );
+		$wpdb->insert( $wpdb->prefix . 'amm_invites', array(
+			'team_id' => $team_id,
+			'email'   => $email,
+			'token'   => $token,
+		));
+		return $token;
+	}
+
+	/**
+	 * Get pending invites
+	 */
+	public function get_pending_invites( $team_id ) {
+		global $wpdb;
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}amm_invites WHERE team_id = %d AND status = 'pending'",
+			$team_id
+		));
+	}
 }
