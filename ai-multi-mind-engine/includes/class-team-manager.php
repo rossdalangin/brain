@@ -24,12 +24,13 @@ class AMM_Team_Manager {
 	/**
 	 * Add member to team
 	 */
-	public function add_member( $team_id, $user_id, $role = 'member' ) {
+	public function add_member( $team_id, $user_id, $role = 'member', $permissions = array('can_generate', 'can_view_workspace') ) {
 		global $wpdb;
 		$wpdb->insert( $wpdb->prefix . 'amm_team_members', array(
 			'team_id' => $team_id,
 			'user_id' => $user_id,
 			'role'    => $role,
+			'permissions' => json_encode($permissions)
 		));
 	}
 
@@ -49,6 +50,18 @@ class AMM_Team_Manager {
 	/**
 	 * Update branding (White-Label)
 	 */
+	/**
+	 * Get member permissions
+	 */
+	public function get_member_permissions( $team_id, $user_id ) {
+		global $wpdb;
+		$perms = $wpdb->get_var( $wpdb->prepare(
+			"SELECT permissions FROM {$wpdb->prefix}amm_team_members WHERE team_id = %d AND user_id = %d",
+			$team_id, $user_id
+		));
+		return $perms ? json_decode($perms, true) : array();
+	}
+
 	public function update_branding( $team_id, $logo, $color ) {
 		global $wpdb;
 		$wpdb->update(

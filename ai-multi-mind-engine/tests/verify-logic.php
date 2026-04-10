@@ -28,6 +28,7 @@ class Mock_WPDB {
     public function insert($t, $d) { echo "DB INSERT into $t\n"; }
     public function update($t, $d, $w) { echo "DB UPDATE $t\n"; }
     public function get_var($q) { return 0; }
+    public function get_results($q) { return array(); }
     public function query($q) { echo "DB QUERY: $q\n"; }
     public function prepare($q, ...$args) { return $q; }
 }
@@ -39,6 +40,9 @@ require_once __DIR__ . '/../includes/minds/class-mind-ceo.php';
 require_once __DIR__ . '/../includes/class-ai-provider-manager.php';
 require_once __DIR__ . '/../includes/class-prompt-engine.php';
 require_once __DIR__ . '/../includes/class-usage-tracker.php';
+require_once __DIR__ . '/../includes/class-team-manager.php';
+require_once __DIR__ . '/../includes/class-analytics-manager.php';
+require_once __DIR__ . '/../includes/class-webhook-manager.php';
 require_once __DIR__ . '/../includes/class-rest-api.php';
 
 echo "--- Testing Prompt Engine ---\n";

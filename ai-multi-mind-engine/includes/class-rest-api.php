@@ -164,6 +164,16 @@ class AMM_REST_API {
 			return new WP_Error( 'forbidden', 'Upgrade your plan to access this AI Mind.', array( 'status' => 403 ) );
 		}
 
+		// 0a. Team Permission Check
+		$team_manager = new AMM_Team_Manager();
+		$teams = $team_manager->get_user_teams( $user_id );
+		if ( ! empty( $teams ) ) {
+			$perms = $team_manager->get_member_permissions( $teams[0]->id, $user_id );
+			if ( $teams[0]->role === 'member' && ! in_array( 'can_generate', $perms ) ) {
+				return new WP_Error( 'forbidden', 'You do not have permission to generate in this team.', array( 'status' => 403 ) );
+			}
+		}
+
 		// 1. Check Limits
 		$tracker = new AMM_Usage_Tracker();
 		if ( ! $tracker->can_user_generate( $user_id ) ) {
@@ -569,9 +579,19 @@ class AMM_REST_API {
 	 * Verify if user can access a specific mind
 	 */
 	private function user_can_access_mind( $user_id, $mind_id ) {
+		// 1. Check if core mind
 		$mind_post = get_page_by_path( $mind_id, OBJECT, 'ai_minds' );
-		if ( ! $mind_post ) return true; // Core minds are free for now
+		if ( ! $mind_post ) return true;
 
+		// 2. Check if purchased one-time
+		global $wpdb;
+		$purchased = $wpdb->get_var( $wpdb->prepare(
+			"SELECT id FROM {$wpdb->prefix}amm_purchases WHERE user_id = %d AND mind_id = %s",
+			$user_id, $mind_id
+		));
+		if ( $purchased ) return true;
+
+		// 3. Check plan level
 		$min_plan = get_post_meta( $mind_post->ID, 'amm_min_plan', true ) ?: 'free';
 		$user_plan = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
 

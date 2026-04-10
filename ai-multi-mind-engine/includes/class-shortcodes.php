@@ -170,7 +170,11 @@ class AMM_Shortcodes {
 				<section id="tab-workspace" class="amm-tab-content">
 					<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
 						<h2>My Workspace</h2>
-						<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
+						<div style="display:flex; gap:10px;">
+							<input type="text" id="amm-workspace-search" placeholder="Search strategy..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:200px;">
+							<button id="amm-bulk-delete-btn" class="amm-secondary-btn" style="background:#ff4444; color:#fff;">Delete Selected</button>
+							<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
+						</div>
 					</div>
 					<div id="amm-workspace-list" class="amm-form-card">Loading saved outputs...</div>
 				</section>
@@ -457,6 +461,16 @@ class AMM_Shortcodes {
 				});
 			};
 
+			// Handle Search
+			document.getElementById('amm-workspace-search').addEventListener('input', (e) => {
+				const term = e.target.value.toLowerCase();
+				document.querySelectorAll('#amm-workspace-list tr').forEach(tr => {
+					if (tr.querySelector('th')) return;
+					const title = tr.innerText.toLowerCase();
+					tr.style.display = title.includes(term) ? '' : 'none';
+				});
+			});
+
 			// Export PDF
 			document.getElementById('amm-export-btn').addEventListener('click', () => {
 				const win = window.open('', '_blank');
@@ -547,8 +561,8 @@ class AMM_Shortcodes {
 		</script>
 
 		<style>
-		.amm-dashboard { display: grid; grid-template-columns: 260px 1fr; min-height: 800px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; background: #fff; color: #333; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-		.amm-app-sidebar { background: #f8f9fa; border-right: 1px solid #eee; padding: 30px 20px; display: flex; flex-direction: column; }
+		.amm-dashboard { display: grid; grid-template-columns: 260px 1fr; min-height: 800px; font-family: 'Inter', -apple-system, sans-serif; background: #fff; color: #333; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.08); border: 1px solid #eee; }
+		.amm-app-sidebar { background: #fcfcfc; border-right: 1px solid #f0f0f0; padding: 40px 25px; display: flex; flex-direction: column; }
 		.amm-logo { font-size: 20px; font-weight: 800; color: #007cba; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
 		.amm-nav { flex-grow: 1; }
 		.amm-nav-item { display: block; padding: 12px 15px; color: #555; text-decoration: none; border-radius: 8px; margin-bottom: 5px; font-weight: 500; transition: 0.2s; }
@@ -560,7 +574,8 @@ class AMM_Shortcodes {
 		.amm-controls label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #888; }
 		.amm-controls select, .amm-controls textarea { width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
 		.amm-controls textarea { height: 180px; }
-		.amm-primary-btn { width: 100%; background: #007cba; color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+		.amm-primary-btn { width: 100%; background: linear-gradient(135deg, #007cba 0%, #005a87 100%); color: #fff; border: none; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,124,186,0.2); transition: transform 0.2s; }
+		.amm-primary-btn:hover { transform: translateY(-2px); }
 		.amm-secondary-btn { background: #eee; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
 		.amm-output-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; padding: 25px; min-height: 400px; white-space: pre-wrap; line-height: 1.6; }
 		.amm-grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }

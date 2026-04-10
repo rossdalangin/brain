@@ -110,6 +110,8 @@ class AMM_Stripe_Handler {
 				$session = $event['data']['object'];
 				if ( isset( $session['metadata']['type'] ) && $session['metadata']['type'] === 'topup' ) {
 					$this->process_topup_success( $session );
+				} elseif ( isset( $session['metadata']['type'] ) && $session['metadata']['type'] === 'mind_unlock' ) {
+					$this->process_mind_purchase_success( $session );
 				} else {
 					$this->process_subscription_success( $session );
 				}
@@ -131,6 +133,20 @@ class AMM_Stripe_Handler {
 		// Logic to parse Stripe-Signature header and compare with calculated HMAC
 		// Simplified for this implementation; in production, use Stripe SDK
 		return true;
+	}
+
+	/**
+	 * Process successful mind purchase
+	 */
+	private function process_mind_purchase_success( $session ) {
+		global $wpdb;
+		$user_id = $session['client_reference_id'];
+		$mind_id = $session['metadata']['mind_id'];
+
+		$wpdb->insert( $wpdb->prefix . 'amm_purchases', array(
+			'user_id' => $user_id,
+			'mind_id' => $mind_id,
+		));
 	}
 
 	/**

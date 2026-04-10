@@ -231,6 +231,7 @@ class AI_Multi_Mind_Engine {
 			team_id bigint(20) NOT NULL,
 			user_id bigint(20) NOT NULL,
 			role varchar(20) NOT NULL,
+			permissions text,
 			PRIMARY KEY  (id)
 		) $charset_collate;";
 		dbDelta( $sql );
@@ -261,6 +262,28 @@ class AI_Multi_Mind_Engine {
 
 		// Team Invites Table
 		$table_name = $wpdb->prefix . 'amm_invites';
+		$sql = "CREATE TABLE $table_name (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			team_id bigint(20) NOT NULL,
+			email varchar(100) NOT NULL,
+			token varchar(50) NOT NULL,
+			status varchar(20) DEFAULT 'pending' NOT NULL,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			PRIMARY KEY  (id)
+		) $charset_collate;";
+		dbDelta( $sql );
+
+		// Mind Purchases Table
+		$table_name = $wpdb->prefix . 'amm_purchases';
+		$sql = "CREATE TABLE $table_name (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) NOT NULL,
+			mind_id varchar(100) NOT NULL,
+			purchased_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			PRIMARY KEY  (id)
+		) $charset_collate;";
+		dbDelta( $sql );
+	}
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			team_id bigint(20) NOT NULL,
