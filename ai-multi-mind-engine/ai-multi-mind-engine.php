@@ -78,6 +78,7 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/class-affiliate-manager.php';
 		require_once AMM_PATH . 'includes/class-analytics-manager.php';
 		require_once AMM_PATH . 'includes/class-webhook-manager.php';
+		require_once AMM_PATH . 'includes/class-logger.php';
 		require_once AMM_PATH . 'includes/class-prompt-engine.php';
 		require_once AMM_PATH . 'includes/class-usage-tracker.php';
 

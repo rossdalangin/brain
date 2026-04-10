@@ -499,10 +499,19 @@ class AMM_REST_API {
 			$data = $aff_manager->get_affiliate_data( $user_id );
 		}
 
+		global $wpdb;
+		$referrals = $wpdb->get_results( $wpdb->prepare(
+			"SELECT r.*, u.user_email FROM {$wpdb->prefix}amm_referrals r
+			 JOIN wp_users u ON r.referred_user_id = u.ID
+			 WHERE r.affiliate_id = %d",
+			$data->id
+		));
+
 		return rest_ensure_response( array(
 			'code' => $data->affiliate_code,
 			'commissions' => $data->total_commissions,
 			'link' => home_url( '/?ref=' . $data->affiliate_code ),
+			'referrals' => $referrals
 		));
 	}
 
@@ -660,6 +669,10 @@ class AMM_REST_API {
 			update_user_meta( $user_id, 'amm_knowledge_base', sanitize_textarea_field( $params['knowledge_base'] ) );
 		}
 
+		if ( isset( $params['company_name'] ) ) {
+			update_user_meta( $user_id, 'amm_company_name', sanitize_text_field( $params['company_name'] ) );
+		}
+
 		if ( isset( $params['usage_alerts'] ) ) {
 			update_user_meta( $user_id, 'amm_usage_alerts', $params['usage_alerts'] ? 'yes' : 'no' );
 		}
@@ -773,6 +786,7 @@ class AMM_REST_API {
 				'webhook_url' => get_user_meta( $user_id, 'amm_external_webhook_url', true ),
 				'default_mind' => get_user_meta( $user_id, 'amm_default_mind', true ) ?: 'ceo',
 				'knowledge_base' => get_user_meta( $user_id, 'amm_knowledge_base', true ),
+				'company_name' => get_user_meta( $user_id, 'amm_company_name', true ),
 				'usage_alerts' => get_user_meta( $user_id, 'amm_usage_alerts', true ) === 'yes',
 			),
 			'usage'   => array(

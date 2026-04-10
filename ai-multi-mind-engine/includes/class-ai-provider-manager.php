@@ -148,6 +148,9 @@ class AMM_AI_Provider_Manager {
 		if ( is_wp_error( $response ) ) return $response;
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
-		return $data['choices'][0]['message']['content'] ?? 'AI response error';
+		$result = $data['choices'][0]['message']['content'] ?? 'AI response error';
+
+		AMM_Logger::log( 'openai', $body, $result );
+		return $result;
 	}
 }

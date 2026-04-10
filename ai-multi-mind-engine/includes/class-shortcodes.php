@@ -147,7 +147,10 @@ class AMM_Shortcodes {
 						<div class="amm-output-container">
 							<div class="amm-output-header">
 								<h3>Generated Intelligence</h3>
-								<button id="amm-export-btn" class="amm-secondary-btn" style="display:none;">📄 Export PDF</button>
+								<div style="display:flex; gap:5px;">
+									<button id="amm-export-btn" class="amm-secondary-btn" style="display:none;">📄 PDF</button>
+									<button id="amm-export-html-btn" class="amm-secondary-btn" style="display:none;">🌐 HTML</button>
+								</div>
 							</div>
 							<div id="amm-output" class="amm-output-box">The engine is waiting for your request...</div>
 						</div>
@@ -231,6 +234,8 @@ class AMM_Shortcodes {
 					<div class="amm-form-card">
 						<label>External Webhook URL (Zapier/Make)</label>
 						<input type="text" id="amm-set-webhook" placeholder="https://hooks.zapier.com/..." style="width:100%; margin-bottom:20px;">
+						<label>Company/Business Name</label>
+						<input type="text" id="amm-set-company" style="width:100%; margin-bottom:20px;">
 						<label>Default AI Mind</label>
 						<select id="amm-set-default-mind" style="width:100%; margin-bottom:20px;"></select>
 						<label>Knowledge Base (Your Company Context)</label>
@@ -310,7 +315,7 @@ class AMM_Shortcodes {
 						const limit = data.usage.limit;
 						const pct = Math.min(100, (used / limit) * 100);
 
-						document.getElementById('amm-user-profile').innerText = `Welcome, ${data.user_name}`;
+						document.getElementById('amm-user-profile').innerText = `Welcome, ${data.user_name}${data.settings.company_name ? ' @ ' + data.settings.company_name : ''}`;
 						document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${used}/${limit} credits`;
 						document.getElementById('amm-usage-bar').style.width = pct + '%';
 
@@ -320,6 +325,7 @@ class AMM_Shortcodes {
 
 						// Populate Settings
 						document.getElementById('amm-set-webhook').value = data.settings.webhook_url || '';
+						document.getElementById('amm-set-company').value = data.settings.company_name || '';
 						document.getElementById('amm-set-default-mind').value = data.settings.default_mind || 'ceo';
 						document.getElementById('amm-set-kb').value = data.settings.knowledge_base || '';
 						document.getElementById('amm-set-alerts').checked = data.settings.usage_alerts;
@@ -433,7 +439,16 @@ class AMM_Shortcodes {
 				// Affiliate
 				fetch(apiRoot + '/affiliate', { headers: { 'X-WP-Nonce': nonce } })
 					.then(res => res.json()).then(data => {
-						document.getElementById('amm-affiliate-info').innerHTML = `<p>Referral Link: <code>${data.link}</code></p><p>Earnings: $${data.commissions}</p>`;
+						let html = `<p>Referral Link: <input type="text" value="${data.link}" readonly style="width:100%;"></p>
+							<p>Earnings: $${data.commissions}</p>
+							<h4>Your Referrals</h4>`;
+
+						if(data.referrals && data.referrals.length) {
+							html += '<table style="width:100%">' + data.referrals.map(r => `<tr><td>${r.user_email}</td><td>${r.status}</td><td>$${r.commission_amount}</td></tr>`).join('') + '</table>';
+						} else {
+							html += '<p>No referrals yet. Share your link to start earning!</p>';
+						}
+						document.getElementById('amm-affiliate-info').innerHTML = html;
 					});
 			}
 			initApp();
@@ -472,6 +487,7 @@ class AMM_Shortcodes {
 								clearInterval(interval);
 								btn.disabled = false;
 								document.getElementById('amm-export-btn').style.display = 'block';
+								document.getElementById('amm-export-html-btn').style.display = 'block';
 								window.ammChatHistory.push({ role: 'user', content: userInput });
 								window.ammChatHistory.push({ role: 'assistant', content: text });
 								outputBox.innerHTML += '<div style="margin-top:20px; font-size:12px; color:green; font-weight:bold;">✅ Strategy saved to your workspace automatically.</div>';
@@ -540,6 +556,16 @@ class AMM_Shortcodes {
 				const win = window.open('', '_blank');
 				win.document.write(`<html><body style="font-family:sans-serif; padding:50px;"><h1>AI Multi-Mind Output</h1><hr>${outputBox.innerText}</body></html>`);
 				win.print();
+			});
+
+			// Export HTML
+			document.getElementById('amm-export-html-btn').addEventListener('click', () => {
+				const blob = new Blob([outputBox.innerText], { type: 'text/html' });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = 'ai-strategy.html';
+				a.click();
 			});
 		});
 
@@ -653,11 +679,12 @@ class AMM_Shortcodes {
 					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
 					body: JSON.stringify({
 						webhook_url: document.getElementById('amm-set-webhook').value,
+						company_name: document.getElementById('amm-set-company').value,
 						default_mind: document.getElementById('amm-set-default-mind').value,
 						knowledge_base: document.getElementById('amm-set-kb').value,
 						usage_alerts: document.getElementById('amm-set-alerts').checked
 					})
-				}).then(res => res.json()).then(data => { if(data.success) alert('Settings Saved!'); });
+				}).then(res => res.json()).then(data => { if(data.success) { alert('Settings Saved!'); location.reload(); } });
 			});
 		});
 
