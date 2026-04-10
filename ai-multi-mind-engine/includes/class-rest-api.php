@@ -74,6 +74,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_create_mind' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Update Branding Endpoint (Agency White-Label)
+		register_rest_route( $namespace, '/update-branding', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_branding_update' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -115,6 +122,8 @@ class AMM_REST_API {
 
 		// 4. Track Usage
 		$tracker->track_generation( $user_id );
+		$analytics = new AMM_Analytics_Manager();
+		$analytics->log_mind_usage( $mind_id );
 
 		// 5. Save Output (optional, but good for SaaS)
 		$output_id = wp_insert_post( array(
@@ -291,6 +300,28 @@ class AMM_REST_API {
 			'commissions' => $data->total_commissions,
 			'link' => home_url( '/?ref=' . $data->affiliate_code ),
 		));
+	}
+
+	/**
+	 * Handle branding update
+	 */
+	public function handle_branding_update( $request ) {
+		$user_id = get_current_user_id();
+		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+
+		if ( $plan_id !== 'agency' ) {
+			return new WP_Error( 'rest_forbidden', 'White-labeling is an AGENCY feature.', array( 'status' => 403 ) );
+		}
+
+		$params = $request->get_json_params();
+		$team_id = (int)$params['team_id'];
+		$logo    = sanitize_text_field( $params['logo'] );
+		$color   = sanitize_text_field( $params['color'] );
+
+		$team_manager = new AMM_Team_Manager();
+		$team_manager->update_branding( $team_id, $logo, $color );
+
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**

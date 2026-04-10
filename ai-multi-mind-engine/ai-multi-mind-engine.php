@@ -75,6 +75,7 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/class-ai-provider-manager.php';
 		require_once AMM_PATH . 'includes/class-team-manager.php';
 		require_once AMM_PATH . 'includes/class-affiliate-manager.php';
+		require_once AMM_PATH . 'includes/class-analytics-manager.php';
 		require_once AMM_PATH . 'includes/class-prompt-engine.php';
 		require_once AMM_PATH . 'includes/class-usage-tracker.php';
 
@@ -185,6 +186,8 @@ class AI_Multi_Mind_Engine {
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			owner_id bigint(20) NOT NULL,
 			team_name varchar(255) NOT NULL,
+			custom_logo text,
+			primary_color varchar(20) DEFAULT '#007cba',
 			created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
 			PRIMARY KEY  (id)
 		) $charset_collate;";

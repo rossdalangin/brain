@@ -95,6 +95,35 @@ class AMM_Admin_Settings {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+
+			<hr>
+			<h2>System Health Monitor</h2>
+			<table class="wp-list-table widefat fixed striped">
+				<thead>
+					<tr>
+						<th>Service</th>
+						<th>Status</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Gemini API</td>
+						<td><?php echo get_option('amm_gemini_api_key') ? '✅ Configured' : '❌ Missing'; ?></td>
+						<td><button class="button">Test</button></td>
+					</tr>
+					<tr>
+						<td>OpenAI API</td>
+						<td><?php echo get_option('amm_openai_api_key') ? '✅ Configured' : '❌ Missing'; ?></td>
+						<td><button class="button">Test</button></td>
+					</tr>
+					<tr>
+						<td>Stripe Webhooks</td>
+						<td><?php echo get_option('amm_stripe_webhook_secret') ? '✅ Configured' : '❌ Missing'; ?></td>
+						<td><button class="button">Verify</button></td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 		<?php
 	}

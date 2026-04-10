@@ -45,4 +45,16 @@ class AMM_Team_Manager {
 			$user_id
 		));
 	}
+
+	/**
+	 * Update branding (White-Label)
+	 */
+	public function update_branding( $team_id, $logo, $color ) {
+		global $wpdb;
+		$wpdb->update(
+			$wpdb->prefix . 'amm_teams',
+			array( 'custom_logo' => $logo, 'primary_color' => $color ),
+			array( 'id' => $team_id )
+		);
+	}
 }
