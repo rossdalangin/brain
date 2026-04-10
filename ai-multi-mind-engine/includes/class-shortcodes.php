@@ -95,6 +95,11 @@ class AMM_Shortcodes {
 							<span id="amm-insight-refs" style="font-size:32px; color:#007cba;">0</span>
 						</div>
 					</div>
+
+					<div class="amm-form-card" style="margin-top:20px;">
+						<h3>Recent Activity</h3>
+						<div id="amm-recent-activity">Loading recent insights...</div>
+					</div>
 				</section>
 
 				<!-- Generate Tab -->
@@ -243,6 +248,10 @@ class AMM_Shortcodes {
 						<div class="amm-plan-card featured"><h4>Pro</h4><p>$49/mo</p><button onclick="ammCheckout('pro')" class="amm-primary-btn">Select</button></div>
 						<div class="amm-plan-card"><h4>Agency</h4><p>$199/mo</p><button onclick="ammCheckout('agency')" class="amm-primary-btn">Select</button></div>
 					</div>
+
+						<div id="amm-portal-container" style="display:none; margin-top:20px; text-align:center;">
+							<button onclick="ammPortal()" class="amm-secondary-btn" style="width:200px;">Manage Billing & Invoices</button>
+						</div>
 						<div class="amm-form-card" style="margin-top:20px; text-align:center;">
 							<h3>Need more credits?</h3>
 							<p>Buy 50 extra credits for just $10.</p>
@@ -307,12 +316,20 @@ class AMM_Shortcodes {
 
 						if (data.plan === 'pro' || data.plan === 'agency') document.getElementById('amm-builder-container').style.display = 'block';
 						if (data.plan === 'agency') document.getElementById('amm-branding-container').style.display = 'block';
+						if (data.plan !== 'free') document.getElementById('amm-portal-container').style.display = 'block';
 
 						// Populate Settings
 						document.getElementById('amm-set-webhook').value = data.settings.webhook_url || '';
 						document.getElementById('amm-set-default-mind').value = data.settings.default_mind || 'ceo';
 						document.getElementById('amm-set-kb').value = data.settings.knowledge_base || '';
 						document.getElementById('amm-set-alerts').checked = data.settings.usage_alerts;
+
+						// Recent Activity
+						const recent = document.getElementById('amm-recent-activity');
+						fetch(apiRoot + '/outputs', { headers: { 'X-WP-Nonce': nonce } })
+							.then(res => res.json()).then(outputs => {
+								recent.innerHTML = outputs.slice(0, 5).map(o => `<div style="padding:10px; border-bottom:1px solid #eee;"><strong>${o.title}</strong> - ${o.date}</div>`).join('') || 'No recent activity.';
+							});
 
 						// Populate Insights
 						if (document.getElementById('amm-insight-gens')) {
@@ -374,7 +391,7 @@ class AMM_Shortcodes {
 						}
 						workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
 							'<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Actions</th></tr>' +
-							outputs.map(o => `<tr><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+							outputs.map(o => `<tr><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
 							'</table>';
 
 						document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -457,6 +474,7 @@ class AMM_Shortcodes {
 								document.getElementById('amm-export-btn').style.display = 'block';
 								window.ammChatHistory.push({ role: 'user', content: userInput });
 								window.ammChatHistory.push({ role: 'assistant', content: text });
+								outputBox.innerHTML += '<div style="margin-top:20px; font-size:12px; color:green; font-weight:bold;">✅ Strategy saved to your workspace automatically.</div>';
 							}
 						}, 5);
 					} else {
@@ -501,6 +519,21 @@ class AMM_Shortcodes {
 					tr.style.display = title.includes(term) ? '' : 'none';
 				});
 			});
+
+			// Duplicate Logic
+			window.ammDuplicate = function(id) {
+				fetch(apiRoot + '/duplicate', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ post_id: id })
+				}).then(res => res.json()).then(data => { if(data.success) refreshWorkspace(); });
+			};
+
+			// Portal Logic
+			window.ammPortal = function() {
+				fetch(apiRoot + '/billing-portal', { headers: { 'X-WP-Nonce': nonce } })
+					.then(res => res.json()).then(data => { if(data.url) window.location.href = data.url; });
+			};
 
 			// Export PDF
 			document.getElementById('amm-export-btn').addEventListener('click', () => {

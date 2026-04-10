@@ -165,6 +165,20 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_refine_prompt' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Duplicate Endpoint
+		register_rest_route( $namespace, '/duplicate', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_duplicate' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Billing Portal Endpoint
+		register_rest_route( $namespace, '/billing-portal', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_billing_portal' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -398,6 +412,17 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Get Stripe billing portal URL
+	 */
+	public function get_billing_portal() {
+		$user_id = get_current_user_id();
+		$stripe = new AMM_Stripe_Handler();
+		$url = $stripe->create_portal_session( $user_id );
+
+		return rest_ensure_response( array( 'url' => $url ) );
+	}
+
+	/**
 	 * Get billing history for the user
 	 */
 	public function get_billing_history() {
@@ -514,6 +539,30 @@ class AMM_REST_API {
 			'success' => true,
 			'invite_url' => home_url( '/join-team/?token=' . $token )
 		));
+	}
+
+	/**
+	 * Handle output duplication
+	 */
+	public function handle_duplicate( $request ) {
+		$params = $request->get_json_params();
+		$post_id = (int)$params['post_id'];
+		$user_id = get_current_user_id();
+
+		$post = get_post( $post_id );
+		if ( ! $post || (int)$post->post_author !== $user_id ) {
+			return new WP_Error( 'forbidden', 'Unauthorized.', array( 'status' => 403 ) );
+		}
+
+		$new_id = wp_insert_post( array(
+			'post_title'   => $post->post_title . ' (Copy)',
+			'post_content' => $post->post_content,
+			'post_status'  => 'publish',
+			'post_type'    => 'ai_outputs',
+			'post_author'  => $user_id,
+		));
+
+		return rest_ensure_response( array( 'success' => true, 'new_id' => $new_id ) );
 	}
 
 	/**

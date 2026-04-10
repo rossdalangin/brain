@@ -68,6 +68,28 @@ class AMM_Stripe_Handler {
 	}
 
 	/**
+	 * Create billing portal session
+	 */
+	public function create_portal_session( $user_id ) {
+		$customer_id = get_user_meta( $user_id, 'amm_stripe_customer_id', true );
+		if ( ! $customer_id ) return '';
+
+		$url = "https://api.stripe.com/v1/billing_portal/sessions";
+		$body = array(
+			'customer' => $customer_id,
+			'return_url' => home_url( '/billing/' ),
+		);
+
+		$response = wp_remote_post( $url, array(
+			'headers' => array( 'Authorization' => 'Bearer ' . $this->secret_key, 'Content-Type' => 'application/x-www-form-urlencoded' ),
+			'body' => http_build_query( $body )
+		));
+
+		$session = json_decode( wp_remote_retrieve_body( $response ), true );
+		return $session['url'] ?? '';
+	}
+
+	/**
 	 * Create one-time mind purchase session
 	 */
 	private function create_mind_purchase_session( $user_id, $mind_id ) {
@@ -209,6 +231,7 @@ class AMM_Stripe_Handler {
 
 		update_user_meta( $user_id, 'amm_subscription_status', 'active' );
 		update_user_meta( $user_id, 'amm_plan_id', $plan_id );
+		update_user_meta( $user_id, 'amm_stripe_customer_id', $session['customer'] );
 	}
 
 	/**
