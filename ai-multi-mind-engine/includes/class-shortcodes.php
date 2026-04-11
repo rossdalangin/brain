@@ -62,6 +62,7 @@ class AMM_Shortcodes {
 				<nav class="amm-nav">
 					<a href="#" class="amm-nav-item" data-tab="dashboard">📊 Dashboard</a>
 					<a href="#" class="amm-nav-item active" data-tab="generate">🚀 Ignite Mind</a>
+					<a href="#" class="amm-nav-item" data-tab="council">🏛️ Mind Council</a>
 					<a href="#" class="amm-nav-item" data-tab="library">📚 Minds Library</a>
 					<a href="#" class="amm-nav-item" data-tab="workspace">📁 My Workspace</a>
 					<a href="#" class="amm-nav-item" data-tab="team">👥 Team Hub</a>
@@ -256,6 +257,22 @@ class AMM_Shortcodes {
 					<div id="amm-affiliate-info" class="amm-form-card">Loading your data...</div>
 				</section>
 
+				<!-- Council Tab -->
+				<section id="tab-council" class="amm-tab-content">
+					<h2>Mind Council Collaboration</h2>
+					<p>Select multiple minds to brainstorm and build your strategy in sequence.</p>
+					<div class="amm-form-card" style="margin-bottom:20px;">
+						<div id="amm-council-selectors" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+							<select class="amm-council-select"><option value="">Select Mind 1...</option></select>
+							<select class="amm-council-select"><option value="">Select Mind 2...</option></select>
+							<select class="amm-council-select"><option value="">Select Mind 3...</option></select>
+						</div>
+						<textarea id="amm-council-input" placeholder="What should the council build for you?" style="width:100%; height:100px; margin-bottom:10px;"></textarea>
+						<button id="amm-ignite-council-btn" class="amm-primary-btn">Ignite Council</button>
+					</div>
+					<div id="amm-council-output" class="amm-output-box">The council is waiting to be summoned...</div>
+				</section>
+
 				<!-- Settings Tab -->
 				<section id="tab-settings" class="amm-tab-content">
 					<h2>User Settings</h2>
@@ -399,6 +416,7 @@ class AMM_Shortcodes {
 						const options = minds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 						document.getElementById('amm-mind-select').innerHTML = options;
 						document.getElementById('amm-set-default-mind').innerHTML = options;
+						document.querySelectorAll('.amm-council-select').forEach(s => s.innerHTML += options);
 
 						const categories = [...new Set(minds.map(m => m.category).filter(Boolean))];
 						document.getElementById('amm-category-filter').innerHTML += categories.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -751,6 +769,24 @@ class AMM_Shortcodes {
 				}).then(res => res.json()).then(data => {
 					if(data.success) {
 						prompt('Invite link generated! Send this to your team member:', data.invite_url);
+					}
+				});
+			});
+
+			// Handle Council
+			document.getElementById('amm-ignite-council-btn').addEventListener('click', () => {
+				const mind_ids = Array.from(document.querySelectorAll('.amm-council-select')).map(s => s.value).filter(Boolean);
+				const user_input = document.getElementById('amm-council-input').value;
+				const output = document.getElementById('amm-council-output');
+
+				output.innerText = 'The Council is deliberating...';
+				fetch(apiRoot + '/collaborate', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+					body: JSON.stringify({ mind_ids, user_input })
+				}).then(res => res.json()).then(data => {
+					if(data.success) {
+						output.innerHTML = `<h3>Final Council Strategy</h3>${data.final_output}`;
 					}
 				});
 			});

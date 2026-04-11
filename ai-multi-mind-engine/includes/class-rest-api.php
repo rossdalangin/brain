@@ -200,6 +200,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_remove_member' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Mind Council Collaboration Endpoint
+		register_rest_route( $namespace, '/collaborate', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_collaboration' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -693,6 +700,35 @@ class AMM_REST_API {
 			$data[] = array( 'id' => $t->term_id, 'name' => $t->name );
 		}
 		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * Handle Mind Council Collaboration
+	 */
+	public function handle_collaboration( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$mind_ids = (array)$params['mind_ids'];
+		$user_input = $params['user_input'] ?? '';
+		$provider = get_option( 'amm_default_ai_provider', 'gemini' );
+
+		$current_output = $user_input;
+		$results = array();
+
+		foreach ( $mind_ids as $mind_id ) {
+			$prompt_engine = new AMM_Prompt_Engine();
+			$prompts = $prompt_engine->prepare_prompts( $mind_id, 'report', $current_output );
+
+			$ai_manager = new AMM_AI_Provider_Manager();
+			$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'] );
+
+			if ( ! is_wp_error( $response ) ) {
+				$current_output = $response;
+				$results[] = array( 'mind_id' => $mind_id, 'content' => $response );
+			}
+		}
+
+		return rest_ensure_response( array( 'success' => true, 'final_output' => $current_output, 'sequence' => $results ) );
 	}
 
 	/**
