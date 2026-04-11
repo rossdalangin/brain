@@ -81,7 +81,20 @@ class AMM_Shortcodes {
 			<main class="amm-app-content">
 				<!-- Dashboard Tab -->
 				<section id="tab-dashboard" class="amm-tab-content">
-					<h2>Elite Insights</h2>
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<h2>Elite Insights</h2>
+						<button class="amm-primary-btn" style="width:200px;" onclick="document.querySelector('[data-tab=generate]').click();">🚀 Start New Session</button>
+					</div>
+
+					<div style="margin-top:30px;">
+						<h3>Quick Ignite (Top Minds)</h3>
+						<div class="amm-grid-layout" style="grid-template-columns: repeat(3, 1fr);">
+							<div class="amm-plan-card" style="cursor:pointer;" onclick="quickIgnite('ceo')"><strong>The Elite CEO</strong></div>
+							<div class="amm-plan-card" style="cursor:pointer;" onclick="quickIgnite('magic_bff')"><strong>Magic BFF</strong></div>
+							<div class="amm-plan-card" style="cursor:pointer;" onclick="quickIgnite('funnel_builder')"><strong>Funnel Architect</strong></div>
+						</div>
+					</div>
+
 					<div class="amm-grid-layout" style="margin-top:20px;">
 						<div class="amm-form-card">
 							<strong>Total Strategies Generated</strong><br>
@@ -329,6 +342,17 @@ class AMM_Shortcodes {
 						const pct = Math.min(100, (used / limit) * 100);
 
 						document.getElementById('amm-user-profile').innerText = `Welcome, ${data.user_name}${data.settings.company_name ? ' @ ' + data.settings.company_name : ''}`;
+
+						// Apply Branding
+						if (data.team_branding) {
+							if (data.team_branding.logo) {
+								document.querySelector('.amm-logo').innerHTML = `<img src="${data.team_branding.logo}" style="max-width:100%; max-height:40px;">`;
+							}
+							if (data.team_branding.color) {
+								document.documentElement.style.setProperty('--amm-primary', data.team_branding.color);
+							}
+						}
+
 						document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${used}/${limit} credits`;
 						document.getElementById('amm-usage-bar').style.width = pct + '%';
 
@@ -594,6 +618,12 @@ class AMM_Shortcodes {
 					.then(res => res.json()).then(data => { if(data.url) window.location.href = data.url; });
 			};
 
+			// Quick Ignite
+			window.quickIgnite = function(mindId) {
+				document.getElementById('amm-mind-select').value = mindId;
+				document.querySelector('[data-tab=generate]').click();
+			};
+
 			// Export PDF
 			document.getElementById('amm-export-btn').addEventListener('click', () => {
 				const win = window.open('', '_blank');
@@ -751,12 +781,13 @@ class AMM_Shortcodes {
 		</script>
 
 		<style>
+		:root { --amm-primary: #007cba; }
 		.amm-dashboard { display: grid; grid-template-columns: 260px 1fr; min-height: 800px; font-family: 'Inter', -apple-system, sans-serif; background: #fff; color: #333; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.08); border: 1px solid #eee; }
 		.amm-app-sidebar { background: #fcfcfc; border-right: 1px solid #f0f0f0; padding: 40px 25px; display: flex; flex-direction: column; }
-		.amm-logo { font-size: 20px; font-weight: 800; color: #007cba; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
+		.amm-logo { font-size: 20px; font-weight: 800; color: var(--amm-primary); margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
 		.amm-nav { flex-grow: 1; }
 		.amm-nav-item { display: block; padding: 12px 15px; color: #555; text-decoration: none; border-radius: 8px; margin-bottom: 5px; font-weight: 500; transition: 0.2s; }
-		.amm-nav-item:hover, .amm-nav-item.active { background: #007cba; color: #fff; }
+		.amm-nav-item:hover, .amm-nav-item.active { background: var(--amm-primary); color: #fff; }
 		.amm-app-content { padding: 40px; overflow-y: auto; background: #fff; }
 		.amm-tab-content { display: none; }
 		.amm-tab-content.active { display: block; }
@@ -764,7 +795,7 @@ class AMM_Shortcodes {
 		.amm-controls label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #888; }
 		.amm-controls select, .amm-controls textarea { width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
 		.amm-controls textarea { height: 180px; }
-		.amm-primary-btn { width: 100%; background: linear-gradient(135deg, #007cba 0%, #005a87 100%); color: #fff; border: none; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,124,186,0.2); transition: transform 0.2s; }
+		.amm-primary-btn { width: 100%; background: var(--amm-primary); color: #fff; border: none; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,124,186,0.2); transition: transform 0.2s; }
 		.amm-primary-btn:hover { transform: translateY(-2px); }
 		.amm-secondary-btn { background: #eee; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
 		.amm-output-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; padding: 25px; min-height: 400px; white-space: pre-wrap; line-height: 1.6; }

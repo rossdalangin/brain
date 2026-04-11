@@ -286,17 +286,6 @@ class AI_Multi_Mind_Engine {
 		) $charset_collate;";
 		dbDelta( $sql );
 	}
-		$sql = "CREATE TABLE $table_name (
-			id bigint(20) NOT NULL AUTO_INCREMENT,
-			team_id bigint(20) NOT NULL,
-			email varchar(100) NOT NULL,
-			token varchar(50) NOT NULL,
-			status varchar(20) DEFAULT 'pending' NOT NULL,
-			created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-			PRIMARY KEY  (id)
-		) $charset_collate;";
-		dbDelta( $sql );
-	}
 }
 
 // Initialize the plugin

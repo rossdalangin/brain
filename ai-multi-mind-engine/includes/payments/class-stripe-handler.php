@@ -99,7 +99,7 @@ class AMM_Stripe_Handler {
 			'cancel_url'  => home_url( '/library/' ),
 			'mode'        => 'payment',
 			'client_reference_id' => $user_id,
-			'line_items'  => array( array( 'price' => 'price_mind_unlock', 'quantity' => 1 ) ),
+			'line_items'  => array( array( 'price' => get_option('amm_stripe_price_mind_unlock'), 'quantity' => 1 ) ),
 			'metadata' => array( 'type' => 'mind_unlock', 'mind_id' => $mind_id )
 		);
 		$response = wp_remote_post( $url, array(

@@ -875,7 +875,11 @@ class AMM_REST_API {
 			'insights' => array(
 				'total_generations' => count( get_posts( array( 'post_type' => 'ai_outputs', 'author' => $user_id, 'posts_per_page' => -1 ) ) ),
 				'referral_count' => 0, // Placeholder for real referral count
-			)
+			),
+			'team_branding' => !empty($teams) ? array(
+				'logo' => $teams[0]->custom_logo,
+				'color' => $teams[0]->primary_color,
+			) : null
 		));
 	}
 }

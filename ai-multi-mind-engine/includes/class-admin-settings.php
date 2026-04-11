@@ -34,6 +34,7 @@ class AMM_Admin_Settings {
 		register_setting( 'amm_settings_group', 'amm_stripe_webhook_secret' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_starter' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_pro' );
+		register_setting( 'amm_settings_group', 'amm_stripe_price_mind_unlock' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_agency' );
 	}
 
@@ -104,6 +105,10 @@ class AMM_Admin_Settings {
 					<tr valign="top">
 						<th scope="row">Stripe Agency Price ID</th>
 						<td><input type="text" name="amm_stripe_price_agency" value="<?php echo esc_attr( get_option('amm_stripe_price_agency') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">Stripe Mind Unlock Price ID</th>
+						<td><input type="text" name="amm_stripe_price_mind_unlock" value="<?php echo esc_attr( get_option('amm_stripe_price_mind_unlock') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Global System Context</th>
