@@ -119,6 +119,22 @@ class AI_Multi_Mind_Engine {
 
 	public function init_shortcodes() {
 		new AMM_Shortcodes();
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+	}
+
+	/**
+	 * Enqueue Dashboard Assets
+	 */
+	public function enqueue_assets() {
+		if ( ! is_user_logged_in() ) return;
+
+		wp_enqueue_style( 'amm-dashboard-css', plugin_dir_url( __FILE__ ) . 'assets/css/amm-dashboard.css', array(), '1.0.0' );
+		wp_enqueue_script( 'amm-dashboard-js', plugin_dir_url( __FILE__ ) . 'assets/js/amm-dashboard.js', array(), '1.0.0', true );
+
+		wp_localize_script( 'amm-dashboard-js', 'ammData', array(
+			'apiRoot' => esc_url_raw( rest_url( 'amm/v1' ) ),
+			'nonce'   => wp_create_nonce( 'wp_rest' )
+		));
 	}
 
 	public function track_referral() {

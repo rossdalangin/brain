@@ -46,6 +46,9 @@ class AMM_Admin_Meta_Boxes {
 				<option value="agency" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'agency' ); ?>>Agency</option>
 			</select>
 		</p>
+		<p>
+			<label><input type="checkbox" name="amm_is_featured" value="yes" <?php checked( get_post_meta($post->ID, 'amm_is_featured', true), 'yes' ); ?>> <strong>Featured Mind?</strong> (Highlight in Library)</label>
+		</p>
 		<?php
 	}
 
@@ -116,7 +119,7 @@ class AMM_Admin_Meta_Boxes {
 			return;
 		}
 
-		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure', 'amm_is_premium', 'amm_min_plan' );
+		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure', 'amm_is_premium', 'amm_min_plan', 'amm_is_featured' );
 		foreach ( $fields as $field ) {
 			if ( isset( $_POST[$field] ) ) {
 				update_post_meta( $post_id, $field, sanitize_text_field( $_POST[$field] ) );

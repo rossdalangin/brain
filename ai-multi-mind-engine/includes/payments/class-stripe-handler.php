@@ -172,14 +172,35 @@ class AMM_Stripe_Handler {
 	}
 
 	/**
-	 * Signature Verification logic
+	 * Signature Verification logic (Manual implementation for production security)
 	 */
 	private function verify_signature( $payload, $sig_header ) {
 		if ( empty( $sig_header ) || empty( $this->webhook_secret ) ) return false;
 
-		// Logic to parse Stripe-Signature header and compare with calculated HMAC
-		// Simplified for this implementation; in production, use Stripe SDK
-		return true;
+		$parts = explode( ',', $sig_header );
+		$timestamp = -1;
+		$signatures = array();
+
+		foreach ( $parts as $part ) {
+			$kv = explode( '=', $part, 2 );
+			if ( count( $kv ) < 2 ) continue;
+			if ( trim( $kv[0] ) === 't' ) $timestamp = (int)$kv[1];
+			if ( trim( $kv[0] ) === 'v1' ) $signatures[] = $kv[1];
+		}
+
+		if ( $timestamp === -1 || empty( $signatures ) ) return false;
+
+		// Check timestamp tolerance (5 minutes)
+		if ( abs( time() - $timestamp ) > 300 ) return false;
+
+		$signed_payload = $timestamp . '.' . $payload;
+		$expected_sig = hash_hmac( 'sha256', $signed_payload, $this->webhook_secret );
+
+		foreach ( $signatures as $sig ) {
+			if ( hash_equals( $expected_sig, $sig ) ) return true;
+		}
+
+		return false;
 	}
 
 	/**

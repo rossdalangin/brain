@@ -1,0 +1,33 @@
+:root { --amm-primary: #007cba; }
+.amm-dashboard { display: grid; grid-template-columns: 260px 1fr; min-height: 800px; font-family: 'Inter', -apple-system, sans-serif; background: #fff; color: #333; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.08); border: 1px solid #eee; }
+.amm-app-sidebar { background: #fcfcfc; border-right: 1px solid #f0f0f0; padding: 40px 25px; display: flex; flex-direction: column; }
+.amm-logo { font-size: 20px; font-weight: 800; color: var(--amm-primary); margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
+.amm-nav { flex-grow: 1; }
+.amm-nav-item { display: block; padding: 12px 15px; color: #555; text-decoration: none; border-radius: 8px; margin-bottom: 5px; font-weight: 500; transition: 0.2s; }
+.amm-nav-item:hover, .amm-nav-item.active { background: var(--amm-primary); color: #fff; }
+.amm-app-content { padding: 40px; overflow-y: auto; background: #fff; }
+.amm-tab-content { display: none; }
+.amm-tab-content.active { display: block; }
+.amm-generate-layout { display: grid; grid-template-columns: 350px 1fr; gap: 30px; margin-top: 30px; }
+.amm-controls label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #888; }
+.amm-controls select, .amm-controls textarea { width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+.amm-controls textarea { height: 180px; }
+.amm-primary-btn { width: 100%; background: var(--amm-primary); color: #fff; border: none; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,124,186,0.2); transition: transform 0.2s; }
+.amm-primary-btn:hover { transform: translateY(-2px); }
+.amm-secondary-btn { background: #eee; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.amm-output-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; padding: 25px; min-height: 400px; white-space: pre-wrap; line-height: 1.6; }
+.amm-grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.amm-plan-card { border: 1px solid #eee; padding: 20px; border-radius: 12px; text-align: center; background: #fff; }
+.amm-plan-card.premium { border-color: gold; box-shadow: 0 5px 15px rgba(255,215,0,0.1); }
+.amm-plan-card.featured { border: 2px solid #007cba; transform: scale(1.05); }
+.amm-form-card { background: #f9f9f9; padding: 25px; border-radius: 12px; border: 1px solid #eee; }
+.amm-user-block { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; }
+.amm-theme-btn { margin-top: 15px; width: 100%; background: none; border: 1px solid #ddd; border-radius: 6px; padding: 8px; cursor: pointer; }
+
+/* Dark Mode */
+.dark-mode { background: #111; color: #eee; }
+.dark-mode .amm-app-sidebar { background: #1a1a1a; border-right-color: #333; }
+.dark-mode .amm-app-content { background: #111; }
+.dark-mode .amm-nav-item { color: #aaa; }
+.dark-mode .amm-output-box, .dark-mode .amm-form-card, .dark-mode .amm-plan-card { background: #1a1a1a; border-color: #333; color: #eee; }
+.dark-mode .amm-controls select, .dark-mode .amm-controls textarea { background: #222; border-color: #444; color: #eee; }

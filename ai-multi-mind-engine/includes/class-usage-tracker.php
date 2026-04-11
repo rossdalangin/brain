@@ -13,12 +13,36 @@ class AMM_Usage_Tracker {
 	 * Check if a user has enough credits for a generation
 	 */
 	public function can_user_generate( $user_id ) {
+		$this->check_monthly_reset( $user_id );
+
 		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
 		$limit = $this->get_plan_limit( $plan_id );
 
 		$used = $this->get_current_month_usage( $user_id );
 
 		return $used < $limit;
+	}
+
+	/**
+	 * Ensure usage record exists for the current month
+	 */
+	private function check_monthly_reset( $user_id ) {
+		global $wpdb;
+		$month = date( 'Y-m' );
+		$table = $wpdb->prefix . 'amm_usage';
+
+		$exists = $wpdb->get_var( $wpdb->prepare(
+			"SELECT id FROM $table WHERE user_id = %d AND month = %s",
+			$user_id, $month
+		));
+
+		if ( ! $exists ) {
+			$wpdb->insert( $table, array(
+				'user_id'      => $user_id,
+				'month'        => $month,
+				'credits_used' => 0,
+			));
+		}
 	}
 
 	/**

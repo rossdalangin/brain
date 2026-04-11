@@ -207,6 +207,13 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_collaboration' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Team Activity Endpoint
+		register_rest_route( $namespace, '/team-activity', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_team_activity' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
 	}
 
 	/**
@@ -402,15 +409,16 @@ class AMM_REST_API {
 	 * Get all available Minds (Core + CPT)
 	 */
 	public function get_all_minds() {
+		$user_id = get_current_user_id();
 		$core_minds = array(
-			array( 'id' => 'ceo', 'name' => 'Elite CEO' ),
+			array( 'id' => 'ceo', 'name' => 'Elite CEO', 'featured' => true ),
 			array( 'id' => 'strategist', 'name' => 'Blue Ocean Strategist' ),
 			array( 'id' => 'funnel_builder', 'name' => 'Funnel Architect' ),
 			array( 'id' => 'growth_hacker', 'name' => 'Growth Hacker' ),
 			array( 'id' => 'copywriter', 'name' => 'Copywriting Master' ),
 			array( 'id' => 'sales_closer', 'name' => 'Sales Closer' ),
 			array( 'id' => 'profit_maximizer', 'name' => 'Profit Maximizer' ),
-			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi)' ),
+			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi)', 'featured' => true ),
 			array( 'id' => 'sop_architect', 'name' => 'SOP Architect' ),
 			array( 'id' => 'viral_creator', 'name' => 'Viral Creator' ),
 			array( 'id' => 'visionary', 'name' => 'Visionary Founder' ),
@@ -432,7 +440,7 @@ class AMM_REST_API {
 			array( 'id' => 'policy_generator', 'name' => 'Policy Generator' ),
 			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach' ),
 			array( 'id' => 'decision_expert', 'name' => 'Decision Expert' ),
-			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)' ),
+			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
@@ -445,6 +453,7 @@ class AMM_REST_API {
 				'name' => $mind->post_title . ' (Custom)',
 				'premium' => $is_premium,
 				'purchased' => $has_access,
+				'featured' => get_post_meta( $mind->ID, 'amm_is_featured', true ) === 'yes',
 				'category' => wp_get_post_terms( $mind->ID, 'amm_mind_category', array( 'fields' => 'names' ) )[0] ?? 'Custom'
 			);
 		}
@@ -849,6 +858,39 @@ class AMM_REST_API {
 		$team_id = (int)$request->get_param('team_id');
 		$team_manager = new AMM_Team_Manager();
 		return rest_ensure_response( $team_manager->get_pending_invites( $team_id ) );
+	}
+
+	/**
+	 * Get recent activity for the user's team
+	 */
+	public function get_team_activity( $request ) {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		$team_id = (int)$request->get_param('team_id');
+
+		// Verify membership
+		$is_member = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}amm_team_members WHERE team_id = %d AND user_id = %d", $team_id, $user_id ) );
+		if ( ! $is_member ) return new WP_Error( 'forbidden', 'Unauthorized.', array( 'status' => 403 ) );
+
+		$members = $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$wpdb->prefix}amm_team_members WHERE team_id = %d", $team_id ) );
+
+		$activity = get_posts( array(
+			'post_type'      => 'ai_outputs',
+			'author__in'     => $members,
+			'posts_per_page' => 10,
+		));
+
+		$data = array();
+		foreach ( $activity as $a ) {
+			$user = get_userdata( $a->post_author );
+			$data[] = array(
+				'title' => $a->post_title,
+				'user'  => $user->display_name,
+				'date'  => get_the_date( 'Y-m-d H:i', $a->ID )
+			);
+		}
+
+		return rest_ensure_response( $data );
 	}
 
 	/**
