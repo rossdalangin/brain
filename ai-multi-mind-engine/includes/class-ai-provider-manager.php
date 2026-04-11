@@ -42,7 +42,18 @@ class AMM_AI_Provider_Manager {
 	public function generate_response( $provider, $system_prompt, $user_prompt, $history = array() ) {
 		switch ( $provider ) {
 			case 'free_jules':
-				return "The 'Free Jules' engine has processed your request. As a fallback expert, I suggest focusing on high-leverage activities and ensuring your unit economics are sound. (This is a mock fallback response).";
+				$tips = array(
+					"Focus on high-leverage activities ($10,000/hr work) rather than busywork.",
+					"Ensure your unit economics are sound: LTV must be at least 3x CAC.",
+					"Speed is a feature. Build, test, and pivot faster than your competition.",
+					"Niche down until it hurts. Then dominate that niche.",
+					"Solve a bleeding-neck problem, not a nice-to-have one.",
+					"Your network is your net worth. Build elite relationships.",
+					"Automate or delegate anything that isn't your core genius.",
+					"The best marketing is a product that actually works."
+				);
+				$tip = $tips[array_rand($tips)];
+				return "Expert Insight from Jules: \"{$tip}\"\n\nStrategic Recommendation: Based on your request for '{$user_prompt}', I recommend auditing your current workflow to identify the single biggest constraint and applying a 'Blue Ocean' approach to differentiate your offer.";
 			case 'gemini':
 				return $this->call_gemini( $system_prompt, $user_prompt, $history );
 			case 'openai':
