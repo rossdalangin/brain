@@ -109,12 +109,44 @@ class AI_Multi_Mind_Engine {
 
 		if ( is_admin() ) {
 			add_action( 'plugins_loaded', array( $this, 'init_admin' ) );
+			add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
 		}
 	}
 
 	public function init_admin() {
 		new AMM_Admin_Settings();
 		new AMM_Admin_Meta_Boxes();
+	}
+
+	public function add_dashboard_widgets() {
+		wp_add_dashboard_widget(
+			'amm_status_widget',
+			'AI Multi-Mind SaaS Status',
+			array( $this, 'render_dashboard_widget' )
+		);
+	}
+
+	public function render_dashboard_widget() {
+		$analytics = new AMM_Analytics_Manager();
+		$stats = $analytics->get_stats();
+		?>
+		<div style="text-align:center;">
+			<p><strong>Total Strategy Generations</strong></p>
+			<h2 style="font-size:32px; color:#007cba; margin:0;"><?php echo number_format($stats['total_credits_used']); ?></h2>
+			<hr>
+			<div style="display:flex; justify-content:space-around;">
+				<div>
+					<strong>Active Plans</strong><br>
+					<span style="font-size:18px;"><?php echo $stats['active_subscriptions']; ?></span>
+				</div>
+				<div>
+					<strong>System Health</strong><br>
+					<span style="color:green;">✅ Online</span>
+				</div>
+			</div>
+			<p><a href="<?php echo admin_url('admin.php?page=amm-settings'); ?>" class="button button-primary">Manage SaaS Engine</a></p>
+		</div>
+		<?php
 	}
 
 	public function init_shortcodes() {

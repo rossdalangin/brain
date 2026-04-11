@@ -221,6 +221,41 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_public_output' ),
 			'permission_callback' => '__return_true',
 		));
+
+		// Admin Connectivity Test
+		register_rest_route( $namespace, '/admin/test-api', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_test' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+	}
+
+	/**
+	 * Handle Admin Connectivity Test
+	 */
+	public function handle_admin_test( $request ) {
+		$params = $request->get_json_params();
+		$service = $params['service'] ?? '';
+		$provider_manager = new AMM_AI_Provider_Manager();
+
+		switch ( $service ) {
+			case 'gemini':
+			case 'openai':
+			case 'claude':
+				$res = $provider_manager->generate_response( $service, "Verify connectivity.", "Ping." );
+				if ( is_wp_error( $res ) ) return $res;
+				return rest_ensure_response( array( 'success' => true, 'message' => 'API Connection Successful!' ) );
+			case 'stripe':
+				$key = get_option('amm_stripe_secret_key');
+				if ( ! $key ) return new WP_Error( 'missing_key', 'Stripe secret key is not set.' );
+				$response = wp_remote_get( 'https://api.stripe.com/v1/balance', array(
+					'headers' => array( 'Authorization' => 'Bearer ' . $key )
+				));
+				if ( is_wp_error( $response ) ) return $response;
+				return rest_ensure_response( array( 'success' => true, 'message' => 'Stripe Account Connected!' ) );
+			default:
+				return new WP_Error( 'invalid_service', 'Service not recognized.' );
+		}
 	}
 
 	/**

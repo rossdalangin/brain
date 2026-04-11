@@ -132,18 +132,23 @@ class AMM_Admin_Settings {
 				<tbody>
 					<tr>
 						<td>Gemini API</td>
-						<td><?php echo get_option('amm_gemini_api_key') ? '✅ Configured' : '❌ Missing'; ?></td>
-						<td><button class="button">Test</button></td>
+						<td id="status-gemini"><?php echo get_option('amm_gemini_api_key') ? '✅ Configured' : '❌ Missing'; ?></td>
+						<td><button type="button" class="button amm-test-btn" data-service="gemini">Test</button></td>
 					</tr>
 					<tr>
 						<td>OpenAI API</td>
-						<td><?php echo get_option('amm_openai_api_key') ? '✅ Configured' : '❌ Missing'; ?></td>
-						<td><button class="button">Test</button></td>
+						<td id="status-openai"><?php echo get_option('amm_openai_api_key') ? '✅ Configured' : '❌ Missing'; ?></td>
+						<td><button type="button" class="button amm-test-btn" data-service="openai">Test</button></td>
 					</tr>
 					<tr>
-						<td>Stripe Webhooks</td>
-						<td><?php echo get_option('amm_stripe_webhook_secret') ? '✅ Configured' : '❌ Missing'; ?></td>
-						<td><button class="button">Verify</button></td>
+						<td>Claude API</td>
+						<td id="status-claude"><?php echo get_option('amm_claude_api_key') ? '✅ Configured' : '❌ Missing'; ?></td>
+						<td><button type="button" class="button amm-test-btn" data-service="claude">Test</button></td>
+					</tr>
+					<tr>
+						<td>Stripe Integration</td>
+						<td id="status-stripe"><?php echo get_option('amm_stripe_secret_key') ? '✅ Configured' : '❌ Missing'; ?></td>
+						<td><button type="button" class="button amm-test-btn" data-service="stripe">Verify</button></td>
 					</tr>
 				</tbody>
 			</table>
@@ -216,6 +221,41 @@ class AMM_Admin_Settings {
 				</tbody>
 			</table>
 		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			$('.amm-test-btn').on('click', function() {
+				var btn = $(this);
+				var service = btn.data('service');
+				var statusCell = $('#status-' + service);
+
+				btn.prop('disabled', true).text('Testing...');
+
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/test-api" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) {
+						xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>');
+					},
+					contentType: 'application/json',
+					data: JSON.stringify({ service: service }),
+					success: function(response) {
+						if (response.success) {
+							statusCell.html('✅ ' + response.message).css('color', 'green');
+						} else {
+							statusCell.html('❌ Error').css('color', 'red');
+						}
+					},
+					error: function(xhr) {
+						var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Connection Failed';
+						statusCell.html('❌ ' + msg).css('color', 'red');
+					},
+					complete: function() {
+						btn.prop('disabled', false).text(service === 'stripe' ? 'Verify' : 'Test');
+					}
+				});
+			});
+		});
+		</script>
 		<?php
 	}
 }
