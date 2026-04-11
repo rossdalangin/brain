@@ -70,6 +70,7 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/minds/class-mind-batch-1.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-batch-2.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-batch-3.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-batch-4.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-magic-bff.php';
 
 		// Managers

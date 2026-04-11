@@ -12,6 +12,7 @@ class AMM_Shortcodes {
 	public function __construct() {
 		add_shortcode( 'amm_dashboard', array( $this, 'render_dashboard' ) );
 		add_shortcode( 'amm_shared_intel', array( $this, 'render_shared_intel' ) );
+		add_shortcode( 'amm_landing_page', array( $this, 'render_landing_page' ) );
 	}
 
 	public function render_shared_intel() {
@@ -29,6 +30,51 @@ class AMM_Shortcodes {
 			<div style="white-space:pre-wrap; margin-top:30px;"><?php echo esc_html($post->post_content); ?></div>
 			<div style="margin-top:50px; text-align:center;">
 				<a href="<?php echo home_url(); ?>" class="button primary">Get your own AI Minds</a>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	public function render_landing_page() {
+		ob_start();
+		?>
+		<div class="amm-landing" style="font-family:'Inter', sans-serif; max-width:1200px; margin:auto; text-align:center; padding:100px 20px;">
+			<span style="background:#e1f5fe; color:#039be5; padding:8px 20px; border-radius:50px; font-weight:bold; font-size:14px; text-transform:uppercase;">The Thinking Engine for Billion-Dollar Brands</span>
+			<h1 style="font-size:64px; font-weight:800; margin:30px 0; line-height:1.1;">Access Elite Business Minds <span style="color:#007cba;">On Demand.</span></h1>
+			<p style="font-size:20px; color:#666; max-width:800px; margin:0 auto 50px;">Stop using generic AI. Ignite a council of specialized personas trained in the frameworks of the world's most successful entrepreneurs.</p>
+
+			<div style="display:flex; justify-content:center; gap:20px; margin-bottom:100px;">
+				<a href="<?php echo wp_registration_url(); ?>" class="amm-primary-btn" style="width:auto; padding:20px 40px; font-size:18px;">Start Free Journey</a>
+				<a href="#minds" class="amm-secondary-btn" style="padding:20px 40px; font-size:18px;">Browse the Council</a>
+			</div>
+
+			<div id="minds" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:30px; text-align:left;">
+				<div class="amm-form-card">
+					<div style="font-size:40px; margin-bottom:20px;">🧠</div>
+					<h3>The Elite CEO</h3>
+					<p>Strategic oversight and high-leverage decision making based on multi-variable constraints.</p>
+				</div>
+				<div class="amm-form-card">
+					<div style="font-size:40px; margin-bottom:20px;">🚀</div>
+					<h3>The Growth Hacker</h3>
+					<p>Viral loops, acquisition funnels, and rapid-scale marketing experiments.</p>
+				</div>
+				<div class="amm-form-card">
+					<div style="font-size:40px; margin-bottom:20px;">💰</div>
+					<h3>$100M Offer Creator</h3>
+					<p>Crafting offers so good people feel stupid saying no. Powered by the Hormozi framework.</p>
+				</div>
+			</div>
+
+			<div style="margin-top:100px; padding:60px; background:#f9f9f9; border-radius:24px;">
+				<h2>Built for Scalability. Designed for Revenue.</h2>
+				<p>Whether you're a solo founder or a global agency, the AI Multi-Mind Engine scales with you.</p>
+				<div style="display:flex; justify-content:center; gap:50px; margin-top:40px;">
+					<div><strong>30+</strong><br>Specialized Minds</div>
+					<div><strong>100%</strong><br>Secure & Private</div>
+					<div><strong>24/7</strong><br>Elite Mentorship</div>
+				</div>
 			</div>
 		</div>
 		<?php
@@ -64,6 +110,7 @@ class AMM_Shortcodes {
 					<a href="#" class="amm-nav-item active" data-tab="generate">🚀 Ignite Mind</a>
 					<a href="#" class="amm-nav-item" data-tab="council">🏛️ Mind Council</a>
 					<a href="#" class="amm-nav-item" data-tab="library">📚 Minds Library</a>
+					<a href="#" class="amm-nav-item" data-tab="templates">📜 Templates</a>
 					<a href="#" class="amm-nav-item" data-tab="workspace">📁 My Workspace</a>
 					<a href="#" class="amm-nav-item" data-tab="team">👥 Team Hub</a>
 					<a href="#" class="amm-nav-item" data-tab="affiliate">💸 Affiliates</a>
@@ -186,10 +233,17 @@ class AMM_Shortcodes {
 				<!-- Library Tab -->
 				<section id="tab-library" class="amm-tab-content">
 					<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-						<h2>AI Minds Library</h2>
-						<select id="amm-category-filter" style="width:200px;">
-							<option value="">All Categories</option>
-						</select>
+						<h2>AI Minds Marketplace</h2>
+						<div style="display:flex; gap:10px;">
+							<select id="amm-mind-filter" style="width:150px;">
+								<option value="all">All Minds</option>
+								<option value="purchased">My Minds</option>
+								<option value="premium">Marketplace</option>
+							</select>
+							<select id="amm-category-filter" style="width:150px;">
+								<option value="">All Categories</option>
+							</select>
+						</div>
 					</div>
 					<div id="amm-marketplace-grid" class="amm-grid-layout">Loading library...</div>
 
@@ -209,6 +263,13 @@ class AMM_Shortcodes {
 							<button id="amm-create-template-btn" class="amm-secondary-btn">Create Template</button>
 						</div>
 					</div>
+				</section>
+
+				<!-- Templates Tab -->
+				<section id="tab-templates" class="amm-tab-content">
+					<h2>Elite Task Templates</h2>
+					<p>Ready-to-use frameworks for common business challenges.</p>
+					<div id="amm-templates-grid" class="amm-grid-layout">Loading templates...</div>
 				</section>
 
 				<!-- Workspace Tab -->
@@ -264,9 +325,13 @@ class AMM_Shortcodes {
 
 				<!-- Council Tab -->
 				<section id="tab-council" class="amm-tab-content">
-					<h2>Mind Council Collaboration</h2>
-					<p>Select multiple minds to brainstorm and build your strategy in sequence.</p>
+					<h2>Mind Council & Critique</h2>
+					<p>Select multiple minds to brainstorm or use "Critique Mode" to have one mind audit another.</p>
 					<div class="amm-form-card" style="margin-bottom:20px;">
+						<div style="margin-bottom:15px;">
+							<label><input type="radio" name="council-mode" value="sequence" checked> <strong>Sequence Mode</strong> (Mind 1 -> Mind 2 -> Mind 3)</label><br>
+							<label><input type="radio" name="council-mode" value="critique"> <strong>Critique Mode</strong> (Mind 1 Creates -> Mind 2 Audits -> Mind 1 Finalizes)</label>
+						</div>
 						<div id="amm-council-selectors" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
 							<select class="amm-council-select"><option value="">Select Mind 1...</option></select>
 							<select class="amm-council-select"><option value="">Select Mind 2...</option></select>

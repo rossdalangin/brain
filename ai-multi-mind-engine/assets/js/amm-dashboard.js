@@ -98,6 +98,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(templates.length) {
                     const select = document.getElementById('amm-template-select');
                     select.innerHTML += templates.map(t => `<option value="${t.content}" ${t.locked ? 'disabled' : ''}>${t.title}${t.locked ? ' (Locked)' : ''}</option>`).join('');
+
+							document.getElementById('amm-templates-grid').innerHTML = templates.map(t => `
+								<div class="amm-plan-card">
+									<div style="font-size:32px; margin-bottom:10px;">📜</div>
+									<strong>${t.title}</strong>
+									<p style="font-size:10px; color:#888;">Min Plan: ${t.min_plan}</p>
+									<button class="amm-secondary-btn" onclick="document.getElementById('amm-template-select').value='${t.content}'; document.getElementById('amm-input').value='${t.content}'; document.querySelector('[data-tab=generate]').click();" ${t.locked ? 'disabled' : ''}>Use Template</button>
+									${t.locked ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="document.querySelector('[data-tab=billing]').click()">Upgrade to Unlock</button>` : ''}
+								</div>
+							`).join('');
                 }
             });
 
@@ -129,11 +139,25 @@ document.addEventListener('DOMContentLoaded', function() {
             `).join('');
         }
 
-        document.getElementById('amm-category-filter').addEventListener('change', (e) => {
-            const cat = e.target.value;
-            const filtered = cat ? window.ammAllMinds.filter(m => m.category === cat) : window.ammAllMinds;
+        document.getElementById('amm-category-filter').addEventListener('change', () => applyFilters());
+        document.getElementById('amm-mind-filter').addEventListener('change', () => applyFilters());
+
+        function applyFilters() {
+            const cat = document.getElementById('amm-category-filter').value;
+            const type = document.getElementById('amm-mind-filter').value;
+
+            let filtered = window.ammAllMinds;
+
+            if (cat) filtered = filtered.filter(m => m.category === cat);
+
+            if (type === 'purchased') {
+                filtered = filtered.filter(m => !m.premium || m.purchased);
+            } else if (type === 'premium') {
+                filtered = filtered.filter(m => m.premium && !m.purchased);
+            }
+
             renderMindGrid(filtered);
-        });
+        }
 
         // Folders
         fetch(apiRoot + '/folders', { headers: { 'X-WP-Nonce': nonce } })
@@ -238,6 +262,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const outputBox = document.getElementById('amm-output');
     window.ammChatHistory = [];
 
+    // Load History
+    fetch(apiRoot + '/get-history', { headers: { 'X-WP-Nonce': nonce } })
+        .then(res => res.json()).then(h => { window.ammChatHistory = h; });
+
     btn.addEventListener('click', () => {
         const userInput = document.getElementById('amm-input').value;
         if(!userInput) return;
@@ -272,7 +300,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('amm-export-html-btn').style.display = 'block';
                         window.ammChatHistory.push({ role: 'user', content: userInput });
                         window.ammChatHistory.push({ role: 'assistant', content: text });
-                        outputBox.innerHTML += '<div style="margin-top:20px; font-size:12px; color:green; font-weight:bold;">✅ Strategy saved to your workspace automatically.</div>';
+
+								// Save History
+								fetch(apiRoot + '/save-history', {
+									method: 'POST',
+									headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+									body: JSON.stringify({ history: window.ammChatHistory })
+								});
+
+								outputBox.innerHTML += '<div style="margin-top:20px; font-size:12px; color:green; font-weight:bold;">✅ Strategy saved and persistent memory updated.</div>';
                     }
                 }, 5);
             } else {
@@ -483,16 +519,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('amm-ignite-council-btn').addEventListener('click', () => {
         const mind_ids = Array.from(document.querySelectorAll('.amm-council-select')).map(s => s.value).filter(Boolean);
         const user_input = document.getElementById('amm-council-input').value;
+        const mode = document.querySelector('input[name="council-mode"]:checked').value;
         const output = document.getElementById('amm-council-output');
 
         output.innerText = 'The Council is deliberating...';
         fetch(apiRoot + '/collaborate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
-            body: JSON.stringify({ mind_ids, user_input })
+            body: JSON.stringify({ mind_ids, user_input, mode })
         }).then(res => res.json()).then(data => {
             if(data.success) {
-                output.innerHTML = `<h3>Final Council Strategy</h3>${data.final_output}`;
+                let html = `<h3>Council Deliberation Complete (${mode.toUpperCase()})</h3>`;
+                if (data.sequence && data.sequence.length) {
+                    html += '<div style="margin-bottom:20px; border-left:4px solid #007cba; padding-left:20px;">';
+                    data.sequence.forEach((step, idx) => {
+                        html += `<details style="margin-bottom:10px;"><summary style="cursor:pointer; font-weight:bold; color:#007cba;">Mind ${idx+1} Reflection</summary><div style="padding:10px; background:#f0f8ff; border-radius:8px; font-size:13px; margin-top:5px;">${typeof step === 'string' ? step : step.content}</div></details>`;
+                    });
+                    html += '</div>';
+                }
+                html += `<h4>Final Strategy Output</h4><div>${data.final_output}</div>`;
+                output.innerHTML = html;
             }
         });
     });

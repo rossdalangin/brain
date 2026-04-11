@@ -228,6 +228,44 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_admin_test' ),
 			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
 		));
+
+		// Save History Endpoint
+		register_rest_route( $namespace, '/save-history', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_save_history' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Get History Endpoint
+		register_rest_route( $namespace, '/get-history', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'handle_get_history' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+	}
+
+	/**
+	 * Handle Save Conversation History
+	 */
+	public function handle_save_history( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$history = (array)$params['history'];
+
+		// Limit history to last 10 messages for performance
+		$history = array_slice( $history, -10 );
+		update_user_meta( $user_id, 'amm_chat_history', $history );
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle Get Conversation History
+	 */
+	public function handle_get_history() {
+		$user_id = get_current_user_id();
+		$history = get_user_meta( $user_id, 'amm_chat_history', true ) ?: array();
+		return rest_ensure_response( $history );
 	}
 
 	/**
@@ -325,13 +363,9 @@ class AMM_REST_API {
 		// 2. Prepare Prompts
 		$prompt_engine = new AMM_Prompt_Engine();
 
-		// BFF Context Awareness
-		if ( $mind_id === 'magic_bff' ) {
-			$recent = get_posts( array( 'post_type' => 'ai_outputs', 'author' => $user_id, 'posts_per_page' => 3 ) );
-			if ( $recent ) {
-				$titles = array_map( function($p) { return $p->post_title; }, $recent );
-				$user_input = "RECENT TOPICS WE DISCUSSED:\n" . implode(', ', $titles) . "\n\nCURRENT REQUEST:\n" . $user_input;
-			}
+		// BFF Context Awareness (Persistent History)
+		if ( $mind_id === 'magic_bff' && empty($history) ) {
+			$history = get_user_meta( $user_id, 'amm_chat_history', true ) ?: array();
 		}
 
 		$kb_context = get_user_meta( $user_id, 'amm_knowledge_base', true );
@@ -505,6 +539,10 @@ class AMM_REST_API {
 			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach' ),
 			array( 'id' => 'decision_expert', 'name' => 'Decision Expert' ),
 			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true ),
+			array( 'id' => 'roadmap_builder', 'name' => 'Product Roadmap Builder' ),
+			array( 'id' => 'pitch_architect', 'name' => 'Investor Pitch Architect' ),
+			array( 'id' => 'vc_auditor', 'name' => 'VC Auditor' ),
+			array( 'id' => 'psych_copywriter', 'name' => 'Psychological Copywriter' ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
@@ -783,21 +821,38 @@ class AMM_REST_API {
 		$params = $request->get_json_params();
 		$mind_ids = (array)$params['mind_ids'];
 		$user_input = $params['user_input'] ?? '';
+		$mode = $params['mode'] ?? 'sequence';
 		$provider = get_option( 'amm_default_ai_provider', 'gemini' );
 
 		$current_output = $user_input;
 		$results = array();
+		$prompt_engine = new AMM_Prompt_Engine();
+		$ai_manager = new AMM_AI_Provider_Manager();
 
-		foreach ( $mind_ids as $mind_id ) {
-			$prompt_engine = new AMM_Prompt_Engine();
-			$prompts = $prompt_engine->prepare_prompts( $mind_id, 'report', $current_output );
+		if ( $mode === 'critique' && count($mind_ids) >= 2 ) {
+			// 1. Mind 1 creates
+			$p1 = $prompt_engine->prepare_prompts( $mind_ids[0], 'report', $current_output );
+			$r1 = $ai_manager->generate_response( $provider, $p1['system'], $p1['user'] );
 
-			$ai_manager = new AMM_AI_Provider_Manager();
-			$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'] );
+			// 2. Mind 2 audits
+			$p2 = $prompt_engine->prepare_prompts( $mind_ids[1], 'report', "AUDIT THIS STRATEGY FOR FLAWS AND IMPROVEMENTS:\n\n" . $r1 );
+			$r2 = $ai_manager->generate_response( $provider, $p2['system'], $p2['user'] );
 
-			if ( ! is_wp_error( $response ) ) {
-				$current_output = $response;
-				$results[] = array( 'mind_id' => $mind_id, 'content' => $response );
+			// 3. Mind 1 finalizes
+			$p3 = $prompt_engine->prepare_prompts( $mind_ids[0], 'report', "HERE IS AN AUDIT OF YOUR PREVIOUS WORK. IMPROVE AND FINALIZE THE STRATEGY BASED ON THIS FEEDBACK:\n\nAUDIT:\n" . $r2 . "\n\nORIGINAL:\n" . $r1 );
+			$r3 = $ai_manager->generate_response( $provider, $p3['system'], $p3['user'] );
+
+			$current_output = $r3;
+			$results = array($r1, $r2, $r3);
+		} else {
+			foreach ( $mind_ids as $mind_id ) {
+				$prompts = $prompt_engine->prepare_prompts( $mind_id, 'report', $current_output );
+				$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'] );
+
+				if ( ! is_wp_error( $response ) ) {
+					$current_output = $response;
+					$results[] = array( 'mind_id' => $mind_id, 'content' => $response );
+				}
 			}
 		}
 

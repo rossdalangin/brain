@@ -115,6 +115,14 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_Decision_Expert();
 			case 'magic_bff':
 				return new AMM_Mind_Magic_BFF();
+			case 'roadmap_builder':
+				return new AMM_Mind_Roadmap_Builder();
+			case 'pitch_architect':
+				return new AMM_Mind_Pitch_Architect();
+			case 'vc_auditor':
+				return new AMM_Mind_VC_Auditor();
+			case 'psych_copywriter':
+				return new AMM_Mind_Psychological_Copywriter();
 		}
 
 		// Otherwise, look for it in the CPT
