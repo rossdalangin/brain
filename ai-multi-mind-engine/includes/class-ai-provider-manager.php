@@ -68,19 +68,23 @@ class AMM_AI_Provider_Manager {
 	/**
 	 * Call Anthropic Claude API
 	 */
-	private function call_claude( $system_prompt, $user_prompt ) {
+	private function call_claude( $system_prompt, $user_prompt, $history = array() ) {
 		$api_key = $this->api_keys['claude'];
 		if ( ! $api_key ) return new WP_Error( 'missing_key', 'Claude API key missing.' );
 
 		$url = "https://api.anthropic.com/v1/messages";
 
+		$messages = array();
+		foreach ( $history as $h ) {
+			$messages[] = array( 'role' => $h['role'], 'content' => $h['content'] );
+		}
+		$messages[] = array( 'role' => 'user', 'content' => $user_prompt );
+
 		$body = array(
 			'model' => 'claude-3-opus-20240229',
 			'max_tokens' => 1024,
 			'system' => $system_prompt,
-			'messages' => array(
-				array( 'role' => 'user', 'content' => $user_prompt ),
-			)
+			'messages' => $messages
 		);
 
 		$response = wp_remote_post( $url, array(
@@ -101,21 +105,25 @@ class AMM_AI_Provider_Manager {
 	/**
 	 * Call Google Gemini API
 	 */
-	private function call_gemini( $system_prompt, $user_prompt ) {
+	private function call_gemini( $system_prompt, $user_prompt, $history = array() ) {
 		$api_key = $this->api_keys['gemini'];
 		if ( ! $api_key ) return new WP_Error( 'missing_key', 'Gemini API key missing.' );
 
 		$url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" . $api_key;
 
-		$body = array(
-			'contents' => array(
-				array(
-					'parts' => array(
-						array( 'text' => $system_prompt . "\n\nUser Request: " . $user_prompt )
-					)
-				)
-			)
+		$contents = array();
+		foreach ( $history as $h ) {
+			$contents[] = array(
+				'role'  => ( $h['role'] === 'user' ) ? 'user' : 'model',
+				'parts' => array( array( 'text' => $h['content'] ) )
+			);
+		}
+		$contents[] = array(
+			'role'  => 'user',
+			'parts' => array( array( 'text' => $system_prompt . "\n\nUser Request: " . $user_prompt ) )
 		);
+
+		$body = array( 'contents' => $contents );
 
 		$response = wp_remote_post( $url, array(
 			'body'    => json_encode( $body ),

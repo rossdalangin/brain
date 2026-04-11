@@ -25,6 +25,15 @@ class AMM_Admin_Meta_Boxes {
 		);
 
 		add_meta_box(
+			'amm_mind_featured',
+			'Promotion Settings',
+			array( $this, 'render_featured_meta_box' ),
+			'ai_minds',
+			'side',
+			'default'
+		);
+
+		add_meta_box(
 			'amm_template_details',
 			'Template Configuration',
 			array( $this, 'render_template_meta_box' ),
@@ -39,15 +48,21 @@ class AMM_Admin_Meta_Boxes {
 		?>
 		<p>
 			<label for="amm_min_plan"><strong>Minimum Plan Required:</strong></label>
-			<select id="amm_min_plan" name="amm_min_plan">
+			<select id="amm_min_plan" name="amm_min_plan" style="width:100%;">
 				<option value="free" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'free' ); ?>>Free</option>
 				<option value="starter" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'starter' ); ?>>Starter</option>
 				<option value="pro" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'pro' ); ?>>Pro</option>
 				<option value="agency" <?php selected( get_post_meta($post->ID, 'amm_min_plan', true), 'agency' ); ?>>Agency</option>
 			</select>
 		</p>
+		<?php
+	}
+
+	public function render_featured_meta_box( $post ) {
+		wp_nonce_field( 'amm_save_featured_meta', 'amm_featured_nonce' );
+		?>
 		<p>
-			<label><input type="checkbox" name="amm_is_featured" value="yes" <?php checked( get_post_meta($post->ID, 'amm_is_featured', true), 'yes' ); ?>> <strong>Featured Mind?</strong> (Highlight in Library)</label>
+			<label><input type="checkbox" name="amm_is_featured" value="yes" <?php checked( get_post_meta($post->ID, 'amm_is_featured', true), 'yes' ); ?>> <strong>Featured Item?</strong><br><small>Highlight this at the top of the dashboard library.</small></label>
 		</p>
 		<?php
 	}
@@ -119,11 +134,16 @@ class AMM_Admin_Meta_Boxes {
 			return;
 		}
 
-		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure', 'amm_is_premium', 'amm_min_plan', 'amm_is_featured' );
+		$fields = array( 'amm_mind_role', 'amm_mind_framework', 'amm_mind_style', 'amm_mind_structure', 'amm_is_premium', 'amm_min_plan' );
 		foreach ( $fields as $field ) {
 			if ( isset( $_POST[$field] ) ) {
 				update_post_meta( $post_id, $field, sanitize_text_field( $_POST[$field] ) );
 			}
+		}
+
+		// Save Featured Status separately
+		if ( isset( $_POST['amm_featured_nonce'] ) && wp_verify_nonce( $_POST['amm_featured_nonce'], 'amm_save_featured_meta' ) ) {
+			update_post_meta( $post_id, 'amm_is_featured', isset( $_POST['amm_is_featured'] ) ? 'yes' : 'no' );
 		}
 	}
 }
