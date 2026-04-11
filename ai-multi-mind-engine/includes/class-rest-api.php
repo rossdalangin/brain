@@ -214,6 +214,35 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'get_team_activity' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Public Output Endpoint (No Auth Required)
+		register_rest_route( $namespace, '/public-output', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_public_output' ),
+			'permission_callback' => '__return_true',
+		));
+	}
+
+	/**
+	 * Get a publicly shared AI output
+	 */
+	public function get_public_output( $request ) {
+		$post_id = (int)$request->get_param('id');
+		$post = get_post( $post_id );
+
+		if ( ! $post || $post->post_type !== 'ai_outputs' ) {
+			return new WP_Error( 'not_found', 'Shared intelligence not found.', array( 'status' => 404 ) );
+		}
+
+		if ( get_post_meta( $post_id, 'amm_is_public', true ) !== 'yes' ) {
+			return new WP_Error( 'forbidden', 'This intelligence is private.', array( 'status' => 403 ) );
+		}
+
+		return rest_ensure_response( array(
+			'title'   => $post->post_title,
+			'content' => $post->post_content,
+			'date'    => get_the_date( 'Y-m-d', $post_id ),
+		));
 	}
 
 	/**
