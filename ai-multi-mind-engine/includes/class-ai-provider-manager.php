@@ -128,6 +128,7 @@ class AMM_AI_Provider_Manager {
 				'x-api-key'         => $api_key,
 				'anthropic-version' => '2023-06-01'
 			),
+			'timeout' => 60,
 		));
 
 		if ( is_wp_error( $response ) ) return $response;
@@ -162,6 +163,7 @@ class AMM_AI_Provider_Manager {
 		$response = wp_remote_post( $url, array(
 			'body'    => json_encode( $body ),
 			'headers' => array( 'Content-Type' => 'application/json' ),
+			'timeout' => 60,
 		));
 
 		if ( is_wp_error( $response ) ) return $response;
@@ -196,6 +198,7 @@ class AMM_AI_Provider_Manager {
 				'Content-Type'  => 'application/json',
 				'Authorization' => 'Bearer ' . $api_key,
 			),
+			'timeout' => 60,
 		));
 
 		if ( is_wp_error( $response ) ) return $response;

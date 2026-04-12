@@ -43,7 +43,11 @@ class AMM_Analytics_Manager {
 		$month = date( 'Y-m' );
 
 		// Map plan IDs to prices
-		$prices = array( 'starter' => 19, 'pro' => 49, 'agency' => 199 );
+		$prices = array(
+			'starter' => (int)get_option('amm_plan_starter_price', 19),
+			'pro' => (int)get_option('amm_plan_pro_price', 49),
+			'agency' => (int)get_option('amm_plan_agency_price', 199)
+		);
 
 		$subs = $wpdb->get_results( "SELECT plan_id, status FROM {$wpdb->prefix}amm_subscriptions WHERE status = 'active'" );
 		$mrr = 0;

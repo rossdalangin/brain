@@ -78,10 +78,10 @@ class AMM_Usage_Tracker {
 	 */
 	public function get_plan_limit( $plan_id ) {
 		$limits = array(
-			'free'    => 5,
-			'starter' => 50,
-			'pro'     => 200,
-			'agency'  => 1000,
+			'free'    => (int)get_option('amm_plan_free_credits', 5),
+			'starter' => (int)get_option('amm_plan_starter_credits', 50),
+			'pro'     => (int)get_option('amm_plan_pro_credits', 200),
+			'agency'  => (int)get_option('amm_plan_agency_credits', 1000),
 		);
 
 		return $limits[$plan_id] ?? 5;

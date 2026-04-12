@@ -22,7 +22,8 @@ class AMM_Stripe_Handler {
 	 */
 	public function create_checkout_session( $user_id, $plan_id ) {
 		if ( $plan_id === 'topup_50' ) {
-			return $this->create_topup_session( $user_id, 50, 'price_topup_50' );
+			$topup_price = get_option('amm_stripe_price_topup') ?: 'price_topup_50';
+			return $this->create_topup_session( $user_id, 50, $topup_price );
 		}
 
 		if ( strpos($plan_id, 'mind_') === 0 ) {

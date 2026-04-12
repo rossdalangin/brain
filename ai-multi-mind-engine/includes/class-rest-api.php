@@ -208,6 +208,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Import Shared Intelligence Endpoint
+		register_rest_route( $namespace, '/import-shared', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_import_shared' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Billing Portal Endpoint
 		register_rest_route( $namespace, '/billing-portal', array(
 			'methods'             => 'GET',
@@ -707,6 +714,9 @@ class AMM_REST_API {
 		$author_ids = array( $user_id );
 
 		foreach ( $teams as $team ) {
+			$perms = $team_manager->get_member_permissions( $team->id, $user_id );
+			if ( $team->role !== 'admin' && ! in_array( 'can_view_workspace', $perms ) ) continue;
+
 			$author_ids[] = $team->owner_id;
 
 			// Fetch all team member IDs
@@ -854,9 +864,9 @@ class AMM_REST_API {
 	public function get_pricing_plans() {
 		$tracker = new AMM_Usage_Tracker();
 		return rest_ensure_response( array(
-			array( 'id' => 'starter', 'name' => 'Starter', 'price' => '$19', 'credits' => $tracker->get_plan_limit('starter') ),
-			array( 'id' => 'pro', 'name' => 'Pro', 'price' => '$49', 'credits' => $tracker->get_plan_limit('pro'), 'featured' => true ),
-			array( 'id' => 'agency', 'name' => 'Agency', 'price' => '$199', 'credits' => $tracker->get_plan_limit('agency') ),
+			array( 'id' => 'starter', 'name' => 'Starter', 'price' => '$' . get_option('amm_plan_starter_price', 19), 'credits' => $tracker->get_plan_limit('starter') ),
+			array( 'id' => 'pro', 'name' => 'Pro', 'price' => '$' . get_option('amm_plan_pro_price', 49), 'credits' => $tracker->get_plan_limit('pro'), 'featured' => true ),
+			array( 'id' => 'agency', 'name' => 'Agency', 'price' => '$' . get_option('amm_plan_agency_price', 199), 'credits' => $tracker->get_plan_limit('agency') ),
 		));
 	}
 
@@ -1032,6 +1042,34 @@ class AMM_REST_API {
 		));
 
 		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle importing a shared output into personal workspace
+	 */
+	public function handle_import_shared( $request ) {
+		$params = $request->get_json_params();
+		$post_id = (int)$params['post_id'];
+		$user_id = get_current_user_id();
+
+		$post = get_post( $post_id );
+		if ( ! $post || $post->post_type !== 'ai_outputs' ) {
+			return new WP_Error( 'not_found', 'Intelligence not found.', array( 'status' => 404 ) );
+		}
+
+		if ( get_post_meta( $post_id, 'amm_is_public', true ) !== 'yes' ) {
+			return new WP_Error( 'forbidden', 'This intelligence is private.', array( 'status' => 403 ) );
+		}
+
+		$new_id = wp_insert_post( array(
+			'post_title'   => $post->post_title . ' (Imported)',
+			'post_content' => $post->post_content,
+			'post_status'  => 'publish',
+			'post_type'    => 'ai_outputs',
+			'post_author'  => $user_id,
+		));
+
+		return rest_ensure_response( array( 'success' => true, 'new_id' => $new_id ) );
 	}
 
 	public function handle_duplicate( $request ) {

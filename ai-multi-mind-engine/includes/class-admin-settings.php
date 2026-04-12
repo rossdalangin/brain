@@ -36,6 +36,17 @@ class AMM_Admin_Settings {
 		register_setting( 'amm_settings_group', 'amm_stripe_price_pro' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_mind_unlock' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_agency' );
+		register_setting( 'amm_settings_group', 'amm_stripe_price_topup' );
+
+		// Plan Limits & Pricing
+		register_setting( 'amm_settings_group', 'amm_plan_free_credits' );
+		register_setting( 'amm_settings_group', 'amm_plan_starter_credits' );
+		register_setting( 'amm_settings_group', 'amm_plan_pro_credits' );
+		register_setting( 'amm_settings_group', 'amm_plan_agency_credits' );
+
+		register_setting( 'amm_settings_group', 'amm_plan_starter_price' );
+		register_setting( 'amm_settings_group', 'amm_plan_pro_price' );
+		register_setting( 'amm_settings_group', 'amm_plan_agency_price' );
 		register_setting( 'amm_settings_group', 'amm_viral_automation_webhook' );
 		register_setting( 'amm_settings_group', 'amm_paypal_client_id' );
 		register_setting( 'amm_settings_group', 'amm_paypal_client_secret' );
@@ -109,6 +120,10 @@ class AMM_Admin_Settings {
 						<td><input type="text" name="amm_stripe_price_mind_unlock" value="<?php echo esc_attr( get_option('amm_stripe_price_mind_unlock') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
+						<th scope="row">Stripe Top-up (50) Price ID</th>
+						<td><input type="text" name="amm_stripe_price_topup" value="<?php echo esc_attr( get_option('amm_stripe_price_topup') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
 						<th scope="row">PayPal Client ID</th>
 						<td><input type="password" name="amm_paypal_client_id" value="<?php echo esc_attr( get_option('amm_paypal_client_id') ); ?>" class="regular-text" /></td>
 					</tr>
@@ -120,6 +135,36 @@ class AMM_Admin_Settings {
 						<th scope="row">Viral Automation Webhook (Slack/Discord)</th>
 						<td><input type="text" name="amm_viral_automation_webhook" value="<?php echo esc_attr( get_option('amm_viral_automation_webhook') ); ?>" class="regular-text" />
 						<p class="description">Global webhook for team activity notifications.</p></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">Plan Configurations</th>
+						<td>
+							<table class="widefat fixed striped">
+								<thead><tr><th>Plan</th><th>Monthly Credits</th><th>Display Price ($)</th></tr></thead>
+								<tbody>
+									<tr>
+										<td>Free</td>
+										<td><input type="number" name="amm_plan_free_credits" value="<?php echo (int)get_option('amm_plan_free_credits', 5); ?>" style="width:100px;"></td>
+										<td>-</td>
+									</tr>
+									<tr>
+										<td>Starter</td>
+										<td><input type="number" name="amm_plan_starter_credits" value="<?php echo (int)get_option('amm_plan_starter_credits', 50); ?>" style="width:100px;"></td>
+										<td><input type="number" name="amm_plan_starter_price" value="<?php echo (int)get_option('amm_plan_starter_price', 19); ?>" style="width:100px;"></td>
+									</tr>
+									<tr>
+										<td>Pro</td>
+										<td><input type="number" name="amm_plan_pro_credits" value="<?php echo (int)get_option('amm_plan_pro_credits', 200); ?>" style="width:100px;"></td>
+										<td><input type="number" name="amm_plan_pro_price" value="<?php echo (int)get_option('amm_plan_pro_price', 49); ?>" style="width:100px;"></td>
+									</tr>
+									<tr>
+										<td>Agency</td>
+										<td><input type="number" name="amm_plan_agency_credits" value="<?php echo (int)get_option('amm_plan_agency_credits', 1000); ?>" style="width:100px;"></td>
+										<td><input type="number" name="amm_plan_agency_price" value="<?php echo (int)get_option('amm_plan_agency_price', 199); ?>" style="width:100px;"></td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Global System Context</th>

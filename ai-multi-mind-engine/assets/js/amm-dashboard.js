@@ -44,19 +44,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const res = await fetch(apiRoot + endpoint, mergedOptions);
+            const data = await res.json();
+
             if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Network error');
+                if (data.code === 'limit_reached') {
+                    showNotice('🚀 Monthly limit reached! Upgrade your plan for more credits.', 'error');
+                } else if (data.code === 'rest_forbidden') {
+                    showNotice('🔒 This is a PRO feature. Upgrade to unlock.', 'warning');
+                } else {
+                    showNotice(data.message || 'Network error', 'error');
+                }
+                throw new Error(data.message || 'Network error');
             }
-            return await res.json();
+            return data;
         } catch (err) {
             console.error('AMM Fetch Error:', err.message);
-            alert('Engine Error: ' + err.message);
             throw err;
         }
     }
 
+    function showNotice(msg, type = 'info') {
+        const notice = document.createElement('div');
+        notice.style = `position:fixed; top:20px; right:20px; padding:15px 25px; border-radius:8px; color:#fff; z-index:10000; box-shadow:0 10px 20px rgba(0,0,0,0.1); font-weight:bold; transition:all 0.3s; background:${type === 'error' ? '#dc3545' : (type === 'warning' ? '#ffc107' : '#007cba')}`;
+        notice.innerText = msg;
+        document.body.appendChild(notice);
+        setTimeout(() => { notice.style.opacity = '0'; setTimeout(() => notice.remove(), 300); }, 4000);
+    }
+
     function initApp() {
+        // System Status
+        const coreStatus = document.getElementById('amm-status-core');
+        const payStatus = document.getElementById('amm-status-pay');
+        if (coreStatus) coreStatus.innerText = 'Online';
+        if (payStatus) payStatus.innerText = 'Active';
+
         // User Stats
         safeFetch('/user')
             .then(data => {
@@ -119,6 +140,22 @@ document.addEventListener('DOMContentLoaded', function() {
 							const trends = data.usage.trends;
 							const max = Math.max(...trends, 1);
 							document.getElementById('amm-usage-trends').innerHTML = trends.map(t => `<div style="flex:1; background:#007cba; height:${(t/max)*100}%; border-radius:3px;" title="${t} generations"></div>`).join('');
+
+							// Credit Allocation SVG (Pie)
+							const radius = 40;
+							const circ = 2 * Math.PI * radius;
+							const usedPct = (used / limit);
+							const strokeDash = usedPct * circ;
+
+							document.getElementById('amm-usage-svg').innerHTML = `
+								<svg width="100" height="100" viewBox="0 0 100 100">
+									<circle cx="50" cy="50" r="${radius}" fill="none" stroke="#eee" stroke-width="10" />
+									<circle cx="50" cy="50" r="${radius}" fill="none" stroke="#007cba" stroke-width="10"
+										stroke-dasharray="${strokeDash} ${circ}" transform="rotate(-90 50 50)" />
+									<text x="50" y="55" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">${Math.round(usedPct * 100)}%</text>
+								</svg>
+								<div style="font-size:10px; color:#888;">${limit - used} credits left</div>
+							`;
                 }
             });
 
@@ -134,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
 									<div style="font-size:32px; margin-bottom:10px;">📜</div>
 									<strong>${t.title}</strong>
 									<p style="font-size:10px; color:#888;">${t.premium ? 'Premium Marketplace Template' : 'Core Template'}</p>
-									<button class="amm-secondary-btn" onclick="document.getElementById('amm-template-select').value='${t.content}'; document.getElementById('amm-input').value='${t.content}'; document.querySelector('[data-tab=generate]').click();" ${t.locked ? 'disabled' : ''}>Use Template</button>
+									<button class="amm-secondary-btn" onclick="switchTemplate('${t.title}', \`${t.content.replace(/`/g, '\\`')}\`)" ${t.locked ? 'disabled' : ''}>Use Template</button>
 									${t.locked && t.premium && !t.purchased ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout('template_${t.id}')">Unlock for $${t.price}</button>` : ''}
 									${t.locked && !t.premium ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="document.querySelector('[data-tab=billing]').click()">Upgrade Plan to Unlock</button>` : ''}
 								</div>
@@ -164,18 +201,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     <strong>${m.name}</strong>
                     <p style="font-size:10px; color:#888;">${m.category || 'Core'}</p>
                     <p>${m.premium ? 'Premium Mind' : 'Core Mind'}</p>
-                    <button class="amm-secondary-btn" onclick="document.getElementById('amm-mind-select').value='${m.id}'; document.querySelector('[data-tab=generate]').click();" ${m.premium && !m.purchased ? 'disabled' : ''}>Use Mind</button>
+                    <button class="amm-secondary-btn" onclick="switchMind('${m.id}')" ${m.premium && !m.purchased ? 'disabled' : ''}>Use Mind</button>
                     ${m.premium && !m.purchased ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout('mind_${m.id}')">Unlock for $49</button>` : ''}
                 </div>
             `).join('');
         }
 
+        window.switchTemplate = function(title, content) {
+            document.getElementById('amm-input').value = content;
+            document.querySelector('[data-tab=generate]').click();
+            showNotice(`Loaded Template: ${title}`);
+        };
+
+        window.switchMind = function(mindId) {
+            const select = document.getElementById('amm-mind-select');
+            select.value = mindId;
+            document.querySelector('[data-tab=generate]').click();
+            showNotice(`Switched to ${select.options[select.selectedIndex].text}`);
+        };
+
         document.getElementById('amm-category-filter').addEventListener('change', () => applyFilters());
         document.getElementById('amm-mind-filter').addEventListener('change', () => applyFilters());
+        document.getElementById('amm-mind-search').addEventListener('input', () => applyFilters());
 
         function applyFilters() {
             const cat = document.getElementById('amm-category-filter').value;
             const type = document.getElementById('amm-mind-filter').value;
+            const search = document.getElementById('amm-mind-search').value.toLowerCase();
 
             let filtered = window.ammAllMinds;
 
@@ -185,6 +237,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 filtered = filtered.filter(m => !m.premium || m.purchased);
             } else if (type === 'premium') {
                 filtered = filtered.filter(m => m.premium && !m.purchased);
+            }
+
+            if (search) {
+                filtered = filtered.filter(m => m.name.toLowerCase().includes(search) || (m.category && m.category.toLowerCase().includes(search)));
             }
 
             renderMindGrid(filtered);
@@ -483,9 +539,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if(data.is_public) {
-                prompt('Public link copied to clipboard (Ctrl+C):', data.share_url);
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = data.share_url;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                showNotice('🔗 Shared Intelligence link copied to clipboard!');
             } else {
-                alert('Intelligence marked as private.');
+                showNotice('🔒 Intelligence marked as private.');
             }
             refreshWorkspace();
         });
@@ -680,9 +742,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Mind Builder 2.0 Live Preview
+    const builderInputs = ['amm-new-mind-name', 'amm-new-mind-role', 'amm-new-mind-framework', 'amm-new-mind-style', 'amm-new-mind-structure'];
+    builderInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.addEventListener('input', () => {
+                const preview = document.getElementById('amm-mind-preview');
+                const name = document.getElementById('amm-new-mind-name').value || 'New Mind';
+                const role = document.getElementById('amm-new-mind-role').value || 'Unassigned';
+                const frame = document.getElementById('amm-new-mind-framework').value || 'Default';
+                const style = document.getElementById('amm-new-mind-style').value || 'Balanced';
+
+                preview.innerHTML = `
+                    <div style="font-size:24px; margin-bottom:10px;">🧠</div>
+                    <strong style="font-size:16px;">${name}</strong><br>
+                    <span style="color:#007cba;">${role}</span><hr>
+                    <p><strong>Framework:</strong> ${frame}</p>
+                    <p><strong>Style:</strong> ${style}</p>
+                `;
+            });
+        }
+    });
+
     // Handle Create Mind
     if (document.getElementById('amm-create-mind-btn')) {
         document.getElementById('amm-create-mind-btn').addEventListener('click', () => {
+            const btn = document.getElementById('amm-create-mind-btn');
+            btn.innerText = 'Engraving...';
+            btn.disabled = true;
+
             safeFetch('/create-mind', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -693,7 +782,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     structure: document.getElementById('amm-new-mind-structure').value,
                     prompt: document.getElementById('amm-new-mind-prompt').value
                 })
-            }).then(data => { if(data.success) { alert('Custom Mind Created!'); location.reload(); } });
+            }).then(data => {
+                if(data.success) {
+                    showNotice('✨ Mind permanently engraved into the Thinking Engine!');
+                    setTimeout(() => location.reload(), 1500);
+                }
+            });
         });
     }
 
