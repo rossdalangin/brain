@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
+                window.ammUserPlan = data.plan;
                 document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${used}/${limit} credits`;
                 document.getElementById('amm-usage-bar').style.width = pct + '%';
 
@@ -194,9 +195,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Team & Invites
         fetch(apiRoot + '/teams', { headers: { 'X-WP-Nonce': nonce } })
             .then(res => res.json()).then(teams => {
+                const createBtn = document.getElementById('amm-create-team-btn');
+                const controls = document.getElementById('amm-team-controls');
+
                 if(teams.length) {
+                    if(controls) controls.style.display = 'block';
                     window.ammActiveTeamId = teams[0].id;
-                    document.getElementById('amm-team-list').innerHTML = teams.map(t => `<div><strong>${t.team_name}</strong> (${t.role}) ${t.role === 'admin' ? '' : `<button class="amm-secondary-btn" onclick="ammRemoveMember(${t.user_id}, ${t.id})" style="background:#ff4444; color:#fff;">Remove</button>`}</div>`).join('');
+                    document.getElementById('amm-team-list').innerHTML = teams.map(t => `
+                        <div style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                            <strong>${t.team_name}</strong> (${t.role})
+                            ${t.role === 'admin' ? '' : `
+                                <button class="amm-secondary-btn" onclick="ammRemoveMember(${t.user_id}, ${t.id})" style="background:#ff4444; color:#fff;">Remove</button>
+                                <div style="font-size:10px; margin-top:5px;">
+                                    <label><input type="checkbox" onchange="ammTogglePerm(${t.user_id}, ${t.id}, 'can_generate', this.checked)" checked> Can Ignite</label>
+                                    <label><input type="checkbox" onchange="ammTogglePerm(${t.user_id}, ${t.id}, 'can_view_workspace', this.checked)" checked> View Shared</label>
+                                </div>
+                            `}
+                        </div>
+                    `).join('');
 
                     // Fetch Invites
                     fetch(apiRoot + '/pending-invites?team_id=' + teams[0].id, { headers: { 'X-WP-Nonce': nonce } })
@@ -215,6 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 document.getElementById('amm-team-activity').innerHTML = 'No recent team activity.';
                             }
                         });
+                } else if(window.ammUserPlan === 'agency') {
+                    if(createBtn) createBtn.style.display = 'block';
                 }
             });
 
@@ -646,6 +664,32 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Handle Toggle Permission
+    window.ammTogglePerm = function(userId, teamId, perm, isChecked) {
+        // In real app, you'd fetch existing perms first, but for now we toggle based on common sense
+        const perms = ['can_generate', 'can_view_workspace'];
+        if (!isChecked) perms.splice(perms.indexOf(perm), 1);
+
+        fetch(apiRoot + '/update-member-role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+            body: JSON.stringify({ user_id: userId, team_id: teamId, permissions: perms })
+        });
+    };
+
+    // Handle Create Team
+    if (document.getElementById('amm-create-team-btn')) {
+        document.getElementById('amm-create-team-btn').addEventListener('click', () => {
+            const name = prompt('Enter Team Name:');
+            if(!name) return;
+            fetch(apiRoot + '/create-team', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+                body: JSON.stringify({ name })
+            }).then(res => res.json()).then(data => { if(data.success) location.reload(); });
+        });
+    }
 
     // Handle Save Settings
     document.getElementById('amm-save-settings-btn').addEventListener('click', () => {

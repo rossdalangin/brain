@@ -40,6 +40,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Create Team Endpoint
+		register_rest_route( $namespace, '/create-team', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_create_team' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// All Minds Endpoint
 		register_rest_route( $namespace, '/minds', array(
 			'methods'             => 'GET',
@@ -93,6 +100,13 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/update-settings', array(
 			'methods'             => 'POST',
 			'callback'            => array( $this, 'handle_settings_update' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Update Member Role Endpoint
+		register_rest_route( $namespace, '/update-member-role', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_member_role_update' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
@@ -604,6 +618,7 @@ class AMM_REST_API {
 	 * Get user's saved outputs (including team shared ones)
 	 */
 	public function get_user_outputs() {
+		global $wpdb;
 		$user_id = get_current_user_id();
 
 		// Get Team Member IDs
@@ -616,7 +631,7 @@ class AMM_REST_API {
 
 			// Fetch all team member IDs
 			$members = $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$wpdb->prefix}amm_team_members WHERE team_id = %d", $team->id ) );
-			$author_ids = array_merge( $author_ids, $members );
+			if ( $members ) $author_ids = array_merge( $author_ids, $members );
 		}
 
 		$outputs = get_posts( array(
@@ -1075,6 +1090,27 @@ class AMM_REST_API {
 	/**
 	 * Handle user settings update
 	 */
+	public function handle_member_role_update( $request ) {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$team_id = (int)$params['team_id'];
+		$target_user_id = (int)$params['user_id'];
+		$permissions = (array)$params['permissions'];
+
+		// Verify ownership
+		$owner = $wpdb->get_var( $wpdb->prepare( "SELECT owner_id FROM {$wpdb->prefix}amm_teams WHERE id = %d", $team_id ) );
+		if ( (int)$owner !== $user_id ) return new WP_Error( 'forbidden', 'Only owners can update roles.', array( 'status' => 403 ) );
+
+		$wpdb->update(
+			$wpdb->prefix . 'amm_team_members',
+			array( 'permissions' => json_encode($permissions) ),
+			array( 'team_id' => $team_id, 'user_id' => $target_user_id )
+		);
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
 	public function handle_settings_update( $request ) {
 		$user_id = get_current_user_id();
 		$params = $request->get_json_params();
@@ -1211,6 +1247,21 @@ class AMM_REST_API {
 	/**
 	 * Get user teams
 	 */
+	public function handle_create_team( $request ) {
+		$user_id = get_current_user_id();
+		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+		if ( $plan_id !== 'agency' ) return new WP_Error( 'forbidden', 'Only Agency users can create teams.', array( 'status' => 403 ) );
+
+		$params = $request->get_json_params();
+		$name = sanitize_text_field( $params['name'] );
+
+		$team_manager = new AMM_Team_Manager();
+		$team_id = $team_manager->create_team( $user_id, $name );
+		$team_manager->add_member( $team_id, $user_id, 'admin' );
+
+		return rest_ensure_response( array( 'success' => true, 'team_id' => $team_id ) );
+	}
+
 	public function get_teams() {
 		$user_id = get_current_user_id();
 		$team_manager = new AMM_Team_Manager();

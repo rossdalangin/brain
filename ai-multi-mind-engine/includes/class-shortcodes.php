@@ -302,11 +302,16 @@ class AMM_Shortcodes {
 
 				<!-- Team Tab -->
 				<section id="tab-team" class="amm-tab-content">
-					<h2>Team Collaboration Hub</h2>
-					<div class="amm-form-card" style="margin-bottom:20px;">
-						<h3>Invite Team Member</h3>
-						<input type="email" id="amm-invite-email" placeholder="email@example.com" style="width:70%;">
-						<button id="amm-invite-btn" class="amm-primary-btn" style="width:25%;">Invite</button>
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<h2>Team Collaboration Hub</h2>
+						<button id="amm-create-team-btn" class="amm-secondary-btn" style="display:none;">+ Create New Team</button>
+					</div>
+					<div id="amm-team-controls" style="display:none;">
+						<div class="amm-form-card" style="margin-bottom:20px;">
+							<h3>Invite Team Member</h3>
+							<input type="email" id="amm-invite-email" placeholder="email@example.com" style="width:70%;">
+							<button id="amm-invite-btn" class="amm-primary-btn" style="width:25%;">Invite</button>
+						</div>
 					</div>
 
 					<div id="amm-branding-container" class="amm-form-card" style="margin-bottom:20px; display:none;">
