@@ -250,10 +250,15 @@ class AMM_Shortcodes {
 					<div id="amm-builder-container" style="display:none; margin-top:40px;">
 						<h3>Elite Mind & Template Builder (PRO)</h3>
 						<div class="amm-form-card" style="margin-bottom:20px;">
-							<strong>Custom Mind</strong>
-							<input type="text" id="amm-new-mind-name" placeholder="Mind Name (e.g. Real Estate Guru)">
-							<input type="text" id="amm-new-mind-role" placeholder="Role Description">
-							<textarea id="amm-new-mind-prompt" placeholder="Hidden Prompt Engineering Layer (The 'Brain' of the mind)"></textarea>
+							<strong>Custom Mind Builder</strong>
+							<input type="text" id="amm-new-mind-name" placeholder="Mind Name (e.g. Real Estate Guru)" style="width:100%; margin-bottom:10px;">
+							<input type="text" id="amm-new-mind-role" placeholder="Role Description (e.g. Expert in ROI and market trends)" style="width:100%; margin-bottom:10px;">
+							<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+								<input type="text" id="amm-new-mind-framework" placeholder="Thinking Framework (e.g. SWOT)">
+								<input type="text" id="amm-new-mind-style" placeholder="Decision Style (e.g. Cautious)">
+							</div>
+							<input type="text" id="amm-new-mind-structure" placeholder="Preferred Output Structure (e.g. List, PDF, Table)" style="width:100%; margin-bottom:10px;">
+							<textarea id="amm-new-mind-prompt" placeholder="Hidden Prompt Engineering Layer (The 'Brain' of the mind) - Define how it thinks, what it ignores, and how it speaks." style="width:100%; height:100px; margin-bottom:10px;"></textarea>
 							<button id="amm-create-mind-btn" class="amm-primary-btn">Create Custom Mind</button>
 						</div>
 						<div class="amm-form-card">

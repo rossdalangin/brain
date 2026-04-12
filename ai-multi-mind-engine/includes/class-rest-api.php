@@ -593,6 +593,8 @@ class AMM_REST_API {
 			array( 'id' => 'pitch_architect', 'name' => 'Investor Pitch Architect', 'category' => 'Growth' ),
 			array( 'id' => 'vc_auditor', 'name' => 'VC Auditor', 'category' => 'Growth' ),
 			array( 'id' => 'psych_copywriter', 'name' => 'Psychological Copywriter', 'category' => 'Growth' ),
+			array( 'id' => 'seo_strategist', 'name' => 'SEO Strategist', 'category' => 'Growth' ),
+			array( 'id' => 'viral_storyteller', 'name' => 'Viral Storyteller', 'category' => 'Growth' ),
 
 			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true, 'category' => 'Special' ),
 		);
@@ -1137,10 +1139,11 @@ class AMM_REST_API {
 			'usage'   => array(
 				'used'  => $tracker->get_current_month_usage( $user_id ),
 				'limit' => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' ),
+				'trends' => array(10, 30, 20, 50, 40, 70, 90), // Mocked for now, real data would query logs
 			),
 			'insights' => array(
 				'total_generations' => count( get_posts( array( 'post_type' => 'ai_outputs', 'author' => $user_id, 'posts_per_page' => -1 ) ) ),
-				'referral_count' => 0, // Placeholder for real referral count
+				'referral_count' => $wpdb->get_var( $wpdb->prepare( "SELECT count(*) FROM {$wpdb->prefix}amm_referrals r JOIN {$wpdb->prefix}amm_affiliates a ON r.affiliate_id = a.id WHERE a.user_id = %d", $user_id ) ) ?: 0,
 			),
 			'team_branding' => !empty($teams) ? array(
 				'logo' => $teams[0]->custom_logo,

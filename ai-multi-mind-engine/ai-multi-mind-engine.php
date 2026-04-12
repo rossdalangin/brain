@@ -334,6 +334,10 @@ class AI_Multi_Mind_Engine {
 			PRIMARY KEY  (id)
 		) $charset_collate;";
 		dbDelta( $sql );
+
+		// Set Default Options
+		add_option( 'amm_default_ai_provider', 'free_jules' );
+		add_option( 'amm_api_logging', 'yes' );
 	}
 }
 

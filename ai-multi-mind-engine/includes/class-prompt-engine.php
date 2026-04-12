@@ -125,6 +125,10 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_Psychological_Copywriter();
 			case 'blue_ocean':
 				return new AMM_Mind_Blue_Ocean();
+			case 'seo_strategist':
+				return new AMM_Mind_SEO_Strategist();
+			case 'viral_storyteller':
+				return new AMM_Mind_Viral_Storyteller();
 		}
 
 		// Otherwise, look for it in the CPT

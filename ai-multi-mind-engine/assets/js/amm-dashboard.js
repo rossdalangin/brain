@@ -487,6 +487,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Handle Create Mind
+    if (document.getElementById('amm-create-mind-btn')) {
+        document.getElementById('amm-create-mind-btn').addEventListener('click', () => {
+            fetch(apiRoot + '/create-mind', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+                body: JSON.stringify({
+                    name: document.getElementById('amm-new-mind-name').value,
+                    role: document.getElementById('amm-new-mind-role').value,
+                    framework: document.getElementById('amm-new-mind-framework').value,
+                    style: document.getElementById('amm-new-mind-style').value,
+                    structure: document.getElementById('amm-new-mind-structure').value,
+                    prompt: document.getElementById('amm-new-mind-prompt').value
+                })
+            }).then(res => res.json()).then(data => { if(data.success) { alert('Custom Mind Created!'); location.reload(); } });
+        });
+    }
+
     // Handle Create Template
     if (document.getElementById('amm-create-template-btn')) {
         document.getElementById('amm-create-template-btn').addEventListener('click', () => {
