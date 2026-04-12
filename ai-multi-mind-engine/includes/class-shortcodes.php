@@ -157,14 +157,8 @@ class AMM_Shortcodes {
 						</div>
 						<div class="amm-form-card" style="grid-column: span 2;">
 							<strong>Usage Velocity (Last 7 Days)</strong>
-							<div style="display:flex; align-items:flex-end; gap:5px; height:100px; margin-top:10px;">
-								<div style="flex:1; background:#007cba; height:10%; border-radius:3px;"></div>
-								<div style="flex:1; background:#007cba; height:30%; border-radius:3px;"></div>
-								<div style="flex:1; background:#007cba; height:20%; border-radius:3px;"></div>
-								<div style="flex:1; background:#007cba; height:50%; border-radius:3px;"></div>
-								<div style="flex:1; background:#007cba; height:40%; border-radius:3px;"></div>
-								<div style="flex:1; background:#007cba; height:70%; border-radius:3px;"></div>
-								<div style="flex:1; background:#007cba; height:90%; border-radius:3px;"></div>
+							<div id="amm-usage-trends" style="display:flex; align-items:flex-end; gap:5px; height:100px; margin-top:10px;">
+								<!-- Trends injected here -->
 							</div>
 						</div>
 					</div>
@@ -191,6 +185,7 @@ class AMM_Shortcodes {
 								<option value="marketing_plan">Marketing Plan</option>
 								<option value="sales_script">Sales Script</option>
 								<option value="sop">SOP</option>
+								<option value="proposal">Project Proposal</option>
 								<option value="report">Business Report</option>
 								<option value="blog_post">Blog Post</option>
 								<option value="ad_copy">Ad Copy</option>

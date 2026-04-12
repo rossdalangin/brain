@@ -89,6 +89,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('amm-insight-gens').innerText = gens;
                     document.getElementById('amm-insight-gens-bar').style.width = Math.min(100, (gens / 50) * 100) + '%';
                     document.getElementById('amm-insight-refs').innerText = data.insights.referral_count;
+
+							const trends = data.usage.trends;
+							const max = Math.max(...trends, 1);
+							document.getElementById('amm-usage-trends').innerHTML = trends.map(t => `<div style="flex:1; background:#007cba; height:${(t/max)*100}%; border-radius:3px;" title="${t} generations"></div>`).join('');
                 }
             });
 

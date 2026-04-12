@@ -372,7 +372,8 @@ class AMM_REST_API {
 		$user_id = get_current_user_id();
 		$params = $request->get_json_params();
 
-		$mind_id     = $params['mind_id'] ?? 'ceo';
+		$default_mind = get_user_meta( $user_id, 'amm_default_mind', true ) ?: 'ceo';
+		$mind_id     = $params['mind_id'] ?: $default_mind;
 		$output_type = $params['output_type'] ?? 'business_plan';
 		$user_input  = $params['user_input'] ?? '';
 		$language    = $params['language'] ?? 'English';
@@ -1120,8 +1121,22 @@ class AMM_REST_API {
 	 * Get user stats and subscription info
 	 */
 	public function get_user_data() {
+		global $wpdb;
 		$user_id = get_current_user_id();
 		$tracker = new AMM_Usage_Tracker();
+		$team_manager = new AMM_Team_Manager();
+		$teams = $team_manager->get_user_teams( $user_id );
+
+		// Real Usage Trends (Daily generations for last 7 days)
+		$trends = array();
+		for ( $i = 6; $i >= 0; $i-- ) {
+			$date = date( 'Y-m-d', strtotime( "-$i days" ) );
+			$count = $wpdb->get_var( $wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_author = %d AND post_type = 'ai_outputs' AND post_date LIKE %s",
+				$user_id, $date . '%'
+			));
+			$trends[] = (int)$count;
+		}
 
 		$user = get_userdata( $user_id );
 		return rest_ensure_response( array(
@@ -1139,7 +1154,7 @@ class AMM_REST_API {
 			'usage'   => array(
 				'used'  => $tracker->get_current_month_usage( $user_id ),
 				'limit' => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' ),
-				'trends' => array(10, 30, 20, 50, 40, 70, 90), // Mocked for now, real data would query logs
+				'trends' => $trends,
 			),
 			'insights' => array(
 				'total_generations' => count( get_posts( array( 'post_type' => 'ai_outputs', 'author' => $user_id, 'posts_per_page' => -1 ) ) ),
