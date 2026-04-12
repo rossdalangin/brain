@@ -98,6 +98,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('amm-set-company').value = data.settings.company_name || '';
                 document.getElementById('amm-set-default-mind').value = data.settings.default_mind || 'ceo';
                 document.getElementById('amm-set-kb').value = data.settings.knowledge_base || '';
+                window.ammKBFiles = data.settings.knowledge_files || [];
+                renderKBFiles();
                 document.getElementById('amm-set-alerts').checked = data.settings.usage_alerts;
 
                 // Recent Activity
@@ -328,6 +330,33 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: JSON.stringify(persona)
         }).then(data => { if(data.success) alert('Audience Context Saved!'); });
+    });
+
+    // Image Generation Logic
+    document.getElementById('amm-generate-image-btn').addEventListener('click', () => {
+        const promptText = document.getElementById('amm-image-prompt').value;
+        if(!promptText) return;
+
+        const btn = document.getElementById('amm-generate-image-btn');
+        const output = document.getElementById('amm-image-output');
+
+        btn.disabled = true;
+        btn.innerText = 'Creating Visual Masterpiece...';
+        output.innerHTML = '<p>The engine is painting your vision. This can take up to 30 seconds...</p>';
+
+        safeFetch('/generate-image', {
+            method: 'POST',
+            body: JSON.stringify({ prompt: promptText })
+        }).then(data => {
+            if(data.success) {
+                output.innerHTML = `<img src="${data.url}" style="max-width:100%; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,0.2);"><br>
+                    <a href="${data.url}" target="_blank" class="amm-secondary-btn" style="margin-top:20px; display:inline-block;">Download HD Image</a>`;
+                initApp(); // Refresh credits
+            }
+        }).finally(() => {
+            btn.disabled = false;
+            btn.innerText = 'Generate Visual Asset';
+        });
     });
 
     function loadPresets() {
@@ -754,6 +783,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function renderKBFiles() {
+        const container = document.getElementById('amm-kb-files');
+        if(!container) return;
+        container.innerHTML = window.ammKBFiles.map((f, i) => `<div style="padding:5px; background:#f9f9f9; margin-bottom:5px; border-radius:4px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span> <button onclick="removeKBFile(${i})" style="color:red; background:none; border:none; cursor:pointer;">&times;</button></div>`).join('');
+    }
+
+    window.removeKBFile = function(i) {
+        window.ammKBFiles.splice(i, 1);
+        renderKBFiles();
+    };
+
+    document.getElementById('amm-kb-upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            window.ammKBFiles.push({ name: file.name, content: ev.target.result });
+            renderKBFiles();
+        };
+        reader.readAsText(file);
+    });
+
     // Handle Save Settings
     document.getElementById('amm-save-settings-btn').addEventListener('click', () => {
         safeFetch('/update-settings', {
@@ -763,6 +814,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 company_name: document.getElementById('amm-set-company').value,
                 default_mind: document.getElementById('amm-set-default-mind').value,
                 knowledge_base: document.getElementById('amm-set-kb').value,
+                knowledge_files: window.ammKBFiles,
                 usage_alerts: document.getElementById('amm-set-alerts').checked
             })
         }).then(data => { if(data.success) { alert('Settings Saved!'); location.reload(); } });

@@ -187,6 +187,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Image Generation Endpoint
+		register_rest_route( $namespace, '/generate-image', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_image_generation' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Refine Prompt Endpoint
 		register_rest_route( $namespace, '/refine-prompt', array(
 			'methods'             => 'POST',
@@ -552,7 +559,7 @@ class AMM_REST_API {
 		if ( $kb_context ) {
 			$user_input = "CONTEXT ABOUT MY BUSINESS:\n{$kb_context}\n\nUSER REQUEST:\n{$user_input}";
 		}
-		$prompts = $prompt_engine->prepare_prompts( $mind_id, $output_type, $user_input, $language );
+		$prompts = $prompt_engine->prepare_prompts( $mind_id, $output_type, $user_input, $language, $user_id );
 
 		if ( is_wp_error( $prompts ) ) return $prompts;
 
@@ -1047,6 +1054,31 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Handle Image Generation
+	 */
+	public function handle_image_generation( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$prompt = sanitize_text_field( $params['prompt'] );
+
+		// Credit Check (Images cost 5 credits)
+		$tracker = new AMM_Usage_Tracker();
+		if ( $tracker->get_current_month_usage( $user_id ) + 5 > $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' ) ) {
+			return new WP_Error( 'limit_reached', 'Insufficient credits for image generation.', array( 'status' => 403 ) );
+		}
+
+		$ai_manager = new AMM_AI_Provider_Manager();
+		$image_url = $ai_manager->generate_image( $prompt );
+
+		if ( is_wp_error( $image_url ) ) return $image_url;
+
+		// Track usage (x5 for images)
+		for($i=0; $i<5; $i++) $tracker->track_generation( $user_id );
+
+		return rest_ensure_response( array( 'success' => true, 'url' => $image_url ) );
+	}
+
+	/**
 	 * Handle prompt refinement using AI
 	 */
 	public function handle_refine_prompt( $request ) {
@@ -1217,6 +1249,10 @@ class AMM_REST_API {
 
 		if ( isset( $params['knowledge_base'] ) ) {
 			update_user_meta( $user_id, 'amm_knowledge_base', sanitize_textarea_field( $params['knowledge_base'] ) );
+		}
+
+		if ( isset( $params['knowledge_files'] ) ) {
+			update_user_meta( $user_id, 'amm_knowledge_files', (array)$params['knowledge_files'] );
 		}
 
 		if ( isset( $params['company_name'] ) ) {
@@ -1429,6 +1465,7 @@ class AMM_REST_API {
 				'webhook_url' => get_user_meta( $user_id, 'amm_external_webhook_url', true ),
 				'default_mind' => get_user_meta( $user_id, 'amm_default_mind', true ) ?: 'ceo',
 				'knowledge_base' => get_user_meta( $user_id, 'amm_knowledge_base', true ),
+				'knowledge_files' => get_user_meta( $user_id, 'amm_knowledge_files', true ) ?: array(),
 				'company_name' => get_user_meta( $user_id, 'amm_company_name', true ),
 				'usage_alerts' => get_user_meta( $user_id, 'amm_usage_alerts', true ) === 'yes',
 			),

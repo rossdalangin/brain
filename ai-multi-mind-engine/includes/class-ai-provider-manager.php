@@ -66,6 +66,40 @@ class AMM_AI_Provider_Manager {
 	}
 
 	/**
+	 * Generate an image using DALL-E 3
+	 */
+	public function generate_image( $prompt ) {
+		$api_key = $this->api_keys['openai'];
+		if ( ! $api_key ) return new WP_Error( 'missing_key', 'OpenAI API key missing for image generation.' );
+
+		$url = "https://api.openai.com/v1/images/generations";
+		$body = array(
+			'model'  => 'dall-e-3',
+			'prompt' => $prompt,
+			'n'      => 1,
+			'size'   => '1024x1024'
+		);
+
+		$response = wp_remote_post( $url, array(
+			'body'    => json_encode( $body ),
+			'headers' => array(
+				'Content-Type'  => 'application/json',
+				'Authorization' => 'Bearer ' . $api_key,
+			),
+			'timeout' => 60
+		));
+
+		if ( is_wp_error( $response ) ) return $response;
+
+		$data = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( isset( $data['error'] ) ) {
+			return new WP_Error( 'ai_error', $data['error']['message'] );
+		}
+
+		return $data['data'][0]['url'] ?? 'Image generation error';
+	}
+
+	/**
 	 * Call Anthropic Claude API
 	 */
 	private function call_claude( $system_prompt, $user_prompt, $history = array() ) {

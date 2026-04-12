@@ -163,6 +163,7 @@ class AMM_Shortcodes {
 					<a href="#" class="amm-nav-item" data-tab="workspace">📁 My Workspace</a>
 					<a href="#" class="amm-nav-item" data-tab="team">👥 Team Hub</a>
 					<a href="#" class="amm-nav-item" data-tab="persona">🎯 Audience</a>
+					<a href="#" class="amm-nav-item" data-tab="media">🎨 Media Engine</a>
 					<a href="#" class="amm-nav-item" data-tab="affiliate">💸 Affiliates</a>
 					<a href="#" class="amm-nav-item" data-tab="billing">💳 Billing</a>
 					<a href="#" class="amm-nav-item" data-tab="settings">⚙️ Settings</a>
@@ -388,6 +389,17 @@ class AMM_Shortcodes {
 					<div id="amm-invite-list" class="amm-form-card">No pending invites.</div>
 				</section>
 
+				<!-- Media Tab -->
+				<section id="tab-media" class="amm-tab-content">
+					<h2>AI Media Engine (DALL-E 3)</h2>
+					<p>Generate high-end visual assets for your business strategies. (Cost: 5 Credits per image)</p>
+					<div class="amm-form-card">
+						<textarea id="amm-image-prompt" placeholder="Describe the image you want to generate (e.g. A futuristic luxury office with a view of Mars)..." style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+						<button id="amm-generate-image-btn" class="amm-primary-btn">Generate Visual Asset</button>
+					</div>
+					<div id="amm-image-output" style="margin-top:20px; text-align:center;"></div>
+				</section>
+
 				<!-- Affiliate Tab -->
 				<section id="tab-affiliate" class="amm-tab-content">
 					<h2>Affiliate Program</h2>
@@ -451,6 +463,9 @@ class AMM_Shortcodes {
 						<select id="amm-set-default-mind" style="width:100%; margin-bottom:20px;"></select>
 						<label>Knowledge Base (Your Company Context)</label>
 						<textarea id="amm-set-kb" placeholder="About my business, products, target audience..." style="width:100%; height:150px; margin-bottom:20px;"></textarea>
+						<label>Context Pro: Knowledge Files (TXT/JSON/CSV)</label>
+						<div id="amm-kb-files" style="margin-bottom:10px;"></div>
+						<input type="file" id="amm-kb-upload" style="margin-bottom:20px;">
 						<p><input type="checkbox" id="amm-set-alerts"> Enable 90% Credit Usage Email Alerts</p>
 						<button id="amm-save-settings-btn" class="amm-primary-btn">Save Preferences</button>
 					</div>

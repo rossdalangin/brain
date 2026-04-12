@@ -36,6 +36,7 @@ class AMM_Admin_Settings {
 		register_setting( 'amm_settings_group', 'amm_stripe_price_pro' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_mind_unlock' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_agency' );
+		register_setting( 'amm_settings_group', 'amm_viral_automation_webhook' );
 		register_setting( 'amm_settings_group', 'amm_paypal_client_id' );
 		register_setting( 'amm_settings_group', 'amm_paypal_client_secret' );
 	}
@@ -116,6 +117,11 @@ class AMM_Admin_Settings {
 						<td><input type="password" name="amm_paypal_client_secret" value="<?php echo esc_attr( get_option('amm_paypal_client_secret') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
+						<th scope="row">Viral Automation Webhook (Slack/Discord)</th>
+						<td><input type="text" name="amm_viral_automation_webhook" value="<?php echo esc_attr( get_option('amm_viral_automation_webhook') ); ?>" class="regular-text" />
+						<p class="description">Global webhook for team activity notifications.</p></td>
+					</tr>
+					<tr valign="top">
 						<th scope="row">Global System Context</th>
 						<td><textarea name="amm_global_system_context" class="large-text" rows="5"><?php echo esc_textarea( get_option('amm_global_system_context') ); ?></textarea>
 						<p class="description">This ruleset will be applied to ALL AI Minds site-wide.</p></td>
@@ -172,6 +178,25 @@ class AMM_Admin_Settings {
 				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1;">
 					<strong>Active Subscriptions</strong><br>
 					<span style="font-size:24px; color:#007cba;"><?php echo number_format($stats['active_subscriptions']); ?></span>
+				</div>
+			</div>
+
+			<div style="display:flex; gap:20px; margin-top:20px;">
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1; border-left: 5px solid #28a745;">
+					<strong>Monthly Recurring Revenue (MRR)</strong><br>
+					<span style="font-size:24px; color:#28a745;">$<?php echo number_format($stats['revenue_metrics']['mrr']); ?></span>
+				</div>
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1;">
+					<strong>Average Revenue Per User (ARPU)</strong><br>
+					<span style="font-size:24px; color:#007cba;">$<?php echo number_format($stats['revenue_metrics']['arpu'], 2); ?></span>
+				</div>
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1; border-left: 5px solid #dc3545;">
+					<strong>Churn Rate (30d)</strong><br>
+					<span style="font-size:24px; color:#dc3545;"><?php echo $stats['revenue_metrics']['churn_rate']; ?>%</span>
+				</div>
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1;">
+					<strong>Estimated Customer LTV</strong><br>
+					<span style="font-size:24px; color:#007cba;">$<?php echo number_format($stats['revenue_metrics']['ltv'], 2); ?></span>
 				</div>
 			</div>
 

@@ -12,7 +12,7 @@ class AMM_Prompt_Engine {
 	/**
 	 * Prepare the final system and user prompts
 	 */
-	public function prepare_prompts( $mind_id, $output_type, $user_input, $language = 'English' ) {
+	public function prepare_prompts( $mind_id, $output_type, $user_input, $language = 'English', $user_id = 0 ) {
 		$mind = $this->get_mind_instance( $mind_id );
 		if ( ! $mind ) return new WP_Error( 'invalid_mind', 'The selected AI Mind is invalid.' );
 
@@ -23,6 +23,24 @@ class AMM_Prompt_Engine {
 		$system_prompt .= "\n\nCRITICAL: The entire output MUST be written in {$language}.";
 
 		$user_prompt = $mind->format_request( $user_input );
+
+		// Context Pro (RAG Logic)
+		if ( $user_id ) {
+			$kb_context = get_user_meta( $user_id, 'amm_knowledge_base', true );
+			$kb_files   = get_user_meta( $user_id, 'amm_knowledge_files', true ) ?: array();
+
+			$rag_context = "";
+			if ( $kb_context ) $rag_context .= "TEXT CONTEXT:\n{$kb_context}\n";
+			if ( ! empty($kb_files) ) {
+				foreach ( $kb_files as $file ) {
+					$rag_context .= "FILE DATA [{$file['name']}]:\n{$file['content']}\n";
+				}
+			}
+
+			if ( $rag_context ) {
+				$user_prompt = "PRO KNOWLEDGE BASE (RAG):\n{$rag_context}\n\nUSER REQUEST: " . $user_prompt;
+			}
+		}
 
 		return array(
 			'system' => $system_prompt,
