@@ -26,3 +26,6 @@ Welcome to the AI Multi-Mind SaaS Engine. This platform is designed to provide e
 - **Team Hub**: Collaborative workspace with Agency white-labeling.
 - **Affiliate Program**: Built-in referral tracking and commission system.
 - **Workspace**: Organize, search, and export AI generated intelligence.
+- **AI Success Coach**: Real-time floating support chat powered by AI to help users navigate the platform and maximize results.
+- **Acquisition Checklist**: Strategic documentation for scaling to a 10-figure exit.
+- **Advanced Unit Economics**: Deep dive into the metrics that drive billion-dollar SaaS valuations.

@@ -545,6 +545,19 @@ document.addEventListener('DOMContentLoaded', function() {
         a.click();
     });
 
+    // Export Workspace JSON
+    document.getElementById('amm-export-workspace-btn').addEventListener('click', () => {
+        safeFetch('/export-workspace')
+            .then(data => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'amm-workspace-export.json';
+                a.click();
+            });
+    });
+
     // Handle Bulk Delete
     document.getElementById('amm-bulk-delete-btn').addEventListener('click', () => {
         const ids = Array.from(document.querySelectorAll('.amm-out-check:checked')).map(c => c.value);
@@ -761,4 +774,41 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ plan_id: planId, gateway: 'stripe' })
         }).then(data => { if(data.url) window.location.href = data.url; });
     };
+
+    // Support Chat Logic
+    const supportToggle = document.getElementById('amm-support-toggle');
+    const supportChat = document.getElementById('amm-support-chat');
+    const supportSend = document.getElementById('amm-support-send');
+    const supportInput = document.getElementById('amm-support-input');
+    const supportMessages = document.getElementById('amm-support-messages');
+
+    if (supportToggle) {
+        supportToggle.addEventListener('click', () => {
+            supportChat.style.display = supportChat.style.display === 'none' ? 'flex' : 'none';
+        });
+    }
+
+    if (supportSend) {
+        supportSend.addEventListener('click', () => {
+            const msg = supportInput.value;
+            if(!msg) return;
+
+            const userDiv = document.createElement('div');
+            userDiv.style = 'background:#007cba; color:#fff; padding:10px; border-radius:8px; margin-bottom:10px; align-self:flex-end;';
+            userDiv.textContent = msg;
+            supportMessages.appendChild(userDiv);
+            supportInput.value = '';
+
+            safeFetch('/chat-support', {
+                method: 'POST',
+                body: JSON.stringify({ message: msg })
+            }).then(data => {
+                const botDiv = document.createElement('div');
+                botDiv.style = 'background:#f0f0f0; padding:10px; border-radius:8px; margin-bottom:10px;';
+                botDiv.textContent = data.reply;
+                supportMessages.appendChild(botDiv);
+                supportMessages.scrollTop = supportMessages.scrollHeight;
+            });
+        });
+    }
 });

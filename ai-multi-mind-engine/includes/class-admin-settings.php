@@ -36,6 +36,8 @@ class AMM_Admin_Settings {
 		register_setting( 'amm_settings_group', 'amm_stripe_price_pro' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_mind_unlock' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_agency' );
+		register_setting( 'amm_settings_group', 'amm_paypal_client_id' );
+		register_setting( 'amm_settings_group', 'amm_paypal_client_secret' );
 	}
 
 	public function encrypt_key( $value ) {
@@ -104,6 +106,14 @@ class AMM_Admin_Settings {
 					<tr valign="top">
 						<th scope="row">Stripe Mind Unlock Price ID</th>
 						<td><input type="text" name="amm_stripe_price_mind_unlock" value="<?php echo esc_attr( get_option('amm_stripe_price_mind_unlock') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">PayPal Client ID</th>
+						<td><input type="password" name="amm_paypal_client_id" value="<?php echo esc_attr( get_option('amm_paypal_client_id') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">PayPal Client Secret</th>
+						<td><input type="password" name="amm_paypal_client_secret" value="<?php echo esc_attr( get_option('amm_paypal_client_secret') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Global System Context</th>

@@ -110,6 +110,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Success Coach Endpoint
+		register_rest_route( $namespace, '/chat-support', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_support_chat' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Create Invite Endpoint
 		register_rest_route( $namespace, '/invite', array(
 			'methods'             => 'POST',
@@ -296,6 +303,13 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/update-output', array(
 			'methods'             => 'POST',
 			'callback'            => array( $this, 'handle_update_output' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Export Workspace Endpoint
+		register_rest_route( $namespace, '/export-workspace', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'handle_export_workspace' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
@@ -725,6 +739,11 @@ class AMM_REST_API {
 			array( 'id' => 'psych_copywriter', 'name' => 'Psychological Copywriter', 'category' => 'Growth' ),
 			array( 'id' => 'seo_strategist', 'name' => 'SEO Strategist', 'category' => 'Growth' ),
 			array( 'id' => 'viral_storyteller', 'name' => 'Viral Storyteller', 'category' => 'Growth' ),
+			array( 'id' => 'support_architect', 'name' => 'Customer Support Architect', 'category' => 'Growth' ),
+			array( 'id' => 'ecom_strategist', 'name' => 'E-commerce Strategist', 'category' => 'Growth' ),
+			array( 'id' => 'real_estate_authority', 'name' => 'Real Estate Authority', 'category' => 'Growth' ),
+			array( 'id' => 'podcast_strategist', 'name' => 'Podcast Guest Strategist', 'category' => 'Growth' ),
+			array( 'id' => 'youtube_lead', 'name' => 'YouTube Growth Lead', 'category' => 'Growth' ),
 
 			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true, 'category' => 'Special' ),
 		);
@@ -911,6 +930,11 @@ class AMM_REST_API {
 	/**
 	 * Handle output duplication
 	 */
+	public function handle_export_workspace() {
+		$outputs = $this->get_user_outputs();
+		return $outputs; // For now JSON is fine via REST, download handled on frontend
+	}
+
 	public function handle_update_output( $request ) {
 		$user_id = get_current_user_id();
 		$params = $request->get_json_params();
@@ -1116,8 +1140,22 @@ class AMM_REST_API {
 	}
 
 	/**
-	 * Handle user settings update
+	 * Handle Success Coach Chat
 	 */
+	public function handle_support_chat( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$message = $params['message'] ?? '';
+		$provider = get_option( 'amm_default_ai_provider', 'gemini' );
+
+		$system_prompt = "You are the AI Success Coach for the AI Multi-Mind Engine. Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. If they ask about features, explain how to use the 'Council' or 'Magic BFF'.";
+
+		$ai_manager = new AMM_AI_Provider_Manager();
+		$response = $ai_manager->generate_response( $provider, $system_prompt, $message );
+
+		return rest_ensure_response( array( 'success' => true, 'reply' => $response ) );
+	}
+
 	public function handle_member_role_update( $request ) {
 		global $wpdb;
 		$user_id = get_current_user_id();

@@ -129,6 +129,16 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_SEO_Strategist();
 			case 'viral_storyteller':
 				return new AMM_Mind_Viral_Storyteller();
+			case 'support_architect':
+				return new AMM_Mind_Support_Architect();
+			case 'ecom_strategist':
+				return new AMM_Mind_Ecom_Strategist();
+			case 'real_estate_authority':
+				return new AMM_Mind_Real_Estate_Authority();
+			case 'podcast_strategist':
+				return new AMM_Mind_Podcast_Strategist();
+			case 'youtube_lead':
+				return new AMM_Mind_Youtube_Lead();
 		}
 
 		// Otherwise, look for it in the CPT

@@ -297,6 +297,7 @@ class AMM_Shortcodes {
 								<option value="">All Folders</option>
 							</select>
 							<input type="text" id="amm-workspace-search" placeholder="Search strategy..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:200px;">
+							<button id="amm-export-workspace-btn" class="amm-secondary-btn" style="background:#28a745; color:#fff;">📦 Export All (JSON)</button>
 							<button id="amm-bulk-delete-btn" class="amm-secondary-btn" style="background:#ff4444; color:#fff;">Delete Selected</button>
 							<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
 						</div>
@@ -429,6 +430,20 @@ class AMM_Shortcodes {
 				</section>
 			</main>
 		</div>
+
+			<div id="amm-support-widget" style="position:fixed; bottom:20px; right:20px; z-index:9999;">
+				<button id="amm-support-toggle" style="width:60px; height:60px; border-radius:30px; background:#007cba; color:#fff; border:none; box-shadow:0 10px 20px rgba(0,0,0,0.2); cursor:pointer; font-size:24px;">💬</button>
+				<div id="amm-support-chat" style="display:none; position:absolute; bottom:70px; right:0; width:300px; height:400px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); border:1px solid #eee; flex-direction:column; overflow:hidden;">
+					<div style="background:#007cba; color:#fff; padding:15px; font-weight:bold;">Success Coach 🚀</div>
+					<div id="amm-support-messages" style="flex:1; padding:15px; overflow-y:auto; font-size:13px; line-height:1.4;">
+						<div style="background:#f0f0f0; padding:10px; border-radius:8px; margin-bottom:10px;">Hello! I am your Success Coach. How can I help you ignite your business strategy today?</div>
+					</div>
+					<div style="padding:15px; border-top:1px solid #eee; display:flex; gap:5px;">
+						<input type="text" id="amm-support-input" placeholder="Type your question..." style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd;">
+						<button id="amm-support-send" style="background:#007cba; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;">Send</button>
+					</div>
+				</div>
+			</div>
 
 		<?php
 		return ob_get_clean();

@@ -71,6 +71,7 @@ class AI_Multi_Mind_Engine {
 		require_once AMM_PATH . 'includes/minds/class-mind-batch-2.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-batch-3.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-batch-4.php';
+		require_once AMM_PATH . 'includes/minds/class-mind-batch-5.php';
 		require_once AMM_PATH . 'includes/minds/class-mind-magic-bff.php';
 
 		// Managers
@@ -350,6 +351,56 @@ class AI_Multi_Mind_Engine {
 		// Set Default Options
 		add_option( 'amm_default_ai_provider', 'free_jules' );
 		add_option( 'amm_api_logging', 'yes' );
+
+		$this->seed_templates();
+	}
+
+	/**
+	 * Seed Default Templates
+	 */
+	private function seed_templates() {
+		$templates = array(
+			array(
+				'title' => 'High-Ticket Sales Script Generator',
+				'content' => "Develop a high-ticket sales script for a product/service priced at [PRICE]. \nInclude:\n1. The Pattern Interrupt (Hook)\n2. Rapport Building Questions\n3. The Goal Identification (Future Pacing)\n4. The Gap Analysis (Current Pain)\n5. The Value Bridge (How we solve it)\n6. The Objection Pre-emption (Addressing concerns before they arise)\n7. The Close (High-Ticket Invitation)",
+				'min_plan' => 'pro'
+			),
+			array(
+				'title' => 'Viral Twitter/X Thread Architect',
+				'content' => "Create a 10-part viral Twitter thread about [TOPIC]. \nFramework:\n- Tweet 1: The Counter-Intuitive Hook\n- Tweet 2: The Stakes (Why this matters)\n- Tweet 3-7: The Strategy (Step-by-step)\n- Tweet 8: The Transformation\n- Tweet 9: The Lesson\n- Tweet 10: The CTA",
+				'min_plan' => 'starter'
+			)
+		);
+
+		foreach ( $templates as $t ) {
+			if ( ! get_page_by_path( sanitize_title( $t['title'] ), OBJECT, 'ai_templates' ) ) {
+				$post_id = wp_insert_post( array(
+					'post_title'   => $t['title'],
+					'post_content' => $t['content'],
+					'post_status'  => 'publish',
+					'post_type'    => 'ai_templates',
+				));
+				if ( $post_id ) {
+					update_post_meta( $post_id, 'amm_min_plan', $t['min_plan'] );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Log an event to the Audit Trail
+	 */
+	public function log_audit( $user_id, $event_type, $description ) {
+		global $wpdb;
+		$wpdb->insert(
+			$wpdb->prefix . 'amm_audit_trail',
+			array(
+				'user_id'     => $user_id,
+				'event_type'  => $event_type,
+				'description' => $description,
+				'created_at'  => current_time( 'mysql' ),
+			)
+		);
 	}
 }
 
