@@ -123,6 +123,8 @@ class AMM_Prompt_Engine {
 				return new AMM_Mind_VC_Auditor();
 			case 'psych_copywriter':
 				return new AMM_Mind_Psychological_Copywriter();
+			case 'blue_ocean':
+				return new AMM_Mind_Blue_Ocean();
 		}
 
 		// Otherwise, look for it in the CPT

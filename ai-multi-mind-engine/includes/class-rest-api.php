@@ -509,40 +509,52 @@ class AMM_REST_API {
 	public function get_all_minds() {
 		$user_id = get_current_user_id();
 		$core_minds = array(
-			array( 'id' => 'ceo', 'name' => 'Elite CEO', 'featured' => true ),
-			array( 'id' => 'strategist', 'name' => 'Blue Ocean Strategist' ),
-			array( 'id' => 'funnel_builder', 'name' => 'Funnel Architect' ),
-			array( 'id' => 'growth_hacker', 'name' => 'Growth Hacker' ),
-			array( 'id' => 'copywriter', 'name' => 'Copywriting Master' ),
-			array( 'id' => 'sales_closer', 'name' => 'Sales Closer' ),
-			array( 'id' => 'profit_maximizer', 'name' => 'Profit Maximizer' ),
-			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi)', 'featured' => true ),
-			array( 'id' => 'sop_architect', 'name' => 'SOP Architect' ),
-			array( 'id' => 'viral_creator', 'name' => 'Viral Creator' ),
-			array( 'id' => 'visionary', 'name' => 'Visionary Founder' ),
-			array( 'id' => 'dominator', 'name' => 'Market Dominator' ),
-			array( 'id' => 'automation_expert', 'name' => 'Automation Architect' ),
-			array( 'id' => 'storyteller', 'name' => 'Master Storyteller' ),
-			array( 'id' => 'board_advisor', 'name' => 'Board Advisor' ),
-			array( 'id' => 'brand_authority', 'name' => 'Brand Authority Builder' ),
-			array( 'id' => 'objection_killer', 'name' => 'Objection Killer' ),
-			array( 'id' => 'negotiation_master', 'name' => 'Negotiation Master' ),
-			array( 'id' => 'systems_builder', 'name' => 'Systems Builder' ),
-			array( 'id' => 'pricing_strategist', 'name' => 'Pricing Strategist' ),
-			array( 'id' => 'cost_cutter', 'name' => 'Cost Cutter' ),
-			array( 'id' => 'product_strategist', 'name' => 'Product Strategist' ),
-			array( 'id' => 'ux_expert', 'name' => 'UX/UI Expert' ),
-			array( 'id' => 'saas_architect', 'name' => 'SaaS Architect' ),
-			array( 'id' => 'email_specialist', 'name' => 'Email Conversion Specialist' ),
-			array( 'id' => 'risk_analyst', 'name' => 'Risk Analyst' ),
-			array( 'id' => 'policy_generator', 'name' => 'Policy Generator' ),
-			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach' ),
-			array( 'id' => 'decision_expert', 'name' => 'Decision Expert' ),
-			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true ),
-			array( 'id' => 'roadmap_builder', 'name' => 'Product Roadmap Builder' ),
-			array( 'id' => 'pitch_architect', 'name' => 'Investor Pitch Architect' ),
-			array( 'id' => 'vc_auditor', 'name' => 'VC Auditor' ),
-			array( 'id' => 'psych_copywriter', 'name' => 'Psychological Copywriter' ),
+			array( 'id' => 'ceo', 'name' => 'CEO Mind', 'featured' => true, 'category' => 'Executive' ),
+			array( 'id' => 'visionary', 'name' => 'Visionary Founder', 'category' => 'Executive' ),
+			array( 'id' => 'board_advisor', 'name' => 'Board Advisor', 'category' => 'Executive' ),
+
+			array( 'id' => 'strategist', 'name' => 'Elite Business Strategist', 'featured' => true, 'category' => 'Strategy' ),
+			array( 'id' => 'growth_hacker', 'name' => 'Growth Hacker', 'category' => 'Strategy' ),
+			array( 'id' => 'dominator', 'name' => 'Market Dominator', 'category' => 'Strategy' ),
+			array( 'id' => 'blue_ocean', 'name' => 'Blue Ocean Expert', 'category' => 'Strategy' ),
+
+			array( 'id' => 'funnel_builder', 'name' => 'Funnel Builder (Brunson-style)', 'category' => 'Marketing' ),
+			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi-style)', 'featured' => true, 'category' => 'Marketing' ),
+			array( 'id' => 'viral_creator', 'name' => 'Viral Content Creator', 'category' => 'Marketing' ),
+			array( 'id' => 'brand_authority', 'name' => 'Brand Authority Builder', 'category' => 'Marketing' ),
+
+			array( 'id' => 'sales_closer', 'name' => 'High-Ticket Closer', 'category' => 'Sales' ),
+			array( 'id' => 'objection_killer', 'name' => 'Objection Killer', 'category' => 'Sales' ),
+			array( 'id' => 'negotiation_master', 'name' => 'Negotiation Master', 'category' => 'Sales' ),
+
+			array( 'id' => 'sop_architect', 'name' => 'SOP Architect', 'category' => 'Operations' ),
+			array( 'id' => 'systems_builder', 'name' => 'Systems Builder', 'category' => 'Operations' ),
+			array( 'id' => 'automation_expert', 'name' => 'Automation Expert', 'category' => 'Operations' ),
+
+			array( 'id' => 'profit_maximizer', 'name' => 'Profit Maximizer', 'category' => 'Finance' ),
+			array( 'id' => 'pricing_strategist', 'name' => 'Pricing Strategist', 'category' => 'Finance' ),
+			array( 'id' => 'cost_cutter', 'name' => 'Cost Cutter', 'category' => 'Finance' ),
+
+			array( 'id' => 'product_strategist', 'name' => 'Product Strategist', 'category' => 'Product' ),
+			array( 'id' => 'ux_expert', 'name' => 'UX/UI Expert', 'category' => 'Product' ),
+			array( 'id' => 'saas_architect', 'name' => 'SaaS Architect', 'category' => 'Product' ),
+
+			array( 'id' => 'copywriter', 'name' => 'Copywriting Master', 'category' => 'Content' ),
+			array( 'id' => 'storyteller', 'name' => 'Storytelling Expert', 'category' => 'Content' ),
+			array( 'id' => 'email_specialist', 'name' => 'Email Conversion Specialist', 'category' => 'Content' ),
+
+			array( 'id' => 'risk_analyst', 'name' => 'Risk Analyst', 'category' => 'Legal' ),
+			array( 'id' => 'policy_generator', 'name' => 'Policy Generator', 'category' => 'Legal' ),
+
+			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach', 'category' => 'Personal' ),
+			array( 'id' => 'decision_expert', 'name' => 'Decision Expert', 'category' => 'Personal' ),
+
+			array( 'id' => 'roadmap_builder', 'name' => 'Product Roadmap Builder', 'category' => 'Growth' ),
+			array( 'id' => 'pitch_architect', 'name' => 'Investor Pitch Architect', 'category' => 'Growth' ),
+			array( 'id' => 'vc_auditor', 'name' => 'VC Auditor', 'category' => 'Growth' ),
+			array( 'id' => 'psych_copywriter', 'name' => 'Psychological Copywriter', 'category' => 'Growth' ),
+
+			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true, 'category' => 'Special' ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
