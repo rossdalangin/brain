@@ -33,10 +33,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Fetch Data
+    async function safeFetch(endpoint, options = {}) {
+        const defaultOptions = {
+            headers: { 'X-WP-Nonce': nonce }
+        };
+        const mergedOptions = { ...defaultOptions, ...options };
+        if (options.body) {
+            mergedOptions.headers['Content-Type'] = 'application/json';
+        }
+
+        try {
+            const res = await fetch(apiRoot + endpoint, mergedOptions);
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Network error');
+            }
+            return await res.json();
+        } catch (err) {
+            console.error('AMM Fetch Error:', err.message);
+            alert('Engine Error: ' + err.message);
+            throw err;
+        }
+    }
+
     function initApp() {
         // User Stats
-        fetch(apiRoot + '/user', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(data => {
+        safeFetch('/user')
+            .then(data => {
                 const used = data.usage.used;
                 const limit = data.usage.limit;
                 const pct = Math.min(100, (used / limit) * 100);
@@ -79,8 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Recent Activity
                 const recent = document.getElementById('amm-recent-activity');
-                fetch(apiRoot + '/outputs', { headers: { 'X-WP-Nonce': nonce } })
-                    .then(res => res.json()).then(outputs => {
+                safeFetch('/outputs')
+                    .then(outputs => {
                         recent.innerHTML = outputs.slice(0, 5).map(o => `<div style="padding:10px; border-bottom:1px solid #eee;"><strong>${o.title}</strong> - ${o.date}</div>`).join('') || 'No recent activity.';
                     });
 
@@ -98,8 +121,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         // Templates
-        fetch(apiRoot + '/templates', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(templates => {
+        safeFetch('/templates')
+            .then(templates => {
                 if(templates.length) {
                     const select = document.getElementById('amm-template-select');
                     select.innerHTML += templates.map(t => `<option value="${t.content}" ${t.locked ? 'disabled' : ''}>${t.title}${t.locked ? ' (Locked)' : ''}</option>`).join('');
@@ -118,8 +141,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         // Minds
-        fetch(apiRoot + '/minds', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(minds => {
+        safeFetch('/minds')
+            .then(minds => {
                 window.ammAllMinds = minds;
                 const options = minds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
                 document.getElementById('amm-mind-select').innerHTML = options;
@@ -166,15 +189,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Folders
-        fetch(apiRoot + '/folders', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(folders => {
+        safeFetch('/folders')
+            .then(folders => {
                 document.getElementById('amm-workspace-folder-filter').innerHTML += folders.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
             });
 
         // Workspace
         window.refreshWorkspace = function() {
-            fetch(apiRoot + '/outputs', { headers: { 'X-WP-Nonce': nonce } })
-                .then(res => res.json()).then(outputs => {
+            safeFetch('/outputs')
+                .then(outputs => {
                     const workspaceList = document.getElementById('amm-workspace-list');
                     if (!outputs.length) {
                         workspaceList.innerHTML = 'No outputs saved.';
@@ -182,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
                         '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
-                        outputs.map(o => `<tr data-folders="${o.folders.join(',')}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+                        outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
                         '</table>';
 
                     document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -193,8 +216,8 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshWorkspace();
 
         // Team & Invites
-        fetch(apiRoot + '/teams', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(teams => {
+        safeFetch('/teams')
+            .then(teams => {
                 const createBtn = document.getElementById('amm-create-team-btn');
                 const controls = document.getElementById('amm-team-controls');
 
@@ -215,16 +238,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     `).join('');
 
                     // Fetch Invites
-                    fetch(apiRoot + '/pending-invites?team_id=' + teams[0].id, { headers: { 'X-WP-Nonce': nonce } })
-                        .then(res => res.json()).then(invites => {
+                    safeFetch('/pending-invites?team_id=' + teams[0].id)
+                        .then(invites => {
                             if(invites.length) {
                                 document.getElementById('amm-invite-list').innerHTML = invites.map(i => `<div>${i.email} <button class="amm-secondary-btn" onclick="ammRevokeInvite(${i.id})" style="background:#ff4444; color:#fff;">Revoke</button></div>`).join('');
                             }
                         });
 
                     // Fetch Team Activity
-                    fetch(apiRoot + '/team-activity?team_id=' + teams[0].id, { headers: { 'X-WP-Nonce': nonce } })
-                        .then(res => res.json()).then(activity => {
+                    safeFetch('/team-activity?team_id=' + teams[0].id)
+                        .then(activity => {
                             if(activity.length) {
                                 document.getElementById('amm-team-activity').innerHTML = activity.map(a => `<div><strong>${a.user}</strong> generated <em>${a.title}</em></div>`).join('');
                             } else {
@@ -237,8 +260,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         // Plans
-        fetch(apiRoot + '/plans', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(plans => {
+        safeFetch('/plans')
+            .then(plans => {
                 document.getElementById('amm-plans-grid').innerHTML = plans.map(p => `
                     <div class="amm-plan-card ${p.featured ? 'featured' : ''}">
                         <h4>${p.name}</h4>
@@ -250,8 +273,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         // Billing History
-        fetch(apiRoot + '/invoices', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(history => {
+        safeFetch('/invoices')
+            .then(history => {
                 const historyBox = document.getElementById('amm-billing-history');
                 if (history.length === 0) {
                     historyBox.innerHTML = 'No payment history found.';
@@ -264,8 +287,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         // Affiliate
-        fetch(apiRoot + '/affiliate', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(data => {
+        safeFetch('/affiliate')
+            .then(data => {
                 let html = `<p>Referral Link: <input type="text" value="${data.link}" readonly style="width:100%;"></p>
                     <p>Earnings: $${data.commissions}</p>
                     <h4>Your Referrals</h4>`;
@@ -283,8 +306,8 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPersona();
 
     function loadPersona() {
-        fetch(apiRoot + '/persona', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(p => {
+        safeFetch('/persona')
+            .then(p => {
                 if (p.name) {
                     document.getElementById('amm-persona-name').value = p.name;
                     document.getElementById('amm-persona-pain').value = p.pain;
@@ -301,16 +324,15 @@ document.addEventListener('DOMContentLoaded', function() {
             desire: document.getElementById('amm-persona-desire').value,
             triggers: document.getElementById('amm-persona-triggers').value
         };
-        fetch(apiRoot + '/save-persona', {
+        safeFetch('/save-persona', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify(persona)
-        }).then(res => res.json()).then(data => { if(data.success) alert('Audience Context Saved!'); });
+        }).then(data => { if(data.success) alert('Audience Context Saved!'); });
     });
 
     function loadPresets() {
-        fetch(apiRoot + '/presets', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(presets => {
+        safeFetch('/presets')
+            .then(presets => {
                 const list = document.getElementById('amm-presets-list');
                 const container = document.getElementById('amm-presets-container');
                 if (presets.length) {
@@ -333,12 +355,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const mind_ids = Array.from(document.querySelectorAll('.amm-council-select')).map(s => s.value).filter(Boolean);
         const mode = document.querySelector('input[name="council-mode"]:checked').value;
 
-        fetch(apiRoot + '/save-preset', {
+        safeFetch('/save-preset', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ name, mind_ids, mode })
-        }).then(res => res.json()).then(data => { if(data.success) { alert('Preset Saved!'); loadPresets(); } });
+        }).then(data => { if(data.success) { alert('Preset Saved!'); loadPresets(); } });
     });
+
+    // Basic HTML Sanitizer for AI content
+    function sanitizeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        // Basic line-break and list-item preservation
+        return div.innerHTML.replace(/\n/g, '<br>');
+    }
 
     // Generate Logic (Typewriter Effect)
     const btn = document.getElementById('amm-generate-btn');
@@ -346,8 +375,8 @@ document.addEventListener('DOMContentLoaded', function() {
     window.ammChatHistory = [];
 
     // Load History
-    fetch(apiRoot + '/get-history', { headers: { 'X-WP-Nonce': nonce } })
-        .then(res => res.json()).then(h => { window.ammChatHistory = h; });
+    safeFetch('/get-history')
+        .then(h => { window.ammChatHistory = h; });
 
     btn.addEventListener('click', () => {
         const userInput = document.getElementById('amm-input').value;
@@ -356,9 +385,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.disabled = true;
         outputBox.innerText = "The mind is thinking...";
 
-        fetch(apiRoot + '/generate', {
+        safeFetch('/generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({
                 mind_id: document.getElementById('amm-mind-select').value,
                 output_type: document.getElementById('amm-type-select').value,
@@ -367,7 +395,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 history: window.ammChatHistory
             })
         })
-        .then(res => res.json())
         .then(data => {
             if(data.success) {
                 outputBox.innerText = "";
@@ -385,13 +412,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.ammChatHistory.push({ role: 'assistant', content: text });
 
 								// Save History
-								fetch(apiRoot + '/save-history', {
+								safeFetch('/save-history', {
 									method: 'POST',
-									headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
 									body: JSON.stringify({ history: window.ammChatHistory })
 								});
 
-								outputBox.innerHTML += '<div style="margin-top:20px; font-size:12px; color:green; font-weight:bold;">✅ Strategy saved and persistent memory updated.</div>';
+								const successMsg = document.createElement('div');
+								successMsg.style = 'margin-top:20px; font-size:12px; color:green; font-weight:bold;';
+								successMsg.textContent = '✅ Strategy saved and persistent memory updated.';
+								outputBox.appendChild(successMsg);
                     }
                 }, 5);
             } else {
@@ -403,39 +432,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Feedback Logic
     window.ammFeedback = function(id, rating) {
-        fetch(apiRoot + '/feedback', {
+        safeFetch('/feedback', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ post_id: id, rating: rating })
-        }).then(res => res.json()).then(data => { if(data.success) alert('Feedback recorded. Thank you!'); });
+        }).then(data => { if(data.success) alert('Feedback recorded. Thank you!'); });
     };
 
     // Share Logic
     window.ammShare = function(id) {
-        fetch(apiRoot + '/share', {
+        safeFetch('/share', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ post_id: id })
         })
-        .then(res => res.json())
         .then(data => {
             if(data.is_public) {
                 prompt('Public link copied to clipboard (Ctrl+C):', data.share_url);
             } else {
                 alert('Intelligence marked as private.');
             }
+            refreshWorkspace();
         });
     };
 
-    // Handle Folder Filter
-    document.getElementById('amm-workspace-folder-filter').addEventListener('change', (e) => {
-        const folder = e.target.value;
+    // Handle Workspace Filters
+    const wsFolderFilter = document.getElementById('amm-workspace-folder-filter');
+    if(wsFolderFilter) wsFolderFilter.addEventListener('change', () => filterWorkspace());
+    const wsTypeFilter = document.getElementById('amm-workspace-filter');
+    if(wsTypeFilter) wsTypeFilter.addEventListener('change', () => filterWorkspace());
+
+    function filterWorkspace() {
+        const folder = document.getElementById('amm-workspace-folder-filter').value;
+        const type = document.getElementById('amm-workspace-filter').value;
+
         document.querySelectorAll('#amm-workspace-list tr').forEach(tr => {
             if (tr.querySelector('th')) return;
+
             const folders = tr.dataset.folders || '';
-            tr.style.display = (!folder || folders.includes(folder)) ? '' : 'none';
+            const isPublic = tr.dataset.public === 'yes';
+
+            let show = true;
+            if (folder && !folders.includes(folder)) show = false;
+            if (type === 'public' && !isPublic) show = false;
+
+            tr.style.display = show ? '' : 'none';
         });
-    });
+    }
 
     // Handle Search
     document.getElementById('amm-workspace-search').addEventListener('input', (e) => {
@@ -456,11 +497,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('amm-save-edit-btn').addEventListener('click', () => {
         const content = document.getElementById('amm-edit-content').value;
-        fetch(apiRoot + '/update-output', {
+        safeFetch('/update-output', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ post_id: window.ammActiveEditId, content })
-        }).then(res => res.json()).then(data => {
+        }).then(data => {
             if(data.success) {
                 document.getElementById('amm-edit-modal').style.display = 'none';
                 refreshWorkspace();
@@ -470,17 +510,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Duplicate Logic
     window.ammDuplicate = function(id) {
-        fetch(apiRoot + '/duplicate', {
+        safeFetch('/duplicate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ post_id: id })
-        }).then(res => res.json()).then(data => { if(data.success) refreshWorkspace(); });
+        }).then(data => { if(data.success) refreshWorkspace(); });
     };
 
     // Portal Logic
     window.ammPortal = function() {
-        fetch(apiRoot + '/billing-portal', { headers: { 'X-WP-Nonce': nonce } })
-            .then(res => res.json()).then(data => { if(data.url) window.location.href = data.url; });
+        safeFetch('/billing-portal')
+            .then(data => { if(data.url) window.location.href = data.url; });
     };
 
     // Quick Ignite
@@ -511,11 +550,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const ids = Array.from(document.querySelectorAll('.amm-out-check:checked')).map(c => c.value);
         if(ids.length === 0 || !confirm('Delete selected?')) return;
 
-        fetch(apiRoot + '/bulk-action', {
+        safeFetch('/bulk-action', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ ids, action: 'delete' })
-        }).then(res => res.json()).then(data => { if(data.success) refreshWorkspace(); });
+        }).then(data => { if(data.success) refreshWorkspace(); });
     });
 
     // Handle New Folder
@@ -523,11 +561,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = prompt('Enter folder name:');
         if(!name) return;
 
-        fetch(apiRoot + '/create-folder', {
+        safeFetch('/create-folder', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ name })
-        }).then(res => res.json()).then(data => {
+        }).then(data => {
             if(data.success) {
                 alert('Folder Created!');
                 refreshWorkspace();
@@ -541,12 +578,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if(!input.value) return;
 
         document.getElementById('amm-refine-btn').innerText = 'Magic in progress...';
-        fetch(apiRoot + '/refine-prompt', {
+        safeFetch('/refine-prompt', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ user_input: input.value })
         })
-        .then(res => res.json())
         .then(data => {
             if(data.refined_prompt) {
                 input.value = data.refined_prompt;
@@ -560,9 +595,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle Create Mind
     if (document.getElementById('amm-create-mind-btn')) {
         document.getElementById('amm-create-mind-btn').addEventListener('click', () => {
-            fetch(apiRoot + '/create-mind', {
+            safeFetch('/create-mind', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
                 body: JSON.stringify({
                     name: document.getElementById('amm-new-mind-name').value,
                     role: document.getElementById('amm-new-mind-role').value,
@@ -571,54 +605,51 @@ document.addEventListener('DOMContentLoaded', function() {
                     structure: document.getElementById('amm-new-mind-structure').value,
                     prompt: document.getElementById('amm-new-mind-prompt').value
                 })
-            }).then(res => res.json()).then(data => { if(data.success) { alert('Custom Mind Created!'); location.reload(); } });
+            }).then(data => { if(data.success) { alert('Custom Mind Created!'); location.reload(); } });
         });
     }
 
     // Handle Create Template
     if (document.getElementById('amm-create-template-btn')) {
         document.getElementById('amm-create-template-btn').addEventListener('click', () => {
-            fetch(apiRoot + '/create-template', {
+            safeFetch('/create-template', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
                 body: JSON.stringify({
                     title: document.getElementById('amm-new-template-title').value,
                     content: document.getElementById('amm-new-template-content').value
                 })
-            }).then(res => res.json()).then(data => { if(data.success) { alert('Template Created!'); location.reload(); } });
+            }).then(data => { if(data.success) { alert('Template Created!'); location.reload(); } });
         });
     }
 
     // Handle Branding
     document.getElementById('amm-branding-btn').addEventListener('click', () => {
-        fetch(apiRoot + '/update-branding', {
+        safeFetch('/update-branding', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({
                 team_id: window.ammActiveTeamId,
                 logo: document.getElementById('amm-branding-logo').value,
                 color: document.getElementById('amm-branding-color').value
             })
-        }).then(res => res.json()).then(data => { if(data.success) alert('Branding Updated!'); });
+        }).then(data => { if(data.success) alert('Branding Updated!'); });
     });
 
     // Handle Remove Member
     window.ammRemoveMember = function(userId, teamId) {
         if(!confirm('Remove this member?')) return;
-        fetch(apiRoot + '/remove-member', {
+        safeFetch('/remove-member', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ user_id: userId, team_id: teamId })
-        }).then(res => res.json()).then(data => { if(data.success) location.reload(); });
+        }).then(data => { if(data.success) location.reload(); });
     };
 
     // Handle Revoke Invite
     window.ammRevokeInvite = function(id) {
-        fetch(apiRoot + '/revoke-invite', {
+        if(!confirm('Revoke this invite?')) return;
+        safeFetch('/revoke-invite', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ id })
-        }).then(res => res.json()).then(data => { if(data.success) location.reload(); });
+        }).then(data => { if(data.success) location.reload(); });
     };
 
     // Handle Invite
@@ -626,11 +657,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const email = document.getElementById('amm-invite-email').value;
         if(!email) return;
 
-        fetch(apiRoot + '/invite', {
+        safeFetch('/invite', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ team_id: window.ammActiveTeamId, email })
-        }).then(res => res.json()).then(data => {
+        }).then(data => {
             if(data.success) {
                 prompt('Invite link generated! Send this to your team member:', data.invite_url);
             }
@@ -645,22 +675,42 @@ document.addEventListener('DOMContentLoaded', function() {
         const output = document.getElementById('amm-council-output');
 
         output.innerText = 'The Council is deliberating...';
-        fetch(apiRoot + '/collaborate', {
+        safeFetch('/collaborate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ mind_ids, user_input, mode })
-        }).then(res => res.json()).then(data => {
+        }).then(data => {
             if(data.success) {
-                let html = `<h3>Council Deliberation Complete (${mode.toUpperCase()})</h3>`;
+                output.innerHTML = ''; // Clear and build safely
+                const title = document.createElement('h3');
+                title.textContent = `Council Deliberation Complete (${mode.toUpperCase()})`;
+                output.appendChild(title);
+
                 if (data.sequence && data.sequence.length) {
-                    html += '<div style="margin-bottom:20px; border-left:4px solid #007cba; padding-left:20px;">';
+                    const seqContainer = document.createElement('div');
+                    seqContainer.style = 'margin-bottom:20px; border-left:4px solid #007cba; padding-left:20px;';
                     data.sequence.forEach((step, idx) => {
-                        html += `<details style="margin-bottom:10px;"><summary style="cursor:pointer; font-weight:bold; color:#007cba;">Mind ${idx+1} Reflection</summary><div style="padding:10px; background:#f0f8ff; border-radius:8px; font-size:13px; margin-top:5px;">${typeof step === 'string' ? step : step.content}</div></details>`;
+                        const det = document.createElement('details');
+                        det.style.marginBottom = '10px';
+                        const sum = document.createElement('summary');
+                        sum.style = 'cursor:pointer; font-weight:bold; color:#007cba;';
+                        sum.textContent = `Mind ${idx+1} Reflection`;
+                        const inner = document.createElement('div');
+                        inner.style = 'padding:10px; background:#f0f8ff; border-radius:8px; font-size:13px; margin-top:5px;';
+                        inner.innerHTML = sanitizeHTML(typeof step === 'string' ? step : step.content);
+                        det.appendChild(sum);
+                        det.appendChild(inner);
+                        seqContainer.appendChild(det);
                     });
-                    html += '</div>';
+                    output.appendChild(seqContainer);
                 }
-                html += `<h4>Final Strategy Output</h4><div>${data.final_output}</div>`;
-                output.innerHTML = html;
+
+                const finalTitle = document.createElement('h4');
+                finalTitle.textContent = 'Final Strategy Output';
+                output.appendChild(finalTitle);
+
+                const finalContent = document.createElement('div');
+                finalContent.innerHTML = sanitizeHTML(data.final_output);
+                output.appendChild(finalContent);
             }
         });
     });
@@ -693,9 +743,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle Save Settings
     document.getElementById('amm-save-settings-btn').addEventListener('click', () => {
-        fetch(apiRoot + '/update-settings', {
+        safeFetch('/update-settings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({
                 webhook_url: document.getElementById('amm-set-webhook').value,
                 company_name: document.getElementById('amm-set-company').value,
@@ -703,14 +752,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 knowledge_base: document.getElementById('amm-set-kb').value,
                 usage_alerts: document.getElementById('amm-set-alerts').checked
             })
-        }).then(res => res.json()).then(data => { if(data.success) { alert('Settings Saved!'); location.reload(); } });
+        }).then(data => { if(data.success) { alert('Settings Saved!'); location.reload(); } });
     });
 
     window.ammCheckout = function(planId) {
-        fetch(apiRoot + '/checkout', {
+        safeFetch('/checkout', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ plan_id: planId, gateway: 'stripe' })
-        }).then(res => res.json()).then(data => { if(data.url) window.location.href = data.url; });
+        }).then(data => { if(data.url) window.location.href = data.url; });
     };
 });

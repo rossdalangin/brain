@@ -236,6 +236,20 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Stripe Webhook (No Auth - Signature verified internally)
+		register_rest_route( $namespace, '/stripe-webhook', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_stripe_webhook' ),
+			'permission_callback' => '__return_true',
+		));
+
+		// PayPal Webhook (No Auth - Verified internally)
+		register_rest_route( $namespace, '/paypal-webhook', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_paypal_webhook' ),
+			'permission_callback' => '__return_true',
+		));
+
 		// Public Output Endpoint (No Auth Required)
 		register_rest_route( $namespace, '/public-output', array(
 			'methods'             => 'GET',
@@ -647,6 +661,7 @@ class AMM_REST_API {
 				'title'   => $output->post_title,
 				'date'    => get_the_date( 'Y-m-d', $output->ID ),
 				'content' => $output->post_content,
+				'is_public' => get_post_meta( $output->ID, 'amm_is_public', true ) === 'yes',
 				'folders' => wp_get_post_terms( $output->ID, 'amm_folder', array( 'fields' => 'names' ) ),
 			);
 		}
@@ -1038,6 +1053,15 @@ class AMM_REST_API {
 
 			$current_output = $r3;
 			$results = array($r1, $r2, $r3);
+		} elseif ( $mode === 'brainstorm' ) {
+			foreach ( $mind_ids as $mind_id ) {
+				$prompts = $prompt_engine->prepare_prompts( $mind_id, 'report', $user_input );
+				$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'] );
+				if ( ! is_wp_error( $response ) ) {
+					$results[] = array( 'mind_id' => $mind_id, 'content' => $response );
+				}
+			}
+			$current_output = "The Council has provided multiple distinct perspectives. See reflections below.";
 		} else {
 			foreach ( $mind_ids as $mind_id ) {
 				$prompts = $prompt_engine->prepare_prompts( $mind_id, 'report', $current_output );
@@ -1214,6 +1238,20 @@ class AMM_REST_API {
 	/**
 	 * Get recent activity for the user's team
 	 */
+	public function handle_stripe_webhook() {
+		$stripe = new AMM_Stripe_Handler();
+		$res = $stripe->handle_webhook();
+		if ( is_wp_error( $res ) ) return $res;
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	public function handle_paypal_webhook() {
+		$paypal = new AMM_PayPal_Handler();
+		$res = $paypal->handle_webhook();
+		if ( is_wp_error( $res ) ) return $res;
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
 	public function get_team_activity( $request ) {
 		global $wpdb;
 		$user_id = get_current_user_id();

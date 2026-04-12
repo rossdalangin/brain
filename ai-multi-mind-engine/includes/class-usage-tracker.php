@@ -99,7 +99,12 @@ class AMM_Usage_Tracker {
 		$limit = $this->get_plan_limit( $plan_id );
 
 		if ( $used >= ( $limit * 0.9 ) && $used < $limit ) {
-			// In production: wp_mail( get_userdata($user_id)->user_email, 'AI Multi-Mind: Usage Alert', 'You have used 90% of your credits.' );
+			$user_data = get_userdata( $user_id );
+			wp_mail(
+				$user_data->user_email,
+				'🚀 AI Multi-Mind: 90% Credit Usage Alert',
+				"Hello {$user_data->display_name},\n\nYou have used 90% of your monthly AI credits. Ignite your growth by upgrading your plan or buying a top-up today!\n\nAccess Dashboard: " . home_url('/dashboard/')
+			);
 		}
 	}
 

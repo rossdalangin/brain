@@ -68,23 +68,18 @@ class AMM_Admin_Settings {
 							</select>
 						</td>
 					</tr>
-					<?php
-					$ai_manager = new AMM_AI_Provider_Manager();
-					$ref = new ReflectionClass('AMM_AI_Provider_Manager');
-					$method = $ref->getMethod('get_decrypted_option');
-					$method->setAccessible(true);
-					?>
+					<?php $ai_manager = new AMM_AI_Provider_Manager(); ?>
 					<tr valign="top">
 						<th scope="row">Gemini API Key</th>
-						<td><input type="password" name="amm_gemini_api_key" value="<?php echo esc_attr( $method->invoke($ai_manager, 'amm_gemini_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_gemini_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_gemini_api_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">OpenAI API Key</th>
-						<td><input type="password" name="amm_openai_api_key" value="<?php echo esc_attr( $method->invoke($ai_manager, 'amm_openai_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_openai_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_openai_api_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Claude API Key</th>
-						<td><input type="password" name="amm_claude_api_key" value="<?php echo esc_attr( $method->invoke($ai_manager, 'amm_claude_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_claude_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_claude_api_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Secret Key</th>

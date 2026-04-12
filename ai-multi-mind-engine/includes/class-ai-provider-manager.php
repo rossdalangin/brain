@@ -23,7 +23,7 @@ class AMM_AI_Provider_Manager {
 	/**
 	 * AES-256 Decryption with site-specific salt
 	 */
-	private function get_decrypted_option( $option_name ) {
+	public function get_decrypted_option( $option_name ) {
 		$value = get_option( $option_name );
 		if ( ! $value ) return '';
 

@@ -289,6 +289,10 @@ class AMM_Shortcodes {
 					<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
 						<h2>My Workspace</h2>
 						<div style="display:flex; gap:10px;">
+							<select id="amm-workspace-filter" style="width:150px;">
+								<option value="all">All Items</option>
+								<option value="public">Shared Intel</option>
+							</select>
 							<select id="amm-workspace-folder-filter" style="width:150px; border-radius:8px;">
 								<option value="">All Folders</option>
 							</select>
@@ -364,7 +368,8 @@ class AMM_Shortcodes {
 					<div class="amm-form-card" style="margin-bottom:20px;">
 						<div style="margin-bottom:15px;">
 							<label><input type="radio" name="council-mode" value="sequence" checked> <strong>Sequence Mode</strong> (Mind 1 -> Mind 2 -> Mind 3)</label><br>
-							<label><input type="radio" name="council-mode" value="critique"> <strong>Critique Mode</strong> (Mind 1 Creates -> Mind 2 Audits -> Mind 1 Finalizes)</label>
+							<label><input type="radio" name="council-mode" value="critique"> <strong>Critique Mode</strong> (Mind 1 Creates -> Mind 2 Audits -> Mind 1 Finalizes)</label><br>
+							<label><input type="radio" name="council-mode" value="brainstorm"> <strong>Brainstorm Mode</strong> (Parallel outputs from all selected minds)</label>
 						</div>
 						<div id="amm-council-selectors" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
 							<select class="amm-council-select"><option value="">Select Mind 1...</option></select>
