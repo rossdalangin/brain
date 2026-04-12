@@ -117,6 +117,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Verify Invite Endpoint
+		register_rest_route( $namespace, '/verify-invite', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_verify_invite' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Create Invite Endpoint
 		register_rest_route( $namespace, '/invite', array(
 			'methods'             => 'POST',
@@ -907,6 +914,25 @@ class AMM_REST_API {
 		);
 
 		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle Invite Verification
+	 */
+	public function handle_verify_invite( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$token = sanitize_text_field( $params['token'] );
+
+		$team_manager = new AMM_Team_Manager();
+		$team_id = $team_manager->verify_and_consume_token( $token );
+
+		if ( $team_id ) {
+			$team_manager->add_member( $team_id, $user_id );
+			return rest_ensure_response( array( 'success' => true ) );
+		}
+
+		return new WP_Error( 'invalid_token', 'Invalid or expired invitation token.', array( 'status' => 400 ) );
 	}
 
 	/**

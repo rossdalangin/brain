@@ -13,6 +13,7 @@ class AMM_Shortcodes {
 		add_shortcode( 'amm_dashboard', array( $this, 'render_dashboard' ) );
 		add_shortcode( 'amm_shared_intel', array( $this, 'render_shared_intel' ) );
 		add_shortcode( 'amm_landing_page', array( $this, 'render_landing_page' ) );
+		add_shortcode( 'amm_join_team', array( $this, 'render_join_team' ) );
 	}
 
 	public function render_shared_intel() {
@@ -32,6 +33,54 @@ class AMM_Shortcodes {
 				<a href="<?php echo home_url(); ?>" class="button primary">Get your own AI Minds</a>
 			</div>
 		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	public function render_join_team() {
+		if ( ! is_user_logged_in() ) {
+			return '<p>Please <a href="' . wp_login_url( home_url( '/join-team/?' . $_SERVER['QUERY_STRING'] ) ) . '">login or register</a> to accept this invitation.</p>';
+		}
+
+		$token = sanitize_text_field( $_GET['token'] ?? '' );
+		if ( ! $token ) return '<p>Invalid invitation link.</p>';
+
+		ob_start();
+		?>
+		<div class="amm-join-view" style="max-width:500px; margin:100px auto; text-align:center; padding:40px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+			<h2>You've been invited! 👥</h2>
+			<p>Join the team and start collaborating on elite business strategies.</p>
+			<button id="amm-accept-invite-btn" class="amm-primary-btn" data-token="<?php echo esc_attr($token); ?>">Accept Invitation</button>
+			<div id="amm-join-msg" style="margin-top:20px;"></div>
+		</div>
+		<script>
+		document.getElementById('amm-accept-invite-btn').addEventListener('click', function() {
+			const btn = this;
+			const token = btn.dataset.token;
+			btn.disabled = true;
+			btn.innerText = 'Processing...';
+
+			fetch('<?php echo esc_url_raw( rest_url( "amm/v1/verify-invite" ) ); ?>', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'
+				},
+				body: JSON.stringify({ token: token })
+			})
+			.then(res => res.json())
+			.then(data => {
+				if (data.success) {
+					document.getElementById('amm-join-msg').innerHTML = '<p style="color:green;">Successfully joined! Redirecting to dashboard...</p>';
+					setTimeout(() => window.location.href = '<?php echo home_url("/dashboard/"); ?>', 2000);
+				} else {
+					document.getElementById('amm-join-msg').innerHTML = '<p style="color:red;">Error: ' + data.message + '</p>';
+					btn.disabled = false;
+					btn.innerText = 'Accept Invitation';
+				}
+			});
+		});
+		</script>
 		<?php
 		return ob_get_clean();
 	}

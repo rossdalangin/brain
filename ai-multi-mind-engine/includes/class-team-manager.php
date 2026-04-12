@@ -95,4 +95,22 @@ class AMM_Team_Manager {
 			$team_id
 		));
 	}
+
+	/**
+	 * Verify and consume a token
+	 */
+	public function verify_and_consume_token( $token ) {
+		global $wpdb;
+		$invite = $wpdb->get_row( $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}amm_invites WHERE token = %s AND status = 'pending'",
+			$token
+		));
+
+		if ( $invite ) {
+			$wpdb->update( $wpdb->prefix . 'amm_invites', array( 'status' => 'accepted' ), array( 'id' => $invite->id ) );
+			return $invite->team_id;
+		}
+
+		return false;
+	}
 }
