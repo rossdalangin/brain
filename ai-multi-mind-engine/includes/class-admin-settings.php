@@ -217,6 +217,7 @@ class AMM_Admin_Settings {
 							<td id="usage-<?php echo $u->ID; ?>"><?php echo number_format($used); ?> / <?php echo $tracker->get_plan_limit($plan); ?></td>
 							<td>
 								<button type="button" class="button amm-reset-credits" data-user-id="<?php echo $u->ID; ?>">Reset Credits</button>
+								<button type="button" class="button amm-adjust-credits" data-user-id="<?php echo $u->ID; ?>">+ Adjust</button>
 								<select class="amm-change-plan" data-user-id="<?php echo $u->ID; ?>">
 									<option value="free" <?php selected($plan, 'free'); ?>>Free</option>
 									<option value="starter" <?php selected($plan, 'starter'); ?>>Starter</option>
@@ -280,6 +281,21 @@ class AMM_Admin_Settings {
 		</div>
 		<script>
 		jQuery(document).ready(function($) {
+			$('.amm-adjust-credits').on('click', function() {
+				var userId = $(this).data('user-id');
+				var amount = prompt('Amount to add (use negative to subtract):', '10');
+				if(!amount) return;
+
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/adjust-credits" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) { xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>'); },
+					contentType: 'application/json',
+					data: JSON.stringify({ user_id: userId, amount: parseInt(amount) }),
+					success: function() { alert('Credits Adjusted!'); location.reload(); }
+				});
+			});
+
 			$('.amm-reset-credits').on('click', function() {
 				var btn = $(this);
 				var userId = btn.data('user-id');

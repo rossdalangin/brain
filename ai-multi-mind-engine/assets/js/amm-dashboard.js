@@ -275,6 +275,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         // Billing History
+        safeFetch('/usage-history')
+            .then(logs => {
+                const logBox = document.getElementById('amm-usage-log');
+                if(!logBox) return;
+                logBox.innerHTML = '<table style="width:100%"><tr><th>Time</th><th>Event</th><th>Description</th></tr>' +
+                    logs.map(l => `<tr><td>${l.created_at}</td><td>${l.event_type}</td><td>${l.description}</td></tr>`).join('') + '</table>';
+            });
+
         safeFetch('/invoices')
             .then(history => {
                 const historyBox = document.getElementById('amm-billing-history');
@@ -524,6 +532,26 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('amm-edit-modal').style.display = 'flex';
     };
 
+    // Auto-save logic for editor
+    let autoSaveTimer;
+    document.getElementById('amm-edit-content').addEventListener('input', () => {
+        clearTimeout(autoSaveTimer);
+        const status = document.getElementById('amm-save-edit-btn');
+        status.innerText = 'Drafting...';
+        autoSaveTimer = setTimeout(() => {
+            const content = document.getElementById('amm-edit-content').value;
+            safeFetch('/update-output', {
+                method: 'POST',
+                body: JSON.stringify({ post_id: window.ammActiveEditId, content })
+            }).then(data => {
+                if(data.success) {
+                    status.innerText = 'Saved (Auto)';
+                    setTimeout(() => status.innerText = 'Save Changes', 2000);
+                }
+            });
+        }, 3000);
+    });
+
     document.getElementById('amm-save-edit-btn').addEventListener('click', () => {
         const content = document.getElementById('amm-edit-content').value;
         safeFetch('/update-output', {
@@ -596,6 +624,24 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: JSON.stringify({ ids, action: 'delete' })
         }).then(data => { if(data.success) refreshWorkspace(); });
+    });
+
+    // Handle Bulk Move
+    document.getElementById('amm-bulk-move-btn').addEventListener('click', () => {
+        const ids = Array.from(document.querySelectorAll('.amm-out-check:checked')).map(c => c.value);
+        if(ids.length === 0) return;
+
+        safeFetch('/folders').then(folders => {
+            if(!folders.length) { alert('Create a folder first.'); return; }
+            const options = folders.map(f => `${f.id}: ${f.name}`).join('\n');
+            const targetId = prompt('Enter Folder ID to move into:\n' + options);
+            if(!targetId) return;
+
+            safeFetch('/bulk-action', {
+                method: 'POST',
+                body: JSON.stringify({ ids, action: 'move', folder_id: targetId })
+            }).then(data => { if(data.success) refreshWorkspace(); });
+        });
     });
 
     // Handle New Folder
@@ -726,6 +772,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const title = document.createElement('h3');
                 title.textContent = `Council Deliberation Complete (${mode.toUpperCase()})`;
                 output.appendChild(title);
+
+                if (data.success) refreshWorkspace(); // Link to workspace
 
                 if (data.sequence && data.sequence.length) {
                     const seqContainer = document.createElement('div');

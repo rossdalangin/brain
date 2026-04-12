@@ -222,6 +222,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Usage History Endpoint
+		register_rest_route( $namespace, '/usage-history', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_usage_history' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Invoices Endpoint
 		register_rest_route( $namespace, '/invoices', array(
 			'methods'             => 'GET',
@@ -296,6 +303,13 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/admin/change-plan', array(
 			'methods'             => 'POST',
 			'callback'            => array( $this, 'handle_admin_change_plan' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+
+		// Admin Adjust Credits
+		register_rest_route( $namespace, '/admin/adjust-credits', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_adjust_credits' ),
 			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
 		));
 
@@ -437,6 +451,26 @@ class AMM_REST_API {
 			array( 'credits_used' => 0 ),
 			array( 'user_id' => $user_id, 'month' => $month )
 		);
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle Admin Manual Credit Adjustment
+	 */
+	public function handle_admin_adjust_credits( $request ) {
+		global $wpdb;
+		$params = $request->get_json_params();
+		$user_id = (int)$params['user_id'];
+		$amount = (int)$params['amount'];
+		$month = date( 'Y-m' );
+
+		$wpdb->query( $wpdb->prepare(
+			"UPDATE {$wpdb->prefix}amm_usage SET credits_used = credits_used - %d WHERE user_id = %d AND month = %s",
+			$amount, $user_id, $month
+		));
+
+		AMM()->log_audit( get_current_user_id(), 'admin_credit_adjust', "Adjusted $amount credits for user $user_id" );
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
@@ -804,6 +838,19 @@ class AMM_REST_API {
 		return rest_ensure_response( $invoices );
 	}
 
+	/**
+	 * Get detailed usage history for the user
+	 */
+	public function get_usage_history() {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		$logs = $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}amm_audit_trail WHERE user_id = %d AND event_type IN ('generation_success', 'generation_failed') ORDER BY created_at DESC LIMIT 50",
+			$user_id
+		));
+		return rest_ensure_response( $logs );
+	}
+
 	public function get_pricing_plans() {
 		$tracker = new AMM_Usage_Tracker();
 		return rest_ensure_response( array(
@@ -1014,13 +1061,18 @@ class AMM_REST_API {
 	public function handle_bulk_action( $request ) {
 		$params = $request->get_json_params();
 		$ids = (array)$params['ids'];
-		$action = $params['action']; // 'delete'
+		$action = $params['action']; // 'delete', 'move'
 		$user_id = get_current_user_id();
 
 		foreach ( $ids as $id ) {
 			$post = get_post( $id );
 			if ( $post && (int)$post->post_author === $user_id ) {
-				if ( $action === 'delete' ) wp_delete_post( $id, true );
+				if ( $action === 'delete' ) {
+					wp_delete_post( $id, true );
+				} elseif ( $action === 'move' ) {
+					$folder_id = (int)$params['folder_id'];
+					wp_set_post_terms( $id, array( $folder_id ), 'amm_folder' );
+				}
 			}
 		}
 
@@ -1160,7 +1212,21 @@ class AMM_REST_API {
 			}
 		}
 
-		return rest_ensure_response( array( 'success' => true, 'final_output' => $current_output, 'sequence' => $results ) );
+		// Save Council Output to CPT
+		$output_id = wp_insert_post( array(
+			'post_title'   => "Council Session: " . current_time( 'mysql' ),
+			'post_content' => $current_output,
+			'post_status'  => 'publish',
+			'post_type'    => 'ai_outputs',
+			'post_author'  => $user_id,
+		));
+
+		return rest_ensure_response( array(
+			'success' => true,
+			'output_id' => $output_id,
+			'final_output' => $current_output,
+			'sequence' => $results
+		) );
 	}
 
 	/**

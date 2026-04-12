@@ -349,6 +349,7 @@ class AMM_Shortcodes {
 							<input type="text" id="amm-workspace-search" placeholder="Search strategy..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:200px;">
 							<button id="amm-export-workspace-btn" class="amm-secondary-btn" style="background:#28a745; color:#fff;">📦 Export All (JSON)</button>
 							<button id="amm-bulk-delete-btn" class="amm-secondary-btn" style="background:#ff4444; color:#fff;">Delete Selected</button>
+							<button id="amm-bulk-move-btn" class="amm-secondary-btn" style="background:#007cba; color:#fff;">Move to Folder</button>
 							<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
 						</div>
 					</div>
@@ -488,6 +489,9 @@ class AMM_Shortcodes {
 						</div>
 
 						<div style="margin-top:40px;">
+							<h3>Your Credit Usage History</h3>
+							<div id="amm-usage-log" class="amm-form-card" style="margin-bottom:20px;">Loading usage...</div>
+
 							<h3>Your Invoices & Subscriptions</h3>
 							<div id="amm-billing-history" class="amm-form-card">Loading history...</div>
 						</div>
