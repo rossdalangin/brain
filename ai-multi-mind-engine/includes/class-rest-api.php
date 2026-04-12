@@ -187,6 +187,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Invoices Endpoint
+		register_rest_route( $namespace, '/invoices', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_user_invoices' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Get Folders Endpoint
 		register_rest_route( $namespace, '/folders', array(
 			'methods'             => 'GET',
@@ -229,6 +236,20 @@ class AMM_REST_API {
 			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
 		));
 
+		// Admin Reset Credits
+		register_rest_route( $namespace, '/admin/reset-credits', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_reset_credits' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+
+		// Admin Change Plan
+		register_rest_route( $namespace, '/admin/change-plan', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_change_plan' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+
 		// Save History Endpoint
 		register_rest_route( $namespace, '/save-history', array(
 			'methods'             => 'POST',
@@ -240,6 +261,13 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/get-history', array(
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'handle_get_history' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Update Output Endpoint
+		register_rest_route( $namespace, '/update-output', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_update_output' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
@@ -342,6 +370,31 @@ class AMM_REST_API {
 	/**
 	 * Handle Admin Connectivity Test
 	 */
+	public function handle_admin_reset_credits( $request ) {
+		global $wpdb;
+		$params = $request->get_json_params();
+		$user_id = (int)$params['user_id'];
+		$month = date( 'Y-m' );
+
+		$wpdb->update(
+			$wpdb->prefix . 'amm_usage',
+			array( 'credits_used' => 0 ),
+			array( 'user_id' => $user_id, 'month' => $month )
+		);
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	public function handle_admin_change_plan( $request ) {
+		$params = $request->get_json_params();
+		$user_id = (int)$params['user_id'];
+		$plan_id = sanitize_text_field( $params['plan_id'] );
+
+		update_user_meta( $user_id, 'amm_plan_id', $plan_id );
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
 	public function handle_admin_test( $request ) {
 		$params = $request->get_json_params();
 		$service = $params['service'] ?? '';
@@ -674,6 +727,16 @@ class AMM_REST_API {
 	/**
 	 * Get pricing plans for the dashboard
 	 */
+	public function get_user_invoices() {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		$invoices = $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}amm_subscriptions WHERE user_id = %d ORDER BY created_at DESC",
+			$user_id
+		));
+		return rest_ensure_response( $invoices );
+	}
+
 	public function get_pricing_plans() {
 		$tracker = new AMM_Usage_Tracker();
 		return rest_ensure_response( array(
@@ -814,6 +877,25 @@ class AMM_REST_API {
 	/**
 	 * Handle output duplication
 	 */
+	public function handle_update_output( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$post_id = (int)$params['post_id'];
+		$content = $params['content'];
+
+		$post = get_post( $post_id );
+		if ( ! $post || (int)$post->post_author !== $user_id ) {
+			return new WP_Error( 'forbidden', 'Unauthorized.', array( 'status' => 403 ) );
+		}
+
+		wp_update_post( array(
+			'ID'           => $post_id,
+			'post_content' => $content,
+		));
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
 	public function handle_duplicate( $request ) {
 		$params = $request->get_json_params();
 		$post_id = (int)$params['post_id'];

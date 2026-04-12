@@ -184,8 +184,16 @@ class AMM_Admin_Settings {
 						<tr>
 							<td><?php echo esc_html($u->display_name); ?></td>
 							<td><?php echo esc_html(strtoupper($plan)); ?></td>
-							<td><?php echo number_format($used); ?> / <?php echo $tracker->get_plan_limit($plan); ?></td>
-							<td><button class="button">Reset Credits</button> <button class="button">Change Plan</button></td>
+							<td id="usage-<?php echo $u->ID; ?>"><?php echo number_format($used); ?> / <?php echo $tracker->get_plan_limit($plan); ?></td>
+							<td>
+								<button type="button" class="button amm-reset-credits" data-user-id="<?php echo $u->ID; ?>">Reset Credits</button>
+								<select class="amm-change-plan" data-user-id="<?php echo $u->ID; ?>">
+									<option value="free" <?php selected($plan, 'free'); ?>>Free</option>
+									<option value="starter" <?php selected($plan, 'starter'); ?>>Starter</option>
+									<option value="pro" <?php selected($plan, 'pro'); ?>>Pro</option>
+									<option value="agency" <?php selected($plan, 'agency'); ?>>Agency</option>
+								</select>
+							</td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
@@ -242,6 +250,39 @@ class AMM_Admin_Settings {
 		</div>
 		<script>
 		jQuery(document).ready(function($) {
+			$('.amm-reset-credits').on('click', function() {
+				var btn = $(this);
+				var userId = btn.data('user-id');
+				if(!confirm('Reset credits for this user?')) return;
+
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/reset-credits" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) { xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>'); },
+					contentType: 'application/json',
+					data: JSON.stringify({ user_id: userId }),
+					success: function() {
+						alert('Credits Reset!');
+						$('#usage-' + userId).text('0 / ' + $('#usage-' + userId).text().split('/')[1].trim());
+					}
+				});
+			});
+
+			$('.amm-change-plan').on('change', function() {
+				var select = $(this);
+				var userId = select.data('user-id');
+				var planId = select.val();
+
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/change-plan" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) { xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>'); },
+					contentType: 'application/json',
+					data: JSON.stringify({ user_id: userId, plan_id: planId }),
+					success: function() { alert('Plan Updated!'); location.reload(); }
+				});
+			});
+
 			$('.amm-test-btn').on('click', function() {
 				var btn = $(this);
 				var service = btn.data('service');

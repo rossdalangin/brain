@@ -127,6 +127,17 @@ class AMM_Shortcodes {
 				</div>
 			</aside>
 
+			<div id="amm-edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; padding:40px;">
+				<div class="amm-form-card" style="width:100%; max-width:800px; height:80%;">
+					<h3>Edit Strategy</h3>
+					<textarea id="amm-edit-content" style="width:100%; height:calc(100% - 100px); margin-bottom:20px;"></textarea>
+					<div style="display:flex; gap:10px;">
+						<button id="amm-save-edit-btn" class="amm-primary-btn" style="flex:1;">Save Changes</button>
+						<button onclick="document.getElementById('amm-edit-modal').style.display='none'" class="amm-secondary-btn">Cancel</button>
+					</div>
+				</div>
+			</div>
+
 			<main class="amm-app-content">
 				<!-- Dashboard Tab -->
 				<section id="tab-dashboard" class="amm-tab-content">
@@ -402,7 +413,7 @@ class AMM_Shortcodes {
 						</div>
 
 						<div style="margin-top:40px;">
-							<h3>Billing History</h3>
+							<h3>Your Invoices & Subscriptions</h3>
 							<div id="amm-billing-history" class="amm-form-card">Loading history...</div>
 						</div>
 				</section>

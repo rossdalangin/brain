@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
                         '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
-                        outputs.map(o => `<tr data-folders="${o.folders.join(',')}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick="alert(${JSON.stringify(o.content)})">View</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+                        outputs.map(o => `<tr data-folders="${o.folders.join(',')}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 Share</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
                         '</table>';
 
                     document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         // Billing History
-        fetch(apiRoot + '/billing-history', { headers: { 'X-WP-Nonce': nonce } })
+        fetch(apiRoot + '/invoices', { headers: { 'X-WP-Nonce': nonce } })
             .then(res => res.json()).then(history => {
                 const historyBox = document.getElementById('amm-billing-history');
                 if (history.length === 0) {
@@ -426,6 +426,27 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tr.querySelector('th')) return;
             const title = tr.innerText.toLowerCase();
             tr.style.display = title.includes(term) ? '' : 'none';
+        });
+    });
+
+    // Edit Logic
+    window.ammEdit = function(o) {
+        window.ammActiveEditId = o.id;
+        document.getElementById('amm-edit-content').value = o.content;
+        document.getElementById('amm-edit-modal').style.display = 'flex';
+    };
+
+    document.getElementById('amm-save-edit-btn').addEventListener('click', () => {
+        const content = document.getElementById('amm-edit-content').value;
+        fetch(apiRoot + '/update-output', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+            body: JSON.stringify({ post_id: window.ammActiveEditId, content })
+        }).then(res => res.json()).then(data => {
+            if(data.success) {
+                document.getElementById('amm-edit-modal').style.display = 'none';
+                refreshWorkspace();
+            }
         });
     });
 
