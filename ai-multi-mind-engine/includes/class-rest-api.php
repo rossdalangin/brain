@@ -243,6 +243,19 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Persona Endpoints
+		register_rest_route( $namespace, '/persona', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_persona' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		register_rest_route( $namespace, '/save-persona', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_save_persona' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Save Preset Endpoint
 		register_rest_route( $namespace, '/save-preset', array(
 			'methods'             => 'POST',
@@ -306,6 +319,24 @@ class AMM_REST_API {
 		$user_id = get_current_user_id();
 		$history = get_user_meta( $user_id, 'amm_chat_history', true ) ?: array();
 		return rest_ensure_response( $history );
+	}
+
+	/**
+	 * Get User Target Persona
+	 */
+	public function get_persona() {
+		$user_id = get_current_user_id();
+		return rest_ensure_response( get_user_meta( $user_id, 'amm_target_persona', true ) ?: array() );
+	}
+
+	/**
+	 * Save User Target Persona
+	 */
+	public function handle_save_persona( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		update_user_meta( $user_id, 'amm_target_persona', $params );
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**
@@ -410,6 +441,12 @@ class AMM_REST_API {
 		}
 
 		$kb_context = get_user_meta( $user_id, 'amm_knowledge_base', true );
+		$persona = get_user_meta( $user_id, 'amm_target_persona', true );
+
+		if ( $persona ) {
+			$user_input = "TARGET AUDIENCE CONTEXT:\n- Name: {$persona['name']}\n- Pain: {$persona['pain']}\n- Desires: {$persona['desire']}\n- Triggers: {$persona['triggers']}\n\n{$user_input}";
+		}
+
 		if ( $kb_context ) {
 			$user_input = "CONTEXT ABOUT MY BUSINESS:\n{$kb_context}\n\nUSER REQUEST:\n{$user_input}";
 		}
@@ -421,7 +458,12 @@ class AMM_REST_API {
 		$ai_manager = new AMM_AI_Provider_Manager();
 		$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'], $history );
 
-		if ( is_wp_error( $response ) ) return $response;
+		if ( is_wp_error( $response ) ) {
+			AMM()->log_audit( $user_id, 'generation_failed', $response->get_error_message() );
+			return $response;
+		}
+
+		AMM()->log_audit( $user_id, 'generation_success', "Generated $output_type using $mind_id" );
 
 		// 4. Track Usage
 		$tracker->track_generation( $user_id );

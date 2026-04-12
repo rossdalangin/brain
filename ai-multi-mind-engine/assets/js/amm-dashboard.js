@@ -262,6 +262,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     initApp();
     loadPresets();
+    loadPersona();
+
+    function loadPersona() {
+        fetch(apiRoot + '/persona', { headers: { 'X-WP-Nonce': nonce } })
+            .then(res => res.json()).then(p => {
+                if (p.name) {
+                    document.getElementById('amm-persona-name').value = p.name;
+                    document.getElementById('amm-persona-pain').value = p.pain;
+                    document.getElementById('amm-persona-desire').value = p.desire;
+                    document.getElementById('amm-persona-triggers').value = p.triggers;
+                }
+            });
+    }
+
+    document.getElementById('amm-save-persona-btn').addEventListener('click', () => {
+        const persona = {
+            name: document.getElementById('amm-persona-name').value,
+            pain: document.getElementById('amm-persona-pain').value,
+            desire: document.getElementById('amm-persona-desire').value,
+            triggers: document.getElementById('amm-persona-triggers').value
+        };
+        fetch(apiRoot + '/save-persona', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+            body: JSON.stringify(persona)
+        }).then(res => res.json()).then(data => { if(data.success) alert('Audience Context Saved!'); });
+    });
 
     function loadPresets() {
         fetch(apiRoot + '/presets', { headers: { 'X-WP-Nonce': nonce } })

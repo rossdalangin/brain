@@ -20,7 +20,10 @@ function is_wp_error($res) { return $res instanceof WP_Error; }
 function wp_insert_post($args) { echo "POST INSERTED: " . $args['post_title'] . "\n"; return 123; }
 function rest_ensure_response($data) { return $data; }
 
-class WP_Error { public function __construct($c, $m) { $this->c = $c; $this->m = $m; } }
+class WP_Error {
+    public function __construct($c, $m) { $this->c = $c; $this->m = $m; }
+    public function get_error_message() { return $this->m; }
+}
 
 // Mock $wpdb
 class Mock_WPDB {
@@ -33,6 +36,12 @@ class Mock_WPDB {
     public function prepare($q, ...$args) { return $q; }
 }
 $wpdb = new Mock_WPDB();
+
+function AMM() {
+    return new class {
+        public function log_audit($u, $t, $d) { echo "AUDIT LOGGED: $t\n"; }
+    };
+}
 
 // Include classes
 require_once __DIR__ . '/../includes/minds/class-mind-base.php';

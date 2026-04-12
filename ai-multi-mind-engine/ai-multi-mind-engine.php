@@ -250,6 +250,18 @@ class AI_Multi_Mind_Engine {
 		) $charset_collate;";
 		dbDelta( $sql );
 
+		// Audit Trail Table
+		$table_name = $wpdb->prefix . 'amm_audit_trail';
+		$sql = "CREATE TABLE $table_name (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) NOT NULL,
+			event_type varchar(50) NOT NULL,
+			description text,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			PRIMARY KEY  (id)
+		) $charset_collate;";
+		dbDelta( $sql );
+
 		// Usage Table
 		$table_name = $wpdb->prefix . 'amm_usage';
 		$sql = "CREATE TABLE $table_name (

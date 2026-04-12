@@ -211,6 +211,25 @@ class AMM_Admin_Settings {
 				</tbody>
 			</table>
 
+			<h3>SaaS Audit Trail (Last 50 Events)</h3>
+			<table class="wp-list-table widefat fixed striped">
+				<thead><tr><th>Time</th><th>User ID</th><th>Event</th><th>Details</th></tr></thead>
+				<tbody>
+					<?php
+					global $wpdb;
+					$logs = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}amm_audit_trail ORDER BY created_at DESC LIMIT 50" );
+					foreach($logs as $l):
+					?>
+						<tr>
+							<td><?php echo esc_html($l->created_at); ?></td>
+							<td><?php echo (int)$l->user_id; ?></td>
+							<td><code><?php echo esc_html($l->event_type); ?></code></td>
+							<td><?php echo esc_html($l->description); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+
 			<h3>Mind Popularity (Total Generations)</h3>
 			<table class="wp-list-table widefat fixed striped">
 				<thead><tr><th>Mind ID</th><th>Usage Count</th></tr></thead>

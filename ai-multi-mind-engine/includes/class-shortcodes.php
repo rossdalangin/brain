@@ -113,6 +113,7 @@ class AMM_Shortcodes {
 					<a href="#" class="amm-nav-item" data-tab="templates">📜 Templates</a>
 					<a href="#" class="amm-nav-item" data-tab="workspace">📁 My Workspace</a>
 					<a href="#" class="amm-nav-item" data-tab="team">👥 Team Hub</a>
+					<a href="#" class="amm-nav-item" data-tab="persona">🎯 Audience</a>
 					<a href="#" class="amm-nav-item" data-tab="affiliate">💸 Affiliates</a>
 					<a href="#" class="amm-nav-item" data-tab="billing">💳 Billing</a>
 					<a href="#" class="amm-nav-item" data-tab="settings">⚙️ Settings</a>
@@ -321,6 +322,23 @@ class AMM_Shortcodes {
 				<section id="tab-affiliate" class="amm-tab-content">
 					<h2>Affiliate Program</h2>
 					<div id="amm-affiliate-info" class="amm-form-card">Loading your data...</div>
+				</section>
+
+				<!-- Persona Tab -->
+				<section id="tab-persona" class="amm-tab-content">
+					<h2>Target Audience & Persona Builder</h2>
+					<p>Define who your AI Minds are solving problems for. This data will be injected into every generation.</p>
+					<div class="amm-form-card">
+						<label>Persona Name (e.g. Busy E-com Owner)</label>
+						<input type="text" id="amm-persona-name" style="width:100%; margin-bottom:10px;">
+						<label>Pain Points & Roadblocks</label>
+						<textarea id="amm-persona-pain" style="width:100%; height:80px; margin-bottom:10px;" placeholder="What keeps them up at night?"></textarea>
+						<label>Core Desires & Dreams</label>
+						<textarea id="amm-persona-desire" style="width:100%; height:80px; margin-bottom:10px;" placeholder="What do they secretly want?"></textarea>
+						<label>Buying Triggers</label>
+						<input type="text" id="amm-persona-triggers" style="width:100%; margin-bottom:10px;" placeholder="Events that lead to a purchase">
+						<button id="amm-save-persona-btn" class="amm-primary-btn">Save Audience Context</button>
+					</div>
 				</section>
 
 				<!-- Council Tab -->
