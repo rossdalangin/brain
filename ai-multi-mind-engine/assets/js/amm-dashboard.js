@@ -100,12 +100,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     select.innerHTML += templates.map(t => `<option value="${t.content}" ${t.locked ? 'disabled' : ''}>${t.title}${t.locked ? ' (Locked)' : ''}</option>`).join('');
 
 							document.getElementById('amm-templates-grid').innerHTML = templates.map(t => `
-								<div class="amm-plan-card">
+								<div class="amm-plan-card ${t.premium ? 'premium' : ''}">
 									<div style="font-size:32px; margin-bottom:10px;">📜</div>
 									<strong>${t.title}</strong>
-									<p style="font-size:10px; color:#888;">Min Plan: ${t.min_plan}</p>
+									<p style="font-size:10px; color:#888;">${t.premium ? 'Premium Marketplace Template' : 'Core Template'}</p>
 									<button class="amm-secondary-btn" onclick="document.getElementById('amm-template-select').value='${t.content}'; document.getElementById('amm-input').value='${t.content}'; document.querySelector('[data-tab=generate]').click();" ${t.locked ? 'disabled' : ''}>Use Template</button>
-									${t.locked ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="document.querySelector('[data-tab=billing]').click()">Upgrade to Unlock</button>` : ''}
+									${t.locked && t.premium && !t.purchased ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="ammCheckout('template_${t.id}')">Unlock for $${t.price}</button>` : ''}
+									${t.locked && !t.premium ? `<button class="amm-primary-btn" style="margin-top:10px; font-size:10px;" onclick="document.querySelector('[data-tab=billing]').click()">Upgrade Plan to Unlock</button>` : ''}
 								</div>
 							`).join('');
                 }
@@ -256,6 +257,39 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     initApp();
+    loadPresets();
+
+    function loadPresets() {
+        fetch(apiRoot + '/presets', { headers: { 'X-WP-Nonce': nonce } })
+            .then(res => res.json()).then(presets => {
+                const list = document.getElementById('amm-presets-list');
+                const container = document.getElementById('amm-presets-container');
+                if (presets.length) {
+                    container.style.display = 'block';
+                    list.innerHTML = presets.map(p => `<button class="amm-secondary-btn" onclick='applyPreset(${JSON.stringify(p)})'>${p.name}</button>`).join('');
+                }
+            });
+    }
+
+    window.applyPreset = function(p) {
+        const selectors = document.querySelectorAll('.amm-council-select');
+        p.mind_ids.forEach((id, i) => { if(selectors[i]) selectors[i].value = id; });
+        document.querySelector(`input[name="council-mode"][value="${p.mode}"]`).checked = true;
+    };
+
+    // Handle Save Preset
+    document.getElementById('amm-save-preset-btn').addEventListener('click', () => {
+        const name = prompt('Preset Name (e.g. Weekly Audit):');
+        if(!name) return;
+        const mind_ids = Array.from(document.querySelectorAll('.amm-council-select')).map(s => s.value).filter(Boolean);
+        const mode = document.querySelector('input[name="council-mode"]:checked').value;
+
+        fetch(apiRoot + '/save-preset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+            body: JSON.stringify({ name, mind_ids, mode })
+        }).then(res => res.json()).then(data => { if(data.success) { alert('Preset Saved!'); loadPresets(); } });
+    });
 
     // Generate Logic (Typewriter Effect)
     const btn = document.getElementById('amm-generate-btn');

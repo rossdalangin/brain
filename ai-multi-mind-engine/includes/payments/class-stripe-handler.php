@@ -29,6 +29,10 @@ class AMM_Stripe_Handler {
 			return $this->create_mind_purchase_session( $user_id, $plan_id );
 		}
 
+		if ( strpos($plan_id, 'template_') === 0 ) {
+			return $this->create_template_purchase_session( $user_id, $plan_id );
+		}
+
 		$prices = array(
 			'starter' => get_option('amm_stripe_price_starter'),
 			'pro'     => get_option('amm_stripe_price_pro'),
@@ -111,6 +115,39 @@ class AMM_Stripe_Handler {
 	}
 
 	/**
+	 * Create one-time template purchase session
+	 */
+	private function create_template_purchase_session( $user_id, $template_id ) {
+		$template_id_clean = str_replace('template_', '', $template_id);
+		$price = (int)get_post_meta($template_id_clean, 'amm_template_price', true) ?: 19;
+
+		$url = "https://api.stripe.com/v1/checkout/sessions";
+		$body = array(
+			'success_url' => home_url( '/dashboard/?success=template' ),
+			'cancel_url'  => home_url( '/dashboard/' ),
+			'mode'        => 'payment',
+			'client_reference_id' => $user_id,
+			'line_items'  => array(
+				array(
+					'price_data' => array(
+						'currency' => 'usd',
+						'product_data' => array( 'name' => 'Premium Template Unlock' ),
+						'unit_amount' => $price * 100,
+					),
+					'quantity' => 1,
+				)
+			),
+			'metadata' => array( 'type' => 'template_unlock', 'template_id' => $template_id_clean )
+		);
+		$response = wp_remote_post( $url, array(
+			'headers' => array( 'Authorization' => 'Bearer ' . $this->secret_key, 'Content-Type' => 'application/x-www-form-urlencoded' ),
+			'body' => http_build_query( $body )
+		));
+		$session = json_decode( wp_remote_retrieve_body( $response ), true );
+		return $session['url'] ?? '';
+	}
+
+	/**
 	 * Create one-time topup session
 	 */
 	private function create_topup_session( $user_id, $credits, $price_id ) {
@@ -159,6 +196,8 @@ class AMM_Stripe_Handler {
 					$this->process_topup_success( $session );
 				} elseif ( isset( $session['metadata']['type'] ) && $session['metadata']['type'] === 'mind_unlock' ) {
 					$this->process_mind_purchase_success( $session );
+				} elseif ( isset( $session['metadata']['type'] ) && $session['metadata']['type'] === 'template_unlock' ) {
+					$this->process_template_purchase_success( $session );
 				} else {
 					$this->process_subscription_success( $session );
 				}
@@ -201,6 +240,20 @@ class AMM_Stripe_Handler {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Process successful template purchase
+	 */
+	private function process_template_purchase_success( $session ) {
+		global $wpdb;
+		$user_id = $session['client_reference_id'];
+		$template_id = $session['metadata']['template_id'];
+
+		$wpdb->insert( $wpdb->prefix . 'amm_purchases', array(
+			'user_id' => $user_id,
+			'mind_id' => 'template_' . $template_id, // Prefix to distinguish from minds
+		));
 	}
 
 	/**

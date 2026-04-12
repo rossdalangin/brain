@@ -338,7 +338,14 @@ class AMM_Shortcodes {
 							<select class="amm-council-select"><option value="">Select Mind 3...</option></select>
 						</div>
 						<textarea id="amm-council-input" placeholder="What should the council build for you?" style="width:100%; height:100px; margin-bottom:10px;"></textarea>
-						<button id="amm-ignite-council-btn" class="amm-primary-btn">Ignite Council</button>
+						<div style="display:flex; gap:10px;">
+							<button id="amm-ignite-council-btn" class="amm-primary-btn" style="flex:1;">Ignite Council</button>
+							<button id="amm-save-preset-btn" class="amm-secondary-btn">💾 Save Preset</button>
+						</div>
+					</div>
+					<div id="amm-presets-container" style="margin-top:20px; display:none;">
+						<h3>Your Saved Presets</h3>
+						<div id="amm-presets-list" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
 					</div>
 					<div id="amm-council-output" class="amm-output-box">The council is waiting to be summoned...</div>
 				</section>

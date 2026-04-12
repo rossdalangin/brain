@@ -242,6 +242,46 @@ class AMM_REST_API {
 			'callback'            => array( $this, 'handle_get_history' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
+
+		// Save Preset Endpoint
+		register_rest_route( $namespace, '/save-preset', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_save_preset' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Get Presets Endpoint
+		register_rest_route( $namespace, '/presets', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'handle_get_presets' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+	}
+
+	/**
+	 * Handle Save Council Preset
+	 */
+	public function handle_save_preset( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$name = sanitize_text_field( $params['name'] );
+		$mind_ids = (array)$params['mind_ids'];
+		$mode = sanitize_text_field( $params['mode'] );
+
+		$presets = get_user_meta( $user_id, 'amm_council_presets', true ) ?: array();
+		$presets[] = array( 'name' => $name, 'mind_ids' => $mind_ids, 'mode' => $mode );
+		update_user_meta( $user_id, 'amm_council_presets', $presets );
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle Get Council Presets
+	 */
+	public function handle_get_presets() {
+		$user_id = get_current_user_id();
+		$presets = get_user_meta( $user_id, 'amm_council_presets', true ) ?: array();
+		return rest_ensure_response( $presets );
 	}
 
 	/**
@@ -969,14 +1009,31 @@ class AMM_REST_API {
 
 		foreach ( $posts as $p ) {
 			$min_plan = get_post_meta( $p->ID, 'amm_min_plan', true ) ?: 'free';
-			$is_locked = ( $plans[$user_plan] ?? 0 ) < ( $plans[$min_plan] ?? 0 );
+			$is_premium = get_post_meta( $p->ID, 'amm_template_is_premium', true ) === 'yes';
+			$price = (int)get_post_meta( $p->ID, 'amm_template_price', true ) ?: 19;
+
+			$has_plan_access = ( $plans[$user_plan] ?? 0 ) >= ( $plans[$min_plan] ?? 0 );
+
+			$purchased = false;
+			if ( $is_premium ) {
+				global $wpdb;
+				$purchased = (bool)$wpdb->get_var( $wpdb->prepare(
+					"SELECT id FROM {$wpdb->prefix}amm_purchases WHERE user_id = %d AND mind_id = %s",
+					$user_id, 'template_' . $p->ID
+				));
+			}
+
+			$is_locked = ! $has_plan_access && ( ! $is_premium || ! $purchased );
 
 			$data[] = array(
 				'id' => $p->ID,
 				'title' => $p->post_title,
 				'content' => $is_locked ? '' : $p->post_content,
 				'locked' => $is_locked,
-				'min_plan' => $min_plan
+				'min_plan' => $min_plan,
+				'premium' => $is_premium,
+				'price' => $price,
+				'purchased' => $purchased
 			);
 		}
 		return rest_ensure_response( $data );

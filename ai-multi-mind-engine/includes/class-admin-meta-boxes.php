@@ -25,6 +25,15 @@ class AMM_Admin_Meta_Boxes {
 		);
 
 		add_meta_box(
+			'amm_template_marketplace',
+			'Marketplace Settings',
+			array( $this, 'render_template_marketplace_meta_box' ),
+			'ai_templates',
+			'side',
+			'default'
+		);
+
+		add_meta_box(
 			'amm_mind_featured',
 			'Promotion Settings',
 			array( $this, 'render_featured_meta_box' ),
@@ -41,6 +50,19 @@ class AMM_Admin_Meta_Boxes {
 			'normal',
 			'high'
 		);
+	}
+
+	public function render_template_marketplace_meta_box( $post ) {
+		wp_nonce_field( 'amm_save_template_market', 'amm_template_market_nonce' );
+		?>
+		<p>
+			<label><input type="checkbox" name="amm_template_is_premium" value="yes" <?php checked( get_post_meta($post->ID, 'amm_template_is_premium', true), 'yes' ); ?>> <strong>Premium Template?</strong></label>
+		</p>
+		<p>
+			<label for="amm_template_price"><strong>Price ($):</strong></label><br>
+			<input type="number" name="amm_template_price" value="<?php echo esc_attr( get_post_meta($post->ID, 'amm_template_price', true) ?: '19' ); ?>" style="width:100%;">
+		</p>
+		<?php
 	}
 
 	public function render_template_meta_box( $post ) {
@@ -119,6 +141,10 @@ class AMM_Admin_Meta_Boxes {
 			if ( isset( $_POST['amm_min_plan'] ) ) {
 				update_post_meta( $post_id, 'amm_min_plan', sanitize_text_field( $_POST['amm_min_plan'] ) );
 			}
+		}
+		if ( isset( $_POST['amm_template_market_nonce'] ) && wp_verify_nonce( $_POST['amm_template_market_nonce'], 'amm_save_template_market' ) ) {
+			update_post_meta( $post_id, 'amm_template_is_premium', isset( $_POST['amm_template_is_premium'] ) ? 'yes' : 'no' );
+			update_post_meta( $post_id, 'amm_template_price', (int)$_POST['amm_template_price'] );
 		}
 
 		// Mind Meta
