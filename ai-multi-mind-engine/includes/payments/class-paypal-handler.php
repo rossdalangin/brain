@@ -36,6 +36,50 @@ class AMM_PayPal_Handler {
 	}
 
 	/**
+	 * Create PayPal Order (One-time)
+	 */
+	public function create_order( $user_id, $item_id ) {
+		$token = $this->get_access_token();
+		if ( ! $token ) return new WP_Error( 'paypal_error', 'Could not authenticate.' );
+
+		$price = 49; // Default for Mind
+		$desc = "Premium Mind Unlock";
+		if ( strpos($item_id, 'template_') === 0 ) {
+			$id = str_replace('template_', '', $item_id);
+			$price = (int)get_post_meta($id, 'amm_template_price', true) ?: 19;
+			$desc = "Premium Template Unlock";
+		}
+
+		$body = array(
+			'intent' => 'CAPTURE',
+			'purchase_units' => array(
+				array(
+					'amount' => array( 'currency_code' => 'USD', 'value' => $price ),
+					'description' => $desc,
+					'custom_id' => $user_id . '|' . $item_id
+				)
+			),
+			'application_context' => array(
+				'return_url' => home_url( '/dashboard/?success=paypal' ),
+				'cancel_url' => home_url( '/dashboard/' )
+			)
+		);
+
+		$response = wp_remote_post( 'https://api-m.paypal.com/v2/checkout/orders', array(
+			'headers' => array( 'Authorization' => 'Bearer ' . $token, 'Content-Type' => 'application/json' ),
+			'body' => json_encode( $body )
+		));
+
+		$order = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( isset( $order['links'] ) ) {
+			foreach ( $order['links'] as $link ) {
+				if ( $link['rel'] === 'approve' ) return $link['href'];
+			}
+		}
+		return new WP_Error( 'paypal_error', 'Checkout failed.' );
+	}
+
+	/**
 	 * Create PayPal Subscription initiation
 	 */
 	public function create_subscription( $user_id, $plan_id ) {
@@ -101,6 +145,9 @@ class AMM_PayPal_Handler {
 			case 'BILLING.SUBSCRIPTION.EXPIRED':
 				$this->process_subscription( $data['resource'], 'cancelled' );
 				break;
+			case 'CHECKOUT.ORDER.APPROVED':
+				$this->process_one_time( $data['resource'] );
+				break;
 		}
 	}
 
@@ -134,6 +181,21 @@ class AMM_PayPal_Handler {
 		if ( is_wp_error( $response ) ) return false;
 		$result = json_decode( wp_remote_retrieve_body( $response ), true );
 		return ( $result['verification_status'] ?? '' ) === 'SUCCESS';
+	}
+
+	/**
+	 * Process one-time payment
+	 */
+	private function process_one_time( $resource ) {
+		global $wpdb;
+		$custom = explode( '|', $resource['purchase_units'][0]['custom_id'] );
+		$user_id = $custom[0];
+		$item_id = $custom[1];
+
+		$wpdb->insert( $wpdb->prefix . 'amm_purchases', array(
+			'user_id' => $user_id,
+			'mind_id' => $item_id,
+		));
 	}
 
 	/**

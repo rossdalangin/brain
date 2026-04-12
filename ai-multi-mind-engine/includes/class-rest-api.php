@@ -597,7 +597,11 @@ class AMM_REST_API {
 			$url = $stripe->create_checkout_session( $user_id, $plan_id );
 		} else {
 			$paypal = new AMM_PayPal_Handler();
-			$url = $paypal->create_subscription( $user_id, $plan_id );
+			if ( strpos($plan_id, 'mind_') === 0 || strpos($plan_id, 'template_') === 0 ) {
+				$url = $paypal->create_order( $user_id, $plan_id );
+			} else {
+				$url = $paypal->create_subscription( $user_id, $plan_id );
+			}
 		}
 
 		if ( is_wp_error( $url ) ) return $url;
