@@ -320,6 +320,13 @@ class AMM_REST_API {
 			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
 		));
 
+		// Admin Data Purge Endpoint
+		register_rest_route( $namespace, '/admin/purge-data', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_purge' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+
 		// Admin Pay Referral Endpoint
 		register_rest_route( $namespace, '/admin/pay-referral', array(
 			'methods'             => 'POST',
@@ -522,6 +529,18 @@ class AMM_REST_API {
 	/**
 	 * Handle marking a referral as paid
 	 */
+	/**
+	 * Handle system-wide data purge
+	 */
+	public function handle_admin_purge() {
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}amm_usage" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}amm_audit_trail" );
+		$wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_type = 'ai_outputs'" );
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
 	public function handle_admin_pay_referral( $request ) {
 		global $wpdb;
 		$params = $request->get_json_params();
@@ -1057,6 +1076,7 @@ class AMM_REST_API {
 	 * Handle Invite Verification
 	 */
 	public function handle_verify_invite( $request ) {
+		global $wpdb;
 		$user_id = get_current_user_id();
 		$params = $request->get_json_params();
 		$token = sanitize_text_field( $params['token'] );

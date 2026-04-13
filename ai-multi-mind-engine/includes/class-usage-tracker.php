@@ -13,14 +13,27 @@ class AMM_Usage_Tracker {
 	 * Check if a user has enough credits for a generation
 	 */
 	public function can_user_generate( $user_id ) {
-		$this->check_monthly_reset( $user_id );
+		$billing_user_id = $this->get_billing_user_id( $user_id );
+		$this->check_monthly_reset( $billing_user_id );
 
-		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+		$plan_id = get_user_meta( $billing_user_id, 'amm_plan_id', true ) ?: 'free';
 		$limit = $this->get_plan_limit( $plan_id );
 
-		$used = $this->get_current_month_usage( $user_id );
+		$used = $this->get_current_month_usage( $billing_user_id );
 
 		return $used < $limit;
+	}
+
+	/**
+	 * Get the user ID responsible for billing (Team Owner or User)
+	 */
+	public function get_billing_user_id( $user_id ) {
+		$team_manager = new AMM_Team_Manager();
+		$teams = $team_manager->get_user_teams( $user_id );
+		if ( ! empty( $teams ) ) {
+			return $teams[0]->owner_id;
+		}
+		return $user_id;
 	}
 
 	/**
@@ -46,17 +59,18 @@ class AMM_Usage_Tracker {
 	}
 
 	/**
-	 * Increment usage for a user
+	 * Increment usage for a user (or their team owner)
 	 */
 	public function track_generation( $user_id ) {
 		global $wpdb;
+		$billing_user_id = $this->get_billing_user_id( $user_id );
 		$month = date( 'Y-m' );
-		$this->check_usage_alerts( $user_id );
+		$this->check_usage_alerts( $billing_user_id );
 		$table = $wpdb->prefix . 'amm_usage';
 
 		$exists = $wpdb->get_var( $wpdb->prepare(
 			"SELECT id FROM $table WHERE user_id = %d AND month = %s",
-			$user_id, $month
+			$billing_user_id, $month
 		));
 
 		if ( $exists ) {

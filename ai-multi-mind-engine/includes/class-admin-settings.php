@@ -349,9 +349,28 @@ class AMM_Admin_Settings {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+
+			<hr>
+			<div style="background:#fff3f3; padding:30px; border:1px solid #ecc; border-radius:12px; margin-top:50px;">
+				<h3 style="color:#d33; margin-top:0;">Platform Maintenance (Danger Zone)</h3>
+				<p>This action will permanently delete all AI generated outputs, clear the audit trail, and reset usage metering for all users. This is intended for platform reset before a public launch.</p>
+				<button type="button" class="button button-link-delete" id="amm-purge-btn">Reset Platform Data (Purge)</button>
+			</div>
 		</div>
 		<script>
 		jQuery(document).ready(function($) {
+			$('#amm-purge-btn').on('click', function() {
+				if(!confirm('🚨 WARNING: This will delete ALL generated strategy data and reset usage for every user. This action cannot be undone. Proceed?')) return;
+				if(!confirm('Are you absolutely sure? Last chance.')) return;
+
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/purge-data" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) { xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>'); },
+					success: function() { alert('Platform Data Purged Successfully.'); location.reload(); }
+				});
+			});
+
 			$('.amm-pay-referral').on('click', function() {
 				var btn = $(this);
 				var id = btn.data('id');
