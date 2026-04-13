@@ -1089,6 +1089,13 @@ class AMM_REST_API {
 		$email   = sanitize_email( $params['email'] );
 
 		$team_manager = new AMM_Team_Manager();
+
+		// Verify ownership (Security Fix: Prevent IDOR)
+		$teams = $team_manager->get_user_teams( $user_id );
+		$is_owner = false;
+		foreach($teams as $t) { if((int)$t->id === $team_id && $t->role === 'admin') $is_owner = true; }
+		if ( ! $is_owner ) return new WP_Error( 'forbidden', 'You do not own this team.', array( 'status' => 403 ) );
+
 		$token = $team_manager->create_invite( $team_id, $email );
 
 		return rest_ensure_response( array(
@@ -1267,7 +1274,16 @@ class AMM_REST_API {
 		// Track usage (x5 for images)
 		for($i=0; $i<5; $i++) $tracker->track_generation( $user_id );
 
-		return rest_ensure_response( array( 'success' => true, 'url' => $image_url ) );
+		// Save to Workspace
+		$output_id = wp_insert_post( array(
+			'post_title'   => "Visual Asset: " . substr($prompt, 0, 30) . "...",
+			'post_content' => '<!-- IMAGE_GEN --><img src="' . esc_url($image_url) . '" style="max-width:100%;">',
+			'post_status'  => 'publish',
+			'post_type'    => 'ai_outputs',
+			'post_author'  => $user_id,
+		));
+
+		return rest_ensure_response( array( 'success' => true, 'url' => $image_url, 'output_id' => $output_id ) );
 	}
 
 	/**
@@ -1489,6 +1505,13 @@ class AMM_REST_API {
 		$color   = sanitize_text_field( $params['color'] );
 
 		$team_manager = new AMM_Team_Manager();
+
+		// Verify ownership (Security Fix: Prevent IDOR)
+		$teams = $team_manager->get_user_teams( $user_id );
+		$is_owner = false;
+		foreach($teams as $t) { if((int)$t->id === $team_id && $t->role === 'admin') $is_owner = true; }
+		if ( ! $is_owner ) return new WP_Error( 'forbidden', 'You do not own this team.', array( 'status' => 403 ) );
+
 		$team_manager->update_branding( $team_id, $logo, $color );
 
 		return rest_ensure_response( array( 'success' => true ) );
@@ -1540,8 +1563,16 @@ class AMM_REST_API {
 	 * Get pending invites for a team
 	 */
 	public function get_pending_invites( $request ) {
+		$user_id = get_current_user_id();
 		$team_id = (int)$request->get_param('team_id');
 		$team_manager = new AMM_Team_Manager();
+
+		// Verify ownership (Security Fix: Prevent IDOR)
+		$teams = $team_manager->get_user_teams( $user_id );
+		$is_owner = false;
+		foreach($teams as $t) { if((int)$t->id === $team_id && $t->role === 'admin') $is_owner = true; }
+		if ( ! $is_owner ) return new WP_Error( 'forbidden', 'You do not own this team.', array( 'status' => 403 ) );
+
 		return rest_ensure_response( $team_manager->get_pending_invites( $team_id ) );
 	}
 
@@ -1650,16 +1681,21 @@ class AMM_REST_API {
 		$team_manager = new AMM_Team_Manager();
 		$teams = $team_manager->get_user_teams( $user_id );
 
-		// Real Usage Trends (Daily generations for last 7 days)
-		$trends = array();
-		for ( $i = 6; $i >= 0; $i-- ) {
-			$date = date( 'Y-m-d', strtotime( "-$i days" ) );
-			$count = $wpdb->get_var( $wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_author = %d AND post_type = 'ai_outputs' AND post_date LIKE %s",
-				$user_id, $date . '%'
-			));
-			$trends[] = (int)$count;
+		// Optimized Usage Trends (One query instead of 7)
+		$trends = array_fill(0, 7, 0);
+		$start_date = date( 'Y-m-d', strtotime( "-6 days" ) );
+		$results = $wpdb->get_results( $wpdb->prepare(
+			"SELECT DATE(post_date) as d, COUNT(*) as c FROM {$wpdb->posts}
+			 WHERE post_author = %d AND post_type = 'ai_outputs' AND post_date >= %s
+			 GROUP BY DATE(post_date)",
+			$user_id, $start_date
+		));
+		foreach($results as $row) {
+			$diff = (int)date_diff(date_create($start_date), date_create($row->d))->format('%a');
+			if($diff >= 0 && $diff < 7) $trends[$diff] = (int)$row->c;
 		}
+
+		$total_gens = (int)$wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_author = %d AND post_type = 'ai_outputs'", $user_id ) );
 
 		$user = get_userdata( $user_id );
 		return rest_ensure_response( array(
@@ -1681,7 +1717,7 @@ class AMM_REST_API {
 				'trends' => $trends,
 			),
 			'insights' => array(
-				'total_generations' => count( get_posts( array( 'post_type' => 'ai_outputs', 'author' => $user_id, 'posts_per_page' => -1 ) ) ),
+				'total_generations' => $total_gens,
 				'referral_count' => $wpdb->get_var( $wpdb->prepare( "SELECT count(*) FROM {$wpdb->prefix}amm_referrals r JOIN {$wpdb->prefix}amm_affiliates a ON r.affiliate_id = a.id WHERE a.user_id = %d", $user_id ) ) ?: 0,
 			),
 			'team_branding' => !empty($teams) ? array(

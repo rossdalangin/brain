@@ -207,14 +207,24 @@ class AMM_PayPal_Handler {
 		$user_id = $resource['custom_id']; // Passed during checkout
 
 		if ( $status === 'active' ) {
+			$paypal_plan_id = $resource['plan_id'];
+			$plan_id = 'free';
+
+			// Map PayPal Plan ID back to internal ID
+			if ( $paypal_plan_id === get_option('amm_paypal_plan_starter') ) $plan_id = 'starter';
+			elseif ( $paypal_plan_id === get_option('amm_paypal_plan_pro') ) $plan_id = 'pro';
+			elseif ( $paypal_plan_id === get_option('amm_paypal_plan_agency') ) $plan_id = 'agency';
+
 			$wpdb->insert( $wpdb->prefix . 'amm_subscriptions', array(
 				'user_id' => $user_id,
-				'plan_id' => $resource['plan_id'],
+				'plan_id' => $plan_id,
 				'gateway' => 'paypal',
 				'subscription_id' => $sub_id,
 				'status'  => $status,
 				'current_period_end' => date( 'Y-m-d H:i:s', strtotime( $resource['billing_info']['next_billing_time'] ) ),
 			));
+
+			update_user_meta( $user_id, 'amm_plan_id', $plan_id );
 		} else {
 			$wpdb->update(
 				$wpdb->prefix . 'amm_subscriptions',

@@ -44,6 +44,9 @@ class AMM_Affiliate_Manager {
 		));
 
 		if ( $affiliate ) {
+			// Save the link for recurring commissions
+			update_user_meta( $referred_user_id, 'amm_referrer_id', $affiliate->id );
+
 			$wpdb->insert( $wpdb->prefix . 'amm_referrals', array(
 				'affiliate_id'     => $affiliate->id,
 				'referred_user_id' => $referred_user_id,
@@ -51,5 +54,28 @@ class AMM_Affiliate_Manager {
 				'commission_amount' => $commission,
 			));
 		}
+	}
+
+	/**
+	 * Credit commission to an affiliate for a specific referred user
+	 */
+	public function credit_referred_commission( $referred_user_id, $amount ) {
+		global $wpdb;
+		$aff_id = get_user_meta( $referred_user_id, 'amm_referrer_id', true );
+		if ( ! $aff_id ) return;
+
+		$commission = $amount * 0.30; // 30% recurring commission
+
+		$wpdb->insert( $wpdb->prefix . 'amm_referrals', array(
+			'affiliate_id'     => $aff_id,
+			'referred_user_id' => $referred_user_id,
+			'status'           => 'pending',
+			'commission_amount' => $commission,
+		));
+
+		$wpdb->query( $wpdb->prepare(
+			"UPDATE {$wpdb->prefix}amm_affiliates SET total_commissions = total_commissions + %f WHERE id = %d",
+			$commission, $aff_id
+		));
 	}
 }

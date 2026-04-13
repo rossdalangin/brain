@@ -308,6 +308,11 @@ class AMM_Stripe_Handler {
 		update_user_meta( $user_id, 'amm_plan_id', $plan_id );
 		update_user_meta( $user_id, 'amm_stripe_customer_id', $session['customer'] );
 
+		// Credit Affiliate
+		$aff_manager = new AMM_Affiliate_Manager();
+		$amount = $session['amount_total'] / 100;
+		$aff_manager->credit_referred_commission( $user_id, $amount );
+
 		// Notify User
 		$user = get_userdata( $user_id );
 		wp_mail( $user->user_email, "🚀 Plan Activated: " . strtoupper($plan_id), "Welcome to the elite council!\n\nYour {$plan_id} plan is now active. You have full access to our Thinking Engine.\n\nIgnite your first strategy: " . home_url('/dashboard/') );

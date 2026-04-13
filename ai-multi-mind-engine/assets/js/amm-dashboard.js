@@ -123,6 +123,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('amm-user-stats-sidebar').innerHTML = `<strong>${data.plan.toUpperCase()}</strong><br>${used}/${limit} credits`;
                 document.getElementById('amm-usage-bar').style.width = pct + '%';
 
+                if (used >= limit) {
+                    const igniteBtn = document.getElementById('amm-generate-btn');
+                    if (igniteBtn) {
+                        igniteBtn.disabled = true;
+                        igniteBtn.innerText = 'CREDIT LIMIT REACHED';
+                        igniteBtn.style.background = '#ccc';
+
+                        const msg = document.createElement('p');
+                        msg.style = 'color:red; font-size:11px; margin-top:5px;';
+                        msg.innerHTML = '⚡ You have exhausted your credits. <a href="#" onclick="document.querySelector(\'[data-tab=billing]\').click()">Upgrade now</a> to continue.';
+                        igniteBtn.parentNode.appendChild(msg);
+                    }
+                }
+
                 if (data.plan === 'pro' || data.plan === 'agency') {
                     const builder = document.getElementById('amm-builder-container');
                     if(builder) builder.style.display = 'block';
@@ -454,6 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(data.success) {
                 output.innerHTML = `<img src="${data.url}" style="max-width:100%; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,0.2);"><br>
                     <a href="${data.url}" target="_blank" class="amm-secondary-btn" style="margin-top:20px; display:inline-block;">Download HD Image</a>`;
+                refreshWorkspace();
                 initApp(); // Refresh credits
             }
         }).finally(() => {
@@ -727,13 +742,21 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ ids })
         }).then(data => {
             if(data.success) {
-                const blob = new Blob([data.content], { type: 'text/markdown' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'billion-dollar-blueprint.md';
-                a.click();
-                showNotice('💎 Blueprint exported successfully!');
+                const choice = confirm('Blueprint Generated! \n\nClick OK to Download Markdown (.md) \nClick Cancel to Open Print/PDF View.');
+                if (choice) {
+                    const blob = new Blob([data.content], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'billion-dollar-blueprint.md';
+                    a.click();
+                    showNotice('💎 Blueprint downloaded as Markdown.');
+                } else {
+                    const win = window.open('', '_blank');
+                    win.document.write(`<html><body style="font-family:sans-serif; padding:50px; line-height:1.6; max-width:800px; margin:auto;">${data.content.replace(/\n/g, '<br>').replace(/#/g, '')}</body></html>`);
+                    win.document.title = 'Billion-Dollar Blueprint';
+                    setTimeout(() => { win.print(); win.close(); }, 500);
+                }
             }
         });
     });

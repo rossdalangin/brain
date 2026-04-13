@@ -50,6 +50,10 @@ class AMM_Admin_Settings {
 		register_setting( 'amm_settings_group', 'amm_viral_automation_webhook' );
 		register_setting( 'amm_settings_group', 'amm_paypal_client_id' );
 		register_setting( 'amm_settings_group', 'amm_paypal_client_secret' );
+		register_setting( 'amm_settings_group', 'amm_paypal_webhook_id' );
+		register_setting( 'amm_settings_group', 'amm_paypal_plan_starter' );
+		register_setting( 'amm_settings_group', 'amm_paypal_plan_pro' );
+		register_setting( 'amm_settings_group', 'amm_paypal_plan_agency' );
 	}
 
 	public function encrypt_key( $value ) {
@@ -130,6 +134,22 @@ class AMM_Admin_Settings {
 					<tr valign="top">
 						<th scope="row">PayPal Client Secret</th>
 						<td><input type="password" name="amm_paypal_client_secret" value="<?php echo esc_attr( get_option('amm_paypal_client_secret') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">PayPal Webhook ID</th>
+						<td><input type="text" name="amm_paypal_webhook_id" value="<?php echo esc_attr( get_option('amm_paypal_webhook_id') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">PayPal Starter Plan ID</th>
+						<td><input type="text" name="amm_paypal_plan_starter" value="<?php echo esc_attr( get_option('amm_paypal_plan_starter') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">PayPal Pro Plan ID</th>
+						<td><input type="text" name="amm_paypal_plan_pro" value="<?php echo esc_attr( get_option('amm_paypal_plan_pro') ); ?>" class="regular-text" /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row">PayPal Agency Plan ID</th>
+						<td><input type="text" name="amm_paypal_plan_agency" value="<?php echo esc_attr( get_option('amm_paypal_plan_agency') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Viral Automation Webhook (Slack/Discord)</th>
