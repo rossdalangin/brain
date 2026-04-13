@@ -320,6 +320,13 @@ class AMM_REST_API {
 			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
 		));
 
+		// Admin Pay Referral Endpoint
+		register_rest_route( $namespace, '/admin/pay-referral', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_pay_referral' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+
 		// Admin Change Plan
 		register_rest_route( $namespace, '/admin/change-plan', array(
 			'methods'             => 'POST',
@@ -508,6 +515,23 @@ class AMM_REST_API {
 		));
 
 		AMM()->log_audit( get_current_user_id(), 'admin_credit_adjust', "Adjusted $amount credits for user $user_id" );
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle marking a referral as paid
+	 */
+	public function handle_admin_pay_referral( $request ) {
+		global $wpdb;
+		$params = $request->get_json_params();
+		$referral_id = (int)$params['id'];
+
+		$wpdb->update(
+			$wpdb->prefix . 'amm_referrals',
+			array( 'status' => 'paid' ),
+			array( 'id' => $referral_id )
+		);
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
@@ -1042,6 +1066,13 @@ class AMM_REST_API {
 
 		if ( $team_id ) {
 			$team_manager->add_member( $team_id, $user_id );
+
+			// Notify Team Owner
+			$team = $wpdb->get_row( $wpdb->prepare( "SELECT owner_id, team_name FROM {$wpdb->prefix}amm_teams WHERE id = %d", $team_id ) );
+			$owner = get_userdata( $team->owner_id );
+			$new_member = get_userdata( $user_id );
+			wp_mail( $owner->user_email, "👥 New Team Member Joined: {$team->team_name}", "Hello,\n\n{$new_member->display_name} has accepted your invitation and joined the team workspace." );
+
 			return rest_ensure_response( array( 'success' => true ) );
 		}
 

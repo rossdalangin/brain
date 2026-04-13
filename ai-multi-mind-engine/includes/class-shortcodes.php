@@ -161,15 +161,27 @@ class AMM_Shortcodes {
 		ob_start();
 		?>
 		<div id="amm-onboarding-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
-			<div class="amm-form-card" style="max-width:500px; text-align:center;">
-				<h2>Welcome to AI Multi-Mind! 🚀</h2>
-				<p>Ready to access the world's most elite business minds? Here is how to get started:</p>
-				<ul style="text-align:left; margin:20px 0;">
-					<li><strong>1. Select a Mind</strong>: Choose from 30+ specialized AI personas.</li>
-					<li><strong>2. Define your Task</strong>: Use a template or write a custom request.</li>
-					<li><strong>3. Ignite</strong>: Watch the engine build your strategy in real-time.</li>
-				</ul>
-				<button onclick="closeOnboarding()" class="amm-primary-btn">Start My Journey</button>
+			<div class="amm-form-card" style="max-width:600px;">
+				<div id="amm-wizard-step-1" class="amm-wizard-step">
+					<h2>Welcome to AI Multi-Mind! 🚀</h2>
+					<p>Let's set up your Thinking Engine for success. Step 1: Your Brand Profile.</p>
+					<input type="text" id="amm-wiz-company" placeholder="Your Business Name" style="width:100%; margin-bottom:10px;">
+					<textarea id="amm-wiz-kb" placeholder="Describe what your business does..." style="width:100%; height:100px; margin-bottom:20px;"></textarea>
+					<button onclick="wizardNext(2)" class="amm-primary-btn">Next: Define Audience</button>
+				</div>
+				<div id="amm-wizard-step-2" class="amm-wizard-step" style="display:none;">
+					<h2>The Target Persona 🎯</h2>
+					<p>Who are we building strategies for? This context improves AI outputs by 10x.</p>
+					<input type="text" id="amm-wiz-persona" placeholder="Persona Name (e.g. Agency Owners)" style="width:100%; margin-bottom:10px;">
+					<textarea id="amm-wiz-pain" placeholder="What is their #1 pain point?" style="width:100%; height:100px; margin-bottom:20px;"></textarea>
+					<button onclick="wizardNext(3)" class="amm-primary-btn">Next: Ready to Ignite</button>
+				</div>
+				<div id="amm-wizard-step-3" class="amm-wizard-step" style="display:none; text-align:center;">
+					<h2>You are Ready! 🧠</h2>
+					<p>Your profile is saved. You now have access to the Council of 50+ Minds.</p>
+					<div style="font-size:50px; margin:20px 0;">✨</div>
+					<button onclick="finishWizard()" class="amm-primary-btn">Enter Dashboard</button>
+				</div>
 			</div>
 		</div>
 

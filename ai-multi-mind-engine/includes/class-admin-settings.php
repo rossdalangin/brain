@@ -277,19 +277,25 @@ class AMM_Admin_Settings {
 
 			<h3>Affiliate Network Management</h3>
 			<table class="wp-list-table widefat fixed striped">
-				<thead><tr><th>Affiliate User</th><th>Code</th><th>Total Commissions</th><th>Referral Count</th></tr></thead>
+				<thead><tr><th>Referred User</th><th>Affiliate</th><th>Status</th><th>Commission</th><th>Action</th></tr></thead>
 				<tbody>
 					<?php
 					global $wpdb;
-					$affiliates = $wpdb->get_results( "SELECT a.*, u.display_name FROM {$wpdb->prefix}amm_affiliates a JOIN wp_users u ON a.user_id = u.ID" );
-					foreach($affiliates as $a):
-						$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}amm_referrals WHERE affiliate_id = %d", $a->id ) );
+					$referrals = $wpdb->get_results( "SELECT r.*, u.user_email as referred_email, afu.display_name as affiliate_name FROM {$wpdb->prefix}amm_referrals r JOIN {$wpdb->prefix}amm_affiliates a ON r.affiliate_id = a.id JOIN wp_users u ON r.referred_user_id = u.ID JOIN wp_users afu ON a.user_id = afu.ID ORDER BY r.created_at DESC" );
+					foreach($referrals as $r):
 					?>
 						<tr>
-							<td><?php echo esc_html($a->display_name); ?></td>
-							<td><code><?php echo esc_html($a->affiliate_code); ?></code></td>
-							<td>$<?php echo number_format($a->total_commissions, 2); ?></td>
-							<td><?php echo (int)$count; ?></td>
+							<td><?php echo esc_html($r->referred_email); ?></td>
+							<td><?php echo esc_html($r->affiliate_name); ?></td>
+							<td><span class="status-<?php echo $r->status; ?>"><?php echo strtoupper($r->status); ?></span></td>
+							<td>$<?php echo number_format($r->commission_amount, 2); ?></td>
+							<td>
+								<?php if($r->status === 'pending'): ?>
+									<button type="button" class="button amm-pay-referral" data-id="<?php echo $r->id; ?>">Mark as Paid</button>
+								<?php else: ?>
+									✅ Paid
+								<?php endif; ?>
+							</td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
@@ -326,6 +332,21 @@ class AMM_Admin_Settings {
 		</div>
 		<script>
 		jQuery(document).ready(function($) {
+			$('.amm-pay-referral').on('click', function() {
+				var btn = $(this);
+				var id = btn.data('id');
+				if(!confirm('Mark this commission as paid?')) return;
+
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/pay-referral" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) { xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>'); },
+					contentType: 'application/json',
+					data: JSON.stringify({ id: id }),
+					success: function() { alert('Payout Recorded!'); location.reload(); }
+				});
+			});
+
 			$('.amm-adjust-credits').on('click', function() {
 				var userId = $(this).data('user-id');
 				var amount = prompt('Amount to add (use negative to subtract):', '10');

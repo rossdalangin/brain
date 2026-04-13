@@ -13,11 +13,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Onboarding Logic
-    window.closeOnboarding = function() {
+    // Onboarding Wizard Logic
+    window.wizardNext = function(step) {
+        document.querySelectorAll('.amm-wizard-step').forEach(s => s.style.display = 'none');
+        document.getElementById('amm-wizard-step-' + step).style.display = 'block';
+    };
+
+    window.finishWizard = function() {
+        const company = document.getElementById('amm-wiz-company').value;
+        const kb = document.getElementById('amm-wiz-kb').value;
+        const persona = document.getElementById('amm-wiz-persona').value;
+        const pain = document.getElementById('amm-wiz-pain').value;
+
+        safeFetch('/update-settings', {
+            method: 'POST',
+            body: JSON.stringify({ company_name: company, knowledge_base: kb })
+        });
+        safeFetch('/save-persona', {
+            method: 'POST',
+            body: JSON.stringify({ name: persona, pain: pain })
+        });
+
         document.getElementById('amm-onboarding-overlay').style.display = 'none';
         localStorage.setItem('amm_onboarded', 'yes');
+        showNotice('🚀 Setup complete! Your business context is now active.');
+        setTimeout(() => location.reload(), 1000);
     };
+
     if (!localStorage.getItem('amm_onboarded')) {
         document.getElementById('amm-onboarding-overlay').style.display = 'flex';
     }
@@ -339,7 +361,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h4>${p.name}</h4>
                         <p>${p.price}/mo</p>
                         <p style="font-size:12px; color:#888;">${p.credits} Credits / mo</p>
-                        <button onclick="ammCheckout('${p.id}')" class="amm-primary-btn">Select</button>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                            <button onclick="ammCheckout('${p.id}', 'stripe')" class="amm-primary-btn">Pay with Stripe</button>
+                            <button onclick="ammCheckout('${p.id}', 'paypal')" class="amm-secondary-btn" style="background:#ffc439; color:#000;">Pay with PayPal</button>
+                        </div>
                     </div>
                 `).join('');
             });
@@ -1011,10 +1036,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }).then(data => { if(data.success) { alert('Settings Saved!'); location.reload(); } });
     });
 
-    window.ammCheckout = function(planId) {
+    window.ammCheckout = function(planId, gateway = 'stripe') {
         safeFetch('/checkout', {
             method: 'POST',
-            body: JSON.stringify({ plan_id: planId, gateway: 'stripe' })
+            body: JSON.stringify({ plan_id: planId, gateway: gateway })
         }).then(data => { if(data.url) window.location.href = data.url; });
     };
 
