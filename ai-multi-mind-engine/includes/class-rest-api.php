@@ -166,6 +166,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Export Blueprint Endpoint
+		register_rest_route( $namespace, '/export-blueprint', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_export_blueprint' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Create Template Endpoint
 		register_rest_route( $namespace, '/create-template', array(
 			'methods'             => 'POST',
@@ -233,6 +240,13 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/usage-history', array(
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'get_usage_history' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Sync Subscription Endpoint
+		register_rest_route( $namespace, '/sync-subscription', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_sync_subscription' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
@@ -327,6 +341,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Clear History Endpoint
+		register_rest_route( $namespace, '/clear-history', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_clear_history' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Get History Endpoint
 		register_rest_route( $namespace, '/get-history', array(
 			'methods'             => 'GET',
@@ -400,6 +421,15 @@ class AMM_REST_API {
 		$user_id = get_current_user_id();
 		$presets = get_user_meta( $user_id, 'amm_council_presets', true ) ?: array();
 		return rest_ensure_response( $presets );
+	}
+
+	/**
+	 * Handle Clear Conversation History
+	 */
+	public function handle_clear_history() {
+		$user_id = get_current_user_id();
+		delete_user_meta( $user_id, 'amm_chat_history' );
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**
@@ -838,6 +868,25 @@ class AMM_REST_API {
 	/**
 	 * Get pricing plans for the dashboard
 	 */
+	/**
+	 * Handle manual subscription synchronization
+	 */
+	public function handle_sync_subscription() {
+		$user_id = get_current_user_id();
+		$stripe_id = get_user_meta( $user_id, 'amm_stripe_customer_id', true );
+
+		if ( ! $stripe_id ) {
+			return new WP_Error( 'not_found', 'No active payment profile found.' );
+		}
+
+		$stripe = new AMM_Stripe_Handler();
+		$res = $stripe->sync_user_subscription( $user_id );
+
+		if ( is_wp_error( $res ) ) return $res;
+
+		return rest_ensure_response( array( 'success' => true, 'plan' => get_user_meta( $user_id, 'amm_plan_id', true ) ) );
+	}
+
 	public function get_user_invoices() {
 		global $wpdb;
 		$user_id = get_current_user_id();
@@ -1091,6 +1140,28 @@ class AMM_REST_API {
 		));
 
 		return rest_ensure_response( array( 'success' => true, 'new_id' => $new_id ) );
+	}
+
+	/**
+	 * Handle Bulk Export as a single document
+	 */
+	public function handle_export_blueprint( $request ) {
+		$params = $request->get_json_params();
+		$ids = (array)$params['ids'];
+		$user_id = get_current_user_id();
+		$blueprint = "# THE BILLION-DOLLAR BLUEPRINT\n";
+		$blueprint .= "Generated on: " . current_time( 'mysql' ) . "\n\n";
+
+		foreach ( $ids as $id ) {
+			$post = get_post( $id );
+			if ( $post && (int)$post->post_author === $user_id ) {
+				$blueprint .= "## " . strtoupper($post->post_title) . "\n";
+				$blueprint .= $post->post_content . "\n\n";
+				$blueprint .= "---\n\n";
+			}
+		}
+
+		return rest_ensure_response( array( 'success' => true, 'content' => $blueprint ) );
 	}
 
 	/**

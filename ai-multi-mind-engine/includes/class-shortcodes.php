@@ -304,8 +304,11 @@ class AMM_Shortcodes {
 								<option value="Draft a high-ticket sales script for a $5k coaching program.">High-Ticket Sales Script</option>
 							</select>
 							<textarea id="amm-input" placeholder="Enter your context, goals, and constraints here..."></textarea>
-							<button id="amm-generate-btn" class="amm-primary-btn">IGNITE ENGINE</button>
-					<button id="amm-refine-btn" class="amm-secondary-btn" style="margin-top:10px; background:#e1f5fe; color:#039be5;">✨ Refine with Magic BFF</button>
+							<div style="display:flex; gap:10px; margin-bottom:10px;">
+								<button id="amm-generate-btn" class="amm-primary-btn" style="flex:1;">IGNITE ENGINE</button>
+								<button id="amm-clear-history-btn" class="amm-secondary-btn" title="Clear Magic BFF Memory">🗑️ Memory</button>
+							</div>
+					<button id="amm-refine-btn" class="amm-secondary-btn" style="background:#e1f5fe; color:#039be5;">✨ Refine with Magic BFF</button>
 						</div>
 						<div class="amm-output-container">
 							<div class="amm-output-header">
@@ -393,8 +396,14 @@ class AMM_Shortcodes {
 							<select id="amm-workspace-folder-filter" style="width:150px; border-radius:8px;">
 								<option value="">All Folders</option>
 							</select>
+							<select id="amm-workspace-sort" style="width:150px; border-radius:8px;">
+								<option value="newest">Newest First</option>
+								<option value="oldest">Oldest First</option>
+								<option value="title">By Title</option>
+							</select>
 							<input type="text" id="amm-workspace-search" placeholder="Search strategy..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:200px;">
-							<button id="amm-export-workspace-btn" class="amm-secondary-btn" style="background:#28a745; color:#fff;">📦 Export All (JSON)</button>
+							<button id="amm-export-blueprint-btn" class="amm-secondary-btn" style="background:#007cba; color:#fff;">💎 Export Blueprint</button>
+							<button id="amm-export-workspace-btn" class="amm-secondary-btn" style="background:#28a745; color:#fff;">📦 Export JSON</button>
 							<button id="amm-bulk-delete-btn" class="amm-secondary-btn" style="background:#ff4444; color:#fff;">Delete Selected</button>
 							<button id="amm-bulk-move-btn" class="amm-secondary-btn" style="background:#007cba; color:#fff;">Move to Folder</button>
 							<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
@@ -526,8 +535,9 @@ class AMM_Shortcodes {
 						Loading plans...
 					</div>
 
-						<div id="amm-portal-container" style="display:none; margin-top:20px; text-align:center;">
+						<div id="amm-portal-container" style="display:none; margin-top:20px; text-align:center; display:flex; gap:10px; justify-content:center;">
 							<button onclick="ammPortal()" class="amm-secondary-btn" style="width:200px;">Manage Billing & Invoices</button>
+							<button id="amm-sync-sub-btn" class="amm-secondary-btn" style="width:200px; background:#f9f9f9;">🔄 Sync Subscription</button>
 						</div>
 						<div class="amm-form-card" style="margin-top:20px; text-align:center;">
 							<h3>Need more credits?</h3>

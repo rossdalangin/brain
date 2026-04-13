@@ -256,20 +256,34 @@ document.addEventListener('DOMContentLoaded', function() {
         window.refreshWorkspace = function() {
             safeFetch('/outputs')
                 .then(outputs => {
-                    const workspaceList = document.getElementById('amm-workspace-list');
-                    if (!outputs.length) {
-                        workspaceList.innerHTML = 'No outputs saved.';
-                        return;
-                    }
-                    workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
-                        '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
-                        outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
-                        '</table>';
-
-                    document.getElementById('amm-select-all').addEventListener('change', (e) => {
-                        document.querySelectorAll('.amm-out-check').forEach(c => c.checked = e.target.checked);
-                    });
+                    window.ammOutputs = outputs;
+                    renderWorkspace();
                 });
+        }
+
+        function renderWorkspace() {
+            const workspaceList = document.getElementById('amm-workspace-list');
+            let outputs = [...(window.ammOutputs || [])];
+
+            // Sorting
+            const sort = document.getElementById('amm-workspace-sort').value;
+            if (sort === 'oldest') outputs.sort((a,b) => a.id - b.id);
+            else if (sort === 'title') outputs.sort((a,b) => a.title.localeCompare(b.title));
+            else outputs.sort((a,b) => b.id - a.id);
+
+            if (!outputs.length) {
+                workspaceList.innerHTML = 'No outputs saved.';
+                return;
+            }
+            workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
+                '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
+                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+                '</table>';
+
+            document.getElementById('amm-select-all').addEventListener('change', (e) => {
+                document.querySelectorAll('.amm-out-check').forEach(c => c.checked = e.target.checked);
+            });
+            filterWorkspace(); // Maintain filters
         }
         refreshWorkspace();
 
@@ -471,6 +485,18 @@ document.addEventListener('DOMContentLoaded', function() {
     safeFetch('/get-history')
         .then(h => { window.ammChatHistory = h; });
 
+    // Clear History
+    document.getElementById('amm-clear-history-btn').addEventListener('click', () => {
+        if(!confirm('Clear Magic BFF memory? This cannot be undone.')) return;
+        safeFetch('/clear-history', { method: 'POST' })
+            .then(data => {
+                if(data.success) {
+                    window.ammChatHistory = [];
+                    showNotice('✨ Magic BFF memory wiped clean.');
+                }
+            });
+    });
+
     btn.addEventListener('click', () => {
         const userInput = document.getElementById('amm-input').value;
         if(!userInput) return;
@@ -558,6 +584,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if(wsFolderFilter) wsFolderFilter.addEventListener('change', () => filterWorkspace());
     const wsTypeFilter = document.getElementById('amm-workspace-filter');
     if(wsTypeFilter) wsTypeFilter.addEventListener('change', () => filterWorkspace());
+    const wsSort = document.getElementById('amm-workspace-sort');
+    if(wsSort) wsSort.addEventListener('change', () => renderWorkspace());
 
     function filterWorkspace() {
         const folder = document.getElementById('amm-workspace-folder-filter').value;
@@ -662,6 +690,27 @@ document.addEventListener('DOMContentLoaded', function() {
         a.href = url;
         a.download = 'ai-strategy.html';
         a.click();
+    });
+
+    // Export Blueprint logic
+    document.getElementById('amm-export-blueprint-btn').addEventListener('click', () => {
+        const ids = Array.from(document.querySelectorAll('.amm-out-check:checked')).map(c => c.value);
+        if(ids.length === 0) { showNotice('Select strategies to include in your Blueprint.', 'warning'); return; }
+
+        safeFetch('/export-blueprint', {
+            method: 'POST',
+            body: JSON.stringify({ ids })
+        }).then(data => {
+            if(data.success) {
+                const blob = new Blob([data.content], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'billion-dollar-blueprint.md';
+                a.click();
+                showNotice('💎 Blueprint exported successfully!');
+            }
+        });
     });
 
     // Export Workspace JSON
@@ -968,6 +1017,25 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ plan_id: planId, gateway: 'stripe' })
         }).then(data => { if(data.url) window.location.href = data.url; });
     };
+
+    // Sync Subscription
+    document.getElementById('amm-sync-sub-btn').addEventListener('click', () => {
+        const btn = document.getElementById('amm-sync-sub-btn');
+        btn.innerText = 'Syncing...';
+        btn.disabled = true;
+
+        safeFetch('/sync-subscription', { method: 'POST' })
+            .then(data => {
+                if(data.success) {
+                    showNotice(`Subscription synced! Current Plan: ${data.plan.toUpperCase()}`);
+                    setTimeout(() => location.reload(), 1500);
+                }
+            })
+            .finally(() => {
+                btn.innerText = '🔄 Sync Subscription';
+                btn.disabled = false;
+            });
+    });
 
     // Support Chat Logic
     const supportToggle = document.getElementById('amm-support-toggle');

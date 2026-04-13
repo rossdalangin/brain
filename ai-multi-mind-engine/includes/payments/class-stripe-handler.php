@@ -327,4 +327,41 @@ class AMM_Stripe_Handler {
 			update_user_meta( $user_id, 'amm_subscription_status', 'cancelled' );
 		}
 	}
+
+	/**
+	 * Manually sync subscription from Stripe API
+	 */
+	public function sync_user_subscription( $user_id ) {
+		$customer_id = get_user_meta( $user_id, 'amm_stripe_customer_id', true );
+		if ( ! $customer_id ) return new WP_Error('no_stripe_id', 'No Stripe ID.');
+
+		$api_key = get_option('amm_stripe_secret_key');
+		$response = wp_remote_get( "https://api.stripe.com/v1/subscriptions?customer=$customer_id&status=active", array(
+			'headers' => array( 'Authorization' => 'Bearer ' . $api_key )
+		));
+
+		if ( is_wp_error( $response ) ) return $response;
+
+		$data = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( ! empty( $data['data'] ) ) {
+			$sub = $data['data'][0];
+			$price_id = $sub['items']['data'][0]['price']['id'];
+			$plan_id = $this->get_plan_from_price( $price_id );
+
+			update_user_meta( $user_id, 'amm_plan_id', $plan_id );
+			update_user_meta( $user_id, 'amm_subscription_status', 'active' );
+			return true;
+		}
+
+		update_user_meta( $user_id, 'amm_plan_id', 'free' );
+		update_user_meta( $user_id, 'amm_subscription_status', 'inactive' );
+		return false;
+	}
+
+	private function get_plan_from_price( $price_id ) {
+		if ( $price_id === get_option('amm_stripe_price_starter') ) return 'starter';
+		if ( $price_id === get_option('amm_stripe_price_pro') ) return 'pro';
+		if ( $price_id === get_option('amm_stripe_price_agency') ) return 'agency';
+		return 'free';
+	}
 }
