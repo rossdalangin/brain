@@ -14,6 +14,7 @@ class AMM_Shortcodes {
 		add_shortcode( 'amm_shared_intel', array( $this, 'render_shared_intel' ) );
 		add_shortcode( 'amm_landing_page', array( $this, 'render_landing_page' ) );
 		add_shortcode( 'amm_join_team', array( $this, 'render_join_team' ) );
+		add_shortcode( 'amm_auth', array( $this, 'render_auth' ) );
 	}
 
 	public function render_shared_intel() {
@@ -113,6 +114,43 @@ class AMM_Shortcodes {
 			});
 		});
 		</script>
+		<?php
+		return ob_get_clean();
+	}
+
+	public function render_auth() {
+		if ( is_user_logged_in() ) {
+			return '<script>window.location.href="' . home_url('/dashboard/') . '";</script>';
+		}
+
+		$mode = $_GET['mode'] ?? 'login';
+
+		ob_start();
+		?>
+		<div class="amm-auth-view" style="max-width:400px; margin:100px auto; padding:40px; background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.05); text-align:center; font-family:'Inter', sans-serif;">
+			<div style="font-size:24px; font-weight:800; color:#007cba; margin-bottom:30px;">AI Multi-Mind</div>
+
+			<?php if ( $mode === 'login' ): ?>
+				<h2>Welcome Back</h2>
+				<p style="color:#888; margin-bottom:30px;">Access your elite business minds.</p>
+				<form name="loginform" id="loginform" action="<?php echo esc_url( site_url( 'wp-login.php', 'login_post' ) ); ?>" method="post">
+					<input type="text" name="log" placeholder="Username or Email" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;">
+					<input type="password" name="pwd" placeholder="Password" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:20px;">
+					<input type="hidden" name="redirect_to" value="<?php echo home_url('/dashboard/'); ?>">
+					<button type="submit" class="amm-primary-btn">Sign In</button>
+				</form>
+				<p style="margin-top:20px; font-size:13px; color:#888;">Don't have an account? <a href="?mode=register" style="color:#007cba;">Start Free Journey</a></p>
+			<?php else: ?>
+				<h2>Get Started</h2>
+				<p style="color:#888; margin-bottom:30px;">Build your billion-dollar strategy today.</p>
+				<form name="registerform" id="registerform" action="<?php echo esc_url( site_url( 'wp-login.php?action=register', 'login_post' ) ); ?>" method="post">
+					<input type="text" name="user_login" placeholder="Choose Username" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;">
+					<input type="email" name="user_email" placeholder="Your Email" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:20px;">
+					<button type="submit" class="amm-primary-btn">Create Account</button>
+				</form>
+				<p style="margin-top:20px; font-size:13px; color:#888;">Already have an account? <a href="?mode=login" style="color:#007cba;">Sign In</a></p>
+			<?php endif; ?>
+		</div>
 		<?php
 		return ob_get_clean();
 	}

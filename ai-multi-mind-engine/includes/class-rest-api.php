@@ -1472,7 +1472,8 @@ class AMM_REST_API {
 		- Credits: $used / $limit
 		- Last Activity: $last_audit
 
-		Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. Use their context (like low credits or specific last activity) to offer better advice.";
+		Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. Use their context (like low credits or specific last activity) to offer better advice.
+		Mention features like the 'Council' for sequential strategies, 'Context Pro' for file-based RAG, or the 'Media Engine' for visual assets when relevant.";
 
 		$ai_manager = new AMM_AI_Provider_Manager();
 		$response = $ai_manager->generate_response( $provider, $system_prompt, $message );
