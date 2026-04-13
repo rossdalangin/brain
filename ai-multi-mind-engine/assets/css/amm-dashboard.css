@@ -31,3 +31,13 @@
 .dark-mode .amm-nav-item { color: #aaa; }
 .dark-mode .amm-output-box, .dark-mode .amm-form-card, .dark-mode .amm-plan-card { background: #1a1a1a; border-color: #333; color: #eee; }
 .dark-mode .amm-controls select, .dark-mode .amm-controls textarea { background: #222; border-color: #444; color: #eee; }
+
+/* Mobile Optimization */
+@media (max-width: 1024px) {
+    .amm-dashboard { grid-template-columns: 1fr; }
+    .amm-app-sidebar { padding: 20px; border-right: none; border-bottom: 1px solid #f0f0f0; }
+    .amm-nav { display: flex; overflow-x: auto; gap: 10px; margin-bottom: 20px; }
+    .amm-nav-item { white-space: nowrap; margin-bottom: 0; }
+    .amm-generate-layout { grid-template-columns: 1fr; }
+    .amm-app-content { padding: 20px; }
+}

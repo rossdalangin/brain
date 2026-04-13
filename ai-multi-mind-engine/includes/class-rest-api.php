@@ -613,7 +613,7 @@ class AMM_REST_API {
 		$user_input  = $params['user_input'] ?? '';
 		$language    = $params['language'] ?? 'English';
 		$history     = $params['history'] ?? array();
-		$provider    = get_option( 'amm_default_ai_provider', 'gemini' );
+		$provider    = $params['provider'] ?? get_option( 'amm_default_ai_provider', 'gemini' );
 
 		// 0. Plan Access Check for Mind
 		if ( ! $this->user_can_access_mind( $user_id, $mind_id ) ) {
@@ -1194,7 +1194,17 @@ class AMM_REST_API {
 			$post = get_post( $id );
 			if ( $post && (int)$post->post_author === $user_id ) {
 				$blueprint .= "## " . strtoupper($post->post_title) . "\n";
-				$blueprint .= $post->post_content . "\n\n";
+
+				// Handle Image conversion for Markdown
+				$content = $post->post_content;
+				if ( strpos($content, '<!-- IMAGE_GEN -->') !== false ) {
+					preg_match('/src="([^"]+)"/', $content, $matches);
+					if ( ! empty($matches[1]) ) {
+						$content = "![Visual Asset]({$matches[1]})";
+					}
+				}
+
+				$blueprint .= $content . "\n\n";
 				$blueprint .= "---\n\n";
 			}
 		}
@@ -1325,7 +1335,7 @@ class AMM_REST_API {
 		$mind_ids = (array)$params['mind_ids'];
 		$user_input = $params['user_input'] ?? '';
 		$mode = $params['mode'] ?? 'sequence';
-		$provider = get_option( 'amm_default_ai_provider', 'gemini' );
+		$provider = $params['provider'] ?? get_option( 'amm_default_ai_provider', 'gemini' );
 
 		$current_output = $user_input;
 		$results = array();
@@ -1423,12 +1433,26 @@ class AMM_REST_API {
 	 * Handle Success Coach Chat
 	 */
 	public function handle_support_chat( $request ) {
+		global $wpdb;
 		$user_id = get_current_user_id();
 		$params = $request->get_json_params();
 		$message = $params['message'] ?? '';
 		$provider = get_option( 'amm_default_ai_provider', 'gemini' );
 
-		$system_prompt = "You are the AI Success Coach for the AI Multi-Mind Engine. Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. If they ask about features, explain how to use the 'Council' or 'Magic BFF'.";
+		// Build Contextual System Prompt
+		$tracker = new AMM_Usage_Tracker();
+		$plan = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+		$used = $tracker->get_current_month_usage( $user_id );
+		$limit = $tracker->get_plan_limit( $plan );
+		$last_audit = $wpdb->get_var( $wpdb->prepare( "SELECT description FROM {$wpdb->prefix}amm_audit_trail WHERE user_id = %d ORDER BY created_at DESC LIMIT 1", $user_id ) );
+
+		$system_prompt = "You are the AI Success Coach for the AI Multi-Mind Engine.
+		USER CONTEXT:
+		- Plan: " . strtoupper($plan) . "
+		- Credits: $used / $limit
+		- Last Activity: $last_audit
+
+		Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. Use their context (like low credits or specific last activity) to offer better advice.";
 
 		$ai_manager = new AMM_AI_Provider_Manager();
 		$response = $ai_manager->generate_response( $provider, $system_prompt, $message );

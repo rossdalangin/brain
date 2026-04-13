@@ -195,14 +195,14 @@ class AMM_Shortcodes {
 				<div id="amm-user-profile" style="margin-bottom:20px; font-size:12px; color:#888;"></div>
 				<nav class="amm-nav">
 					<a href="#" class="amm-nav-item" data-tab="dashboard">📊 Dashboard</a>
-					<a href="#" class="amm-nav-item active" data-tab="generate">🚀 Ignite Mind</a>
-					<a href="#" class="amm-nav-item" data-tab="council">🏛️ Mind Council</a>
-					<a href="#" class="amm-nav-item" data-tab="library">📚 Minds Library</a>
-					<a href="#" class="amm-nav-item" data-tab="templates">📜 Templates</a>
-					<a href="#" class="amm-nav-item" data-tab="workspace">📁 My Workspace</a>
-					<a href="#" class="amm-nav-item" data-tab="team">👥 Team Hub</a>
-					<a href="#" class="amm-nav-item" data-tab="persona">🎯 Audience</a>
-					<a href="#" class="amm-nav-item" data-tab="media">🎨 Media Engine</a>
+					<a href="#" class="amm-nav-item active" data-tab="generate" title="Ignite a single elite AI mind for a specific task.">🚀 Ignite Mind</a>
+					<a href="#" class="amm-nav-item" data-tab="council" title="Assemble multiple AI minds to collaborate or audit each other.">🏛️ Mind Council</a>
+					<a href="#" class="amm-nav-item" data-tab="library" title="Browse and unlock 40+ specialized business personas.">📚 Minds Library</a>
+					<a href="#" class="amm-nav-item" data-tab="templates" title="Proven frameworks for common business challenges.">📜 Templates</a>
+					<a href="#" class="amm-nav-item" data-tab="workspace" title="Manage, search, and export your generated intelligence.">📁 My Workspace</a>
+					<a href="#" class="amm-nav-item" data-tab="team" title="Invite your team and share intelligence outputs.">👥 Team Hub</a>
+					<a href="#" class="amm-nav-item" data-tab="persona" title="Define who you are solving problems for.">🎯 Audience</a>
+					<a href="#" class="amm-nav-item" data-tab="media" title="Generate high-end visual assets using DALL-E 3.">🎨 Media Engine</a>
 					<a href="#" class="amm-nav-item" data-tab="affiliate">💸 Affiliates</a>
 					<a href="#" class="amm-nav-item" data-tab="billing">💳 Billing</a>
 					<a href="#" class="amm-nav-item" data-tab="settings">⚙️ Settings</a>
@@ -286,6 +286,14 @@ class AMM_Shortcodes {
 						<div class="amm-controls">
 							<label>Select Mind</label>
 							<select id="amm-mind-select"><option value="">Loading minds...</option></select>
+							<div id="amm-provider-selection" style="display:none; margin-top:10px;">
+								<label>AI Provider (PRO)</label>
+								<select id="amm-provider-select">
+									<option value="gemini">Google Gemini</option>
+									<option value="openai">OpenAI GPT-4</option>
+									<option value="claude">Anthropic Claude</option>
+								</select>
+							</div>
 							<label>Output Type</label>
 							<select id="amm-type-select">
 								<option value="business_plan">Business Plan</option>
@@ -503,6 +511,14 @@ class AMM_Shortcodes {
 							<label><input type="radio" name="council-mode" value="brainstorm"> <strong>Brainstorm Mode</strong> (Parallel outputs from all selected minds)</label>
 						</div>
 						<div id="amm-council-selectors" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+							<div id="amm-council-provider-container" style="display:none;">
+								<label>Council Provider (PRO)</label>
+								<select id="amm-council-provider-select" style="margin-bottom:10px;">
+									<option value="gemini">Google Gemini</option>
+									<option value="openai">OpenAI GPT-4</option>
+									<option value="claude">Anthropic Claude</option>
+								</select>
+							</div>
 							<select class="amm-council-select"><option value="">Select Mind 1...</option></select>
 							<select class="amm-council-select"><option value="">Select Mind 2...</option></select>
 							<select class="amm-council-select"><option value="">Select Mind 3...</option></select>

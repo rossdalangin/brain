@@ -140,6 +140,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.plan === 'pro' || data.plan === 'agency') {
                     const builder = document.getElementById('amm-builder-container');
                     if(builder) builder.style.display = 'block';
+
+                    const providers = document.getElementById('amm-provider-selection');
+                    if(providers) providers.style.display = 'block';
+
+                    const councilProviders = document.getElementById('amm-council-provider-container');
+                    if(councilProviders) councilProviders.style.display = 'block';
                 }
                 if (data.plan === 'agency') {
                     const branding = document.getElementById('amm-branding-container');
@@ -544,6 +550,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.disabled = true;
         outputBox.innerText = "The mind is thinking...";
 
+        const provider = document.getElementById('amm-provider-select') ? document.getElementById('amm-provider-select').value : null;
+
         safeFetch('/generate', {
             method: 'POST',
             body: JSON.stringify({
@@ -551,7 +559,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 output_type: document.getElementById('amm-type-select').value,
                 user_input: userInput,
                 language: document.getElementById('amm-language-select').value,
-                history: window.ammChatHistory
+                history: window.ammChatHistory,
+                provider: provider
             })
         })
         .then(data => {
@@ -953,10 +962,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const mode = document.querySelector('input[name="council-mode"]:checked').value;
         const output = document.getElementById('amm-council-output');
 
+        const provider = document.getElementById('amm-council-provider-select') ? document.getElementById('amm-council-provider-select').value : null;
+
         output.innerText = 'The Council is deliberating...';
         safeFetch('/collaborate', {
             method: 'POST',
-            body: JSON.stringify({ mind_ids, user_input, mode })
+            body: JSON.stringify({ mind_ids, user_input, mode, provider: provider })
         }).then(data => {
             if(data.success) {
                 output.innerHTML = ''; // Clear and build safely
