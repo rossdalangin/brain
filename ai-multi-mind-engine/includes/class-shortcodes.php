@@ -212,15 +212,15 @@ class AMM_Shortcodes {
 				<div id="amm-wizard-step-1" class="amm-wizard-step">
 					<h2>Welcome to AI Multi-Mind! 🚀</h2>
 					<p>Let's set up your Thinking Engine for success. Step 1: Your Brand Profile.</p>
-					<input type="text" id="amm-wiz-company" placeholder="Your Business Name" style="width:100%; margin-bottom:10px;">
-					<textarea id="amm-wiz-kb" placeholder="Describe what your business does..." style="width:100%; height:100px; margin-bottom:20px;"></textarea>
+					<input type="text" id="amm-wiz-company" placeholder="Your Business Name (e.g. Acme Consulting)" style="width:100%; margin-bottom:10px;">
+					<textarea id="amm-wiz-kb" placeholder="Describe what your business does (e.g. We help SaaS founders scale their user base using viral growth loops)..." style="width:100%; height:100px; margin-bottom:20px;"></textarea>
 					<button onclick="wizardNext(2)" class="amm-primary-btn">Next: Define Audience</button>
 				</div>
 				<div id="amm-wizard-step-2" class="amm-wizard-step" style="display:none;">
 					<h2>The Target Persona 🎯</h2>
 					<p>Who are we building strategies for? This context improves AI outputs by 10x.</p>
-					<input type="text" id="amm-wiz-persona" placeholder="Persona Name (e.g. Agency Owners)" style="width:100%; margin-bottom:10px;">
-					<textarea id="amm-wiz-pain" placeholder="What is their #1 pain point?" style="width:100%; height:100px; margin-bottom:20px;"></textarea>
+					<input type="text" id="amm-wiz-persona" placeholder="Persona Name (e.g. Busy E-com Founders)" style="width:100%; margin-bottom:10px;">
+					<textarea id="amm-wiz-pain" placeholder="What is their #1 pain point? (e.g. They spend too much on ads but can't figure out their CAC)..." style="width:100%; height:100px; margin-bottom:20px;"></textarea>
 					<button onclick="wizardNext(3)" class="amm-primary-btn">Next: Ready to Ignite</button>
 				</div>
 				<div id="amm-wizard-step-3" class="amm-wizard-step" style="display:none; text-align:center;">
@@ -537,12 +537,12 @@ class AMM_Shortcodes {
 					<h2>Target Audience & Persona Builder</h2>
 					<p>Define who your AI Minds are solving problems for. This data will be injected into every generation.</p>
 					<div class="amm-form-card">
-						<label>Persona Name (e.g. Busy E-com Owner)</label>
-						<input type="text" id="amm-persona-name" style="width:100%; margin-bottom:10px;">
+						<label>Persona Name (e.g. High-Ticket Coaches)</label>
+						<input type="text" id="amm-persona-name" style="width:100%; margin-bottom:10px;" placeholder="Enter a descriptive name for this audience segment.">
 						<label>Pain Points & Roadblocks</label>
-						<textarea id="amm-persona-pain" style="width:100%; height:80px; margin-bottom:10px;" placeholder="What keeps them up at night?"></textarea>
+						<textarea id="amm-persona-pain" style="width:100%; height:80px; margin-bottom:10px;" placeholder="What keeps them up at night? (e.g. High churn rates, unpredictable lead flow, lack of automation)."></textarea>
 						<label>Core Desires & Dreams</label>
-						<textarea id="amm-persona-desire" style="width:100%; height:80px; margin-bottom:10px;" placeholder="What do they secretly want?"></textarea>
+						<textarea id="amm-persona-desire" style="width:100%; height:80px; margin-bottom:10px;" placeholder="What do they secretly want? (e.g. To hit $100k/mo, to work only 20 hours a week, to build a legacy brand)."></textarea>
 						<label>Buying Triggers</label>
 						<input type="text" id="amm-persona-triggers" style="width:100%; margin-bottom:10px;" placeholder="Events that lead to a purchase">
 						<button id="amm-save-persona-btn" class="amm-primary-btn">Save Audience Context</button>

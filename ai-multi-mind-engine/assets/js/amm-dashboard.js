@@ -253,6 +253,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('amm-input').value = content;
             document.querySelector('[data-tab=generate]').click();
             showNotice(`Loaded Template: ${title}`);
+
+        // Contextual Instruction based on Template
+        if(title.includes('Offer')) {
+            showNotice('💡 Pro Tip: Be specific about your target audience for a better offer.', 'info');
+        } else if(title.includes('Sales')) {
+            showNotice('💡 Pro Tip: Include your pricing for accurate close rates.', 'info');
+        }
         };
 
         window.switchMind = function(mindId) {
