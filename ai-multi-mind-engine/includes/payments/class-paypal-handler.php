@@ -9,12 +9,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AMM_PayPal_Handler {
 
+	private function get_decrypted_option( $option_name ) {
+		$ai_manager = new AMM_AI_Provider_Manager();
+		return $ai_manager->get_decrypted_option( $option_name );
+	}
+
 	private $client_id;
 	private $client_secret;
 
 	public function __construct() {
-		$this->client_id = get_option( 'amm_paypal_client_id' );
-		$this->client_secret = get_option( 'amm_paypal_client_secret' );
+		$this->client_id = $this->get_decrypted_option( 'amm_paypal_client_id' );
+		$this->client_secret = $this->get_decrypted_option( 'amm_paypal_client_secret' );
 	}
 
 	/**

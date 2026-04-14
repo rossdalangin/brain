@@ -30,8 +30,8 @@ class AMM_Admin_Settings {
 		register_setting( 'amm_settings_group', 'amm_openai_api_key', array( 'sanitize_callback' => array( $this, 'encrypt_key' ) ) );
 		register_setting( 'amm_settings_group', 'amm_claude_api_key', array( 'sanitize_callback' => array( $this, 'encrypt_key' ) ) );
 		register_setting( 'amm_settings_group', 'amm_default_ai_provider' );
-		register_setting( 'amm_settings_group', 'amm_stripe_secret_key' );
-		register_setting( 'amm_settings_group', 'amm_stripe_webhook_secret' );
+		register_setting( 'amm_settings_group', 'amm_stripe_secret_key', array( 'sanitize_callback' => array( $this, 'encrypt_key' ) ) );
+		register_setting( 'amm_settings_group', 'amm_stripe_webhook_secret', array( 'sanitize_callback' => array( $this, 'encrypt_key' ) ) );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_starter' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_pro' );
 		register_setting( 'amm_settings_group', 'amm_stripe_price_mind_unlock' );
@@ -101,11 +101,11 @@ class AMM_Admin_Settings {
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Secret Key</th>
-						<td><input type="password" name="amm_stripe_secret_key" value="<?php echo esc_attr( get_option('amm_stripe_secret_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_stripe_secret_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_stripe_secret_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Webhook Secret</th>
-						<td><input type="password" name="amm_stripe_webhook_secret" value="<?php echo esc_attr( get_option('amm_stripe_webhook_secret') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_stripe_webhook_secret" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_stripe_webhook_secret') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Starter Price ID</th>
@@ -129,11 +129,11 @@ class AMM_Admin_Settings {
 					</tr>
 					<tr valign="top">
 						<th scope="row">PayPal Client ID</th>
-						<td><input type="password" name="amm_paypal_client_id" value="<?php echo esc_attr( get_option('amm_paypal_client_id') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_paypal_client_id" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_paypal_client_id') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">PayPal Client Secret</th>
-						<td><input type="password" name="amm_paypal_client_secret" value="<?php echo esc_attr( get_option('amm_paypal_client_secret') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_paypal_client_secret" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_paypal_client_secret') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">PayPal Webhook ID</th>

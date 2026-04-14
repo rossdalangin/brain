@@ -459,6 +459,8 @@ class AMM_Shortcodes {
 							<select id="amm-workspace-filter" style="width:150px;">
 								<option value="all">All Items</option>
 								<option value="public">Shared Intel</option>
+								<option value="personal">My Generations</option>
+								<option value="team">Team Shared</option>
 							</select>
 							<select id="amm-workspace-folder-filter" style="width:150px; border-radius:8px;">
 								<option value="">All Folders</option>

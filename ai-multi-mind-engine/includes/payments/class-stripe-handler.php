@@ -9,12 +9,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AMM_Stripe_Handler {
 
+	private function get_decrypted_option( $option_name ) {
+		$ai_manager = new AMM_AI_Provider_Manager();
+		return $ai_manager->get_decrypted_option( $option_name );
+	}
+
 	private $secret_key;
 	private $webhook_secret;
 
 	public function __construct() {
-		$this->secret_key = get_option( 'amm_stripe_secret_key' );
-		$this->webhook_secret = get_option( 'amm_stripe_webhook_secret' );
+		$this->secret_key = $this->get_decrypted_option( 'amm_stripe_secret_key' );
+		$this->webhook_secret = $this->get_decrypted_option( 'amm_stripe_webhook_secret' );
 	}
 
 	/**
@@ -344,7 +349,7 @@ class AMM_Stripe_Handler {
 		$customer_id = get_user_meta( $user_id, 'amm_stripe_customer_id', true );
 		if ( ! $customer_id ) return new WP_Error('no_stripe_id', 'No Stripe ID.');
 
-		$api_key = get_option('amm_stripe_secret_key');
+		$api_key = $this->secret_key;
 		$response = wp_remote_get( "https://api.stripe.com/v1/subscriptions?customer=$customer_id&status=active", array(
 			'headers' => array( 'Authorization' => 'Bearer ' . $api_key )
 		));

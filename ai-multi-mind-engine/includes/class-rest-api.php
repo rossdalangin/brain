@@ -805,9 +805,12 @@ class AMM_REST_API {
 
 		$data = array();
 		foreach ( $outputs as $output ) {
+			$author = get_userdata( $output->post_author );
 			$data[] = array(
 				'id'      => $output->ID,
 				'title'   => $output->post_title,
+				'author'  => $author ? $author->display_name : 'Unknown',
+				'author_id' => $output->post_author,
 				'date'    => get_the_date( 'Y-m-d', $output->ID ),
 				'content' => $output->post_content,
 				'is_public' => get_post_meta( $output->ID, 'amm_is_public', true ) === 'yes',
@@ -824,59 +827,59 @@ class AMM_REST_API {
 	public function get_all_minds() {
 		$user_id = get_current_user_id();
 		$core_minds = array(
-			array( 'id' => 'ceo', 'name' => 'CEO Mind', 'featured' => true, 'category' => 'Executive' ),
-			array( 'id' => 'visionary', 'name' => 'Visionary Founder', 'category' => 'Executive' ),
-			array( 'id' => 'board_advisor', 'name' => 'Board Advisor', 'category' => 'Executive' ),
+			array( 'id' => 'ceo', 'name' => 'CEO Mind', 'featured' => true, 'category' => 'Executive', 'min_plan' => 'free' ),
+			array( 'id' => 'visionary', 'name' => 'Visionary Founder', 'category' => 'Executive', 'min_plan' => 'starter' ),
+			array( 'id' => 'board_advisor', 'name' => 'Board Advisor', 'category' => 'Executive', 'min_plan' => 'pro' ),
 
-			array( 'id' => 'strategist', 'name' => 'Elite Business Strategist', 'featured' => true, 'category' => 'Strategy' ),
-			array( 'id' => 'growth_hacker', 'name' => 'Growth Hacker', 'category' => 'Strategy' ),
-			array( 'id' => 'dominator', 'name' => 'Market Dominator', 'category' => 'Strategy' ),
-			array( 'id' => 'blue_ocean', 'name' => 'Blue Ocean Expert', 'category' => 'Strategy' ),
+			array( 'id' => 'strategist', 'name' => 'Elite Business Strategist', 'featured' => true, 'category' => 'Strategy', 'min_plan' => 'free' ),
+			array( 'id' => 'growth_hacker', 'name' => 'Growth Hacker', 'category' => 'Strategy', 'min_plan' => 'starter' ),
+			array( 'id' => 'dominator', 'name' => 'Market Dominator', 'category' => 'Strategy', 'min_plan' => 'pro' ),
+			array( 'id' => 'blue_ocean', 'name' => 'Blue Ocean Expert', 'category' => 'Strategy', 'min_plan' => 'starter' ),
 
-			array( 'id' => 'funnel_builder', 'name' => 'Funnel Builder (Brunson-style)', 'category' => 'Marketing' ),
-			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi-style)', 'featured' => true, 'category' => 'Marketing' ),
-			array( 'id' => 'viral_creator', 'name' => 'Viral Content Creator', 'category' => 'Marketing' ),
-			array( 'id' => 'brand_authority', 'name' => 'Brand Authority Builder', 'category' => 'Marketing' ),
+			array( 'id' => 'funnel_builder', 'name' => 'Funnel Builder (Brunson-style)', 'category' => 'Marketing', 'min_plan' => 'starter' ),
+			array( 'id' => 'offer_creator', 'name' => 'Offer Creator (Hormozi-style)', 'featured' => true, 'category' => 'Marketing', 'min_plan' => 'starter' ),
+			array( 'id' => 'viral_creator', 'name' => 'Viral Content Creator', 'category' => 'Marketing', 'min_plan' => 'free' ),
+			array( 'id' => 'brand_authority', 'name' => 'Brand Authority Builder', 'category' => 'Marketing', 'min_plan' => 'starter' ),
 
-			array( 'id' => 'sales_closer', 'name' => 'High-Ticket Closer', 'category' => 'Sales' ),
-			array( 'id' => 'objection_killer', 'name' => 'Objection Killer', 'category' => 'Sales' ),
-			array( 'id' => 'negotiation_master', 'name' => 'Negotiation Master', 'category' => 'Sales' ),
+			array( 'id' => 'sales_closer', 'name' => 'High-Ticket Closer', 'category' => 'Sales', 'min_plan' => 'pro' ),
+			array( 'id' => 'objection_killer', 'name' => 'Objection Killer', 'category' => 'Sales', 'min_plan' => 'starter' ),
+			array( 'id' => 'negotiation_master', 'name' => 'Negotiation Master', 'category' => 'Sales', 'min_plan' => 'pro' ),
 
-			array( 'id' => 'sop_architect', 'name' => 'SOP Architect', 'category' => 'Operations' ),
-			array( 'id' => 'systems_builder', 'name' => 'Systems Builder', 'category' => 'Operations' ),
-			array( 'id' => 'automation_expert', 'name' => 'Automation Expert', 'category' => 'Operations' ),
+			array( 'id' => 'sop_architect', 'name' => 'SOP Architect', 'category' => 'Operations', 'min_plan' => 'starter' ),
+			array( 'id' => 'systems_builder', 'name' => 'Systems Builder', 'category' => 'Operations', 'min_plan' => 'starter' ),
+			array( 'id' => 'automation_expert', 'name' => 'Automation Expert', 'category' => 'Operations', 'min_plan' => 'pro' ),
 
-			array( 'id' => 'profit_maximizer', 'name' => 'Profit Maximizer', 'category' => 'Finance' ),
-			array( 'id' => 'pricing_strategist', 'name' => 'Pricing Strategist', 'category' => 'Finance' ),
-			array( 'id' => 'cost_cutter', 'name' => 'Cost Cutter', 'category' => 'Finance' ),
+			array( 'id' => 'profit_maximizer', 'name' => 'Profit Maximizer', 'category' => 'Finance', 'min_plan' => 'starter' ),
+			array( 'id' => 'pricing_strategist', 'name' => 'Pricing Strategist', 'category' => 'Finance', 'min_plan' => 'starter' ),
+			array( 'id' => 'cost_cutter', 'name' => 'Cost Cutter', 'category' => 'Finance', 'min_plan' => 'pro' ),
 
-			array( 'id' => 'product_strategist', 'name' => 'Product Strategist', 'category' => 'Product' ),
-			array( 'id' => 'ux_expert', 'name' => 'UX/UI Expert', 'category' => 'Product' ),
-			array( 'id' => 'saas_architect', 'name' => 'SaaS Architect', 'category' => 'Product' ),
+			array( 'id' => 'product_strategist', 'name' => 'Product Strategist', 'category' => 'Product', 'min_plan' => 'starter' ),
+			array( 'id' => 'ux_expert', 'name' => 'UX/UI Expert', 'category' => 'Product', 'min_plan' => 'starter' ),
+			array( 'id' => 'saas_architect', 'name' => 'SaaS Architect', 'category' => 'Product', 'min_plan' => 'pro' ),
 
-			array( 'id' => 'copywriter', 'name' => 'Copywriting Master', 'category' => 'Content' ),
-			array( 'id' => 'storyteller', 'name' => 'Storytelling Expert', 'category' => 'Content' ),
-			array( 'id' => 'email_specialist', 'name' => 'Email Conversion Specialist', 'category' => 'Content' ),
+			array( 'id' => 'copywriter', 'name' => 'Copywriting Master', 'category' => 'Content', 'min_plan' => 'free' ),
+			array( 'id' => 'storyteller', 'name' => 'Storytelling Expert', 'category' => 'Content', 'min_plan' => 'starter' ),
+			array( 'id' => 'email_specialist', 'name' => 'Email Conversion Specialist', 'category' => 'Content', 'min_plan' => 'starter' ),
 
-			array( 'id' => 'risk_analyst', 'name' => 'Risk Analyst', 'category' => 'Legal' ),
-			array( 'id' => 'policy_generator', 'name' => 'Policy Generator', 'category' => 'Legal' ),
+			array( 'id' => 'risk_analyst', 'name' => 'Risk Analyst', 'category' => 'Legal', 'min_plan' => 'pro' ),
+			array( 'id' => 'policy_generator', 'name' => 'Policy Generator', 'category' => 'Legal', 'min_plan' => 'pro' ),
 
-			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach', 'category' => 'Personal' ),
-			array( 'id' => 'decision_expert', 'name' => 'Decision Expert', 'category' => 'Personal' ),
+			array( 'id' => 'leadership_coach', 'name' => 'Leadership Coach', 'category' => 'Personal', 'min_plan' => 'starter' ),
+			array( 'id' => 'decision_expert', 'name' => 'Decision Expert', 'category' => 'Personal', 'min_plan' => 'starter' ),
 
-			array( 'id' => 'roadmap_builder', 'name' => 'Product Roadmap Builder', 'category' => 'Growth' ),
-			array( 'id' => 'pitch_architect', 'name' => 'Investor Pitch Architect', 'category' => 'Growth' ),
-			array( 'id' => 'vc_auditor', 'name' => 'VC Auditor', 'category' => 'Growth' ),
-			array( 'id' => 'psych_copywriter', 'name' => 'Psychological Copywriter', 'category' => 'Growth' ),
-			array( 'id' => 'seo_strategist', 'name' => 'SEO Strategist', 'category' => 'Growth' ),
-			array( 'id' => 'viral_storyteller', 'name' => 'Viral Storyteller', 'category' => 'Growth' ),
-			array( 'id' => 'support_architect', 'name' => 'Customer Support Architect', 'category' => 'Growth' ),
-			array( 'id' => 'ecom_strategist', 'name' => 'E-commerce Strategist', 'category' => 'Growth' ),
-			array( 'id' => 'real_estate_authority', 'name' => 'Real Estate Authority', 'category' => 'Growth' ),
-			array( 'id' => 'podcast_strategist', 'name' => 'Podcast Guest Strategist', 'category' => 'Growth' ),
-			array( 'id' => 'youtube_lead', 'name' => 'YouTube Growth Lead', 'category' => 'Growth' ),
+			array( 'id' => 'roadmap_builder', 'name' => 'Product Roadmap Builder', 'category' => 'Growth', 'min_plan' => 'pro' ),
+			array( 'id' => 'pitch_architect', 'name' => 'Investor Pitch Architect', 'category' => 'Growth', 'min_plan' => 'pro' ),
+			array( 'id' => 'vc_auditor', 'name' => 'VC Auditor', 'category' => 'Growth', 'min_plan' => 'agency' ),
+			array( 'id' => 'psych_copywriter', 'name' => 'Psychological Copywriter', 'category' => 'Growth', 'min_plan' => 'starter' ),
+			array( 'id' => 'seo_strategist', 'name' => 'SEO Strategist', 'category' => 'Growth', 'min_plan' => 'starter' ),
+			array( 'id' => 'viral_storyteller', 'name' => 'Viral Storyteller', 'category' => 'Growth', 'min_plan' => 'free' ),
+			array( 'id' => 'support_architect', 'name' => 'Customer Support Architect', 'category' => 'Growth', 'min_plan' => 'starter' ),
+			array( 'id' => 'ecom_strategist', 'name' => 'E-commerce Strategist', 'category' => 'Growth', 'min_plan' => 'starter' ),
+			array( 'id' => 'real_estate_authority', 'name' => 'Real Estate Authority', 'category' => 'Growth', 'min_plan' => 'pro' ),
+			array( 'id' => 'podcast_strategist', 'name' => 'Podcast Guest Strategist', 'category' => 'Growth', 'min_plan' => 'starter' ),
+			array( 'id' => 'youtube_lead', 'name' => 'YouTube Growth Lead', 'category' => 'Growth', 'min_plan' => 'starter' ),
 
-			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true, 'category' => 'Special' ),
+			array( 'id' => 'magic_bff', 'name' => 'Magic Business Mentor (BFF)', 'featured' => true, 'category' => 'Special', 'min_plan' => 'pro' ),
 		);
 
 		$cpt_minds = get_posts( array( 'post_type' => 'ai_minds', 'posts_per_page' => -1 ) );
@@ -1287,6 +1290,11 @@ class AMM_REST_API {
 	 */
 	public function handle_image_generation( $request ) {
 		$user_id = get_current_user_id();
+		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+
+		if ( ! in_array( $plan_id, array( 'pro', 'agency' ) ) ) {
+			return new WP_Error( 'rest_forbidden', 'The Media Engine is a PRO feature.', array( 'status' => 403 ) );
+		}
 		$params = $request->get_json_params();
 		$prompt = sanitize_text_field( $params['prompt'] );
 
@@ -1351,6 +1359,12 @@ class AMM_REST_API {
 	 */
 	public function handle_collaboration( $request ) {
 		$user_id = get_current_user_id();
+		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+
+		if ( ! in_array( $plan_id, array( 'pro', 'agency' ) ) ) {
+			return new WP_Error( 'rest_forbidden', 'The Mind Council is a PRO feature.', array( 'status' => 403 ) );
+		}
+
 		$params = $request->get_json_params();
 		$mind_ids = (array)$params['mind_ids'];
 		$user_input = $params['user_input'] ?? '';
@@ -1674,6 +1688,7 @@ class AMM_REST_API {
 	public function handle_create_team( $request ) {
 		$user_id = get_current_user_id();
 		$plan_id = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
+
 		if ( $plan_id !== 'agency' ) return new WP_Error( 'forbidden', 'Only Agency users can create teams.', array( 'status' => 403 ) );
 
 		$params = $request->get_json_params();
@@ -1696,24 +1711,34 @@ class AMM_REST_API {
 	 * Verify if user can access a specific mind
 	 */
 	private function user_can_access_mind( $user_id, $mind_id ) {
-		// 1. Check if core mind
-		$mind_post = get_page_by_path( $mind_id, OBJECT, 'ai_minds' );
-		if ( ! $mind_post ) return true;
-
-		// 2. Check if purchased one-time
-		global $wpdb;
-		$purchased = $wpdb->get_var( $wpdb->prepare(
-			"SELECT id FROM {$wpdb->prefix}amm_purchases WHERE user_id = %d AND mind_id = %s",
-			$user_id, $mind_id
-		));
-		if ( $purchased ) return true;
-
-		// 3. Check plan level
-		$min_plan = get_post_meta( $mind_post->ID, 'amm_min_plan', true ) ?: 'free';
 		$user_plan = get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free';
-
 		$plans = array( 'free' => 0, 'starter' => 1, 'pro' => 2, 'agency' => 3 );
-		return ( $plans[$user_plan] ?? 0 ) >= ( $plans[$min_plan] ?? 0 );
+
+		// 1. Check Core Minds min_plan
+		$all_minds = $this->get_all_minds()->get_data();
+		foreach ( $all_minds as $m ) {
+			if ( $m['id'] === $mind_id ) {
+				$min = $m['min_plan'] ?? 'free';
+				return ( $plans[$user_plan] ?? 0 ) >= ( $plans[$min] ?? 0 );
+			}
+		}
+
+		// 2. Check CPT Minds
+		$mind_post = get_page_by_path( $mind_id, OBJECT, 'ai_minds' );
+		if ( $mind_post ) {
+			// Check one-time purchase
+			global $wpdb;
+			$purchased = $wpdb->get_var( $wpdb->prepare(
+				"SELECT id FROM {$wpdb->prefix}amm_purchases WHERE user_id = %d AND mind_id = %s",
+				$user_id, $mind_id
+			));
+			if ( $purchased ) return true;
+
+			$min_plan = get_post_meta( $mind_post->ID, 'amm_min_plan', true ) ?: 'free';
+			return ( $plans[$user_plan] ?? 0 ) >= ( $plans[$min_plan] ?? 0 );
+		}
+
+		return true;
 	}
 
 	/**

@@ -318,8 +318,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
-                '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
-                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+                '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Author</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
+                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}" data-author-id="${o.author_id}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.author}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
                 '</table>';
 
             document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -639,16 +639,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterWorkspace() {
         const folder = document.getElementById('amm-workspace-folder-filter').value;
         const type = document.getElementById('amm-workspace-filter').value;
+        const currentUserId = ammData.currentUserId;
 
         document.querySelectorAll('#amm-workspace-list tr').forEach(tr => {
             if (tr.querySelector('th')) return;
 
             const folders = tr.dataset.folders || '';
             const isPublic = tr.dataset.public === 'yes';
+            const authorId = parseInt(tr.dataset.authorId);
 
             let show = true;
             if (folder && !folders.includes(folder)) show = false;
             if (type === 'public' && !isPublic) show = false;
+            if (type === 'personal' && authorId !== currentUserId) show = false;
+            if (type === 'team' && authorId === currentUserId) show = false;
 
             tr.style.display = show ? '' : 'none';
         });
@@ -751,7 +755,17 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ ids })
         }).then(data => {
             if(data.success) {
-                const choice = confirm('Blueprint Generated! \n\nClick OK to Download Markdown (.md) \nClick Cancel to Open Print/PDF View.');
+                const choice = confirm('Blueprint Generated! \n\nOK: Download (.md) \nCancel: Open Print View \n(Tip: Close this to Copy to Clipboard instead)');
+
+                // Copy to clipboard regardless
+                const dummy = document.createElement('textarea');
+                document.body.appendChild(dummy);
+                dummy.value = data.content;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                showNotice('💎 Blueprint also copied to clipboard!');
+
                 if (choice) {
                     const blob = new Blob([data.content], { type: 'text/markdown' });
                     const url = URL.createObjectURL(blob);
@@ -1009,15 +1023,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle Toggle Permission
     window.ammTogglePerm = function(userId, teamId, perm, isChecked) {
-        // In real app, you'd fetch existing perms first, but for now we toggle based on common sense
-        const perms = ['can_generate', 'can_view_workspace'];
-        if (!isChecked) perms.splice(perms.indexOf(perm), 1);
+        // Find existing permissions for this user in the local team list if possible
+        // For simplicity in this UI, we use the active checkboxes state
+        const row = event.target.closest('div');
+        const perms = [];
+        if (row.querySelector('input[onchange*="can_generate"]').checked) perms.push('can_generate');
+        if (row.querySelector('input[onchange*="can_view_workspace"]').checked) perms.push('can_view_workspace');
 
-        fetch(apiRoot + '/update-member-role', {
+        safeFetch('/update-member-role', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
             body: JSON.stringify({ user_id: userId, team_id: teamId, permissions: perms })
-        });
+        }).then(data => { if(data.success) showNotice('Team permissions updated.'); });
     };
 
     // Handle Create Team

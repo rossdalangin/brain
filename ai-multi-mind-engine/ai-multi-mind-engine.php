@@ -167,7 +167,8 @@ class AI_Multi_Mind_Engine {
 
 		wp_localize_script( 'amm-dashboard-js', 'ammData', array(
 			'apiRoot' => esc_url_raw( rest_url( 'amm/v1' ) ),
-			'nonce'   => wp_create_nonce( 'wp_rest' )
+			'nonce'   => wp_create_nonce( 'wp_rest' ),
+			'currentUserId' => get_current_user_id()
 		));
 	}
 
