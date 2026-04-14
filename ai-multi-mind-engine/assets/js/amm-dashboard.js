@@ -93,6 +93,41 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => { notice.style.opacity = '0'; setTimeout(() => notice.remove(), 300); }, 4000);
     }
 
+    function updateUsageUI(used, limit) {
+        const usedEl = document.getElementById('amm-user-stats-sidebar');
+        const barEl = document.getElementById('amm-usage-bar');
+        const pct = Math.min(100, (used / limit) * 100);
+
+        if (usedEl) usedEl.innerHTML = `<strong>${window.ammUserPlan ? window.ammUserPlan.toUpperCase() : 'PLAN'}</strong><br>${used}/${limit} credits`;
+        if (barEl) barEl.style.width = pct + '%';
+
+        // SVG Update
+        const svgContainer = document.getElementById('amm-usage-svg');
+        if (svgContainer) {
+            const radius = 40;
+            const circ = 2 * Math.PI * radius;
+            const usedPct = (used / limit);
+            const strokeDash = usedPct * circ;
+            const circle = svgContainer.querySelector('circle[stroke="#007cba"]');
+            if (circle) circle.setAttribute('stroke-dasharray', `${strokeDash} ${circ}`);
+
+            const text = svgContainer.querySelector('text');
+            if (text) text.textContent = Math.round(usedPct * 100) + '%';
+
+            const info = svgContainer.querySelector('div');
+            if (info) info.textContent = (limit - used) + ' credits left';
+        }
+
+        // Re-check guardrails
+        if (used >= limit) {
+            const igniteBtn = document.getElementById('amm-generate-btn');
+            if (igniteBtn) {
+                igniteBtn.disabled = true;
+                igniteBtn.innerText = 'CREDIT LIMIT REACHED';
+            }
+        }
+    }
+
     function initApp() {
         // System Status
         const coreStatus = document.getElementById('amm-status-core');
@@ -262,6 +297,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         };
 
+    window.copyAffLink = function() {
+        const link = document.getElementById('amm-aff-link');
+        link.select();
+        document.execCommand('copy');
+        showNotice('🚀 Affiliate link copied to clipboard!');
+    };
+
         window.switchMind = function(mindId) {
             const select = document.getElementById('amm-mind-select');
             select.value = mindId;
@@ -326,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
                 '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Author</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
-                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}" data-author-id="${o.author_id}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.author}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick='ammEdit(${JSON.stringify(o)})'>✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}" data-author-id="${o.author_id}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.author}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick="ammEditById(${o.id})">✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
                 '</table>';
 
             document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -421,9 +463,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Affiliate
         safeFetch('/affiliate')
             .then(data => {
-                let html = `<p>Referral Link: <input type="text" value="${data.link}" readonly style="width:100%;"></p>
-                    <p>Earnings: $${data.commissions}</p>
-                    <h4>Your Referrals</h4>`;
+                let html = `<div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <input type="text" id="amm-aff-link" value="${data.link}" readonly style="flex:1;">
+                    <button class="amm-primary-btn" style="width:auto;" onclick="copyAffLink()">Copy Link</button>
+                </div>
+                <p>Earnings: $${data.commissions}</p>
+                <h4>Your Referrals</h4>`;
 
                 if(data.referrals && data.referrals.length) {
                     html += '<table style="width:100%">' + data.referrals.map(r => `<tr><td>${r.user_email}</td><td>${r.status}</td><td>$${r.commission_amount}</td></tr>`).join('') + '</table>';
@@ -482,7 +527,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 output.innerHTML = `<img src="${data.url}" style="max-width:100%; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,0.2);"><br>
                     <a href="${data.url}" target="_blank" class="amm-secondary-btn" style="margin-top:20px; display:inline-block;">Download HD Image</a>`;
                 refreshWorkspace();
-                initApp(); // Refresh credits
+
+                // Real-time Update
+                updateUsageUI(data.usage.used, data.usage.limit);
             }
         }).finally(() => {
             btn.disabled = false;
@@ -493,16 +540,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadPresets() {
         safeFetch('/presets')
             .then(presets => {
+                window.ammPresets = presets;
                 const list = document.getElementById('amm-presets-list');
                 const container = document.getElementById('amm-presets-container');
                 if (presets.length) {
                     container.style.display = 'block';
-                    list.innerHTML = presets.map(p => `<button class="amm-secondary-btn" onclick='applyPreset(${JSON.stringify(p)})'>${p.name}</button>`).join('');
+                    list.innerHTML = presets.map((p, i) => `<button class="amm-secondary-btn" onclick='applyPresetByIndex(${i})'>${p.name}</button>`).join('');
                 }
             });
     }
 
-    window.applyPreset = function(p) {
+    window.applyPresetByIndex = function(index) {
+        const p = window.ammPresets[index];
+        if(!p) return;
         const selectors = document.querySelectorAll('.amm-council-select');
         p.mind_ids.forEach((id, i) => { if(selectors[i]) selectors[i].value = id; });
         document.querySelector(`input[name="council-mode"][value="${p.mode}"]`).checked = true;
@@ -596,6 +646,9 @@ document.addEventListener('DOMContentLoaded', function() {
 								successMsg.style = 'margin-top:20px; font-size:12px; color:green; font-weight:bold;';
 								successMsg.textContent = '✅ Strategy saved and persistent memory updated.';
 								outputBox.appendChild(successMsg);
+
+								// Real-time Sidebar Update
+								updateUsageUI(data.usage.used, data.usage.limit);
                     }
                 }, 5);
             } else {
@@ -676,7 +729,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Edit Logic
-    window.ammEdit = function(o) {
+    window.ammEditById = function(id) {
+        const o = window.ammOutputs.find(out => parseInt(out.id) === parseInt(id));
+        if(!o) return;
         window.ammActiveEditId = o.id;
         document.getElementById('amm-edit-content').value = o.content;
         document.getElementById('amm-edit-modal').style.display = 'flex';

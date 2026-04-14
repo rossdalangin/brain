@@ -65,6 +65,7 @@ class AMM_Analytics_Manager {
 
 		return array(
 			'mrr' => $mrr,
+			'arr' => $mrr * 12,
 			'arpu' => round($arpu, 2),
 			'churn_rate' => round($churn_rate, 2),
 			'ltv' => round($ltv, 2),

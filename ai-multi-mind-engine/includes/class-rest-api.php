@@ -1321,7 +1321,13 @@ class AMM_REST_API {
 			'post_author'  => $user_id,
 		));
 
-		return rest_ensure_response( array( 'success' => true, 'url' => $image_url, 'output_id' => $output_id ) );
+		return rest_ensure_response( array(
+			'success'   => true,
+			'url'       => $image_url,
+			'output_id' => $output_id,
+			'usage'     => $tracker->get_current_month_usage( $user_id ),
+			'limit'     => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' )
+		));
 	}
 
 	/**
@@ -1421,11 +1427,14 @@ class AMM_REST_API {
 			'post_author'  => $user_id,
 		));
 
+		$tracker = new AMM_Usage_Tracker();
 		return rest_ensure_response( array(
 			'success' => true,
 			'output_id' => $output_id,
 			'final_output' => $current_output,
-			'sequence' => $results
+			'sequence' => $results,
+			'usage'     => $tracker->get_current_month_usage( $user_id ),
+			'limit'     => $tracker->get_plan_limit( get_user_meta( $user_id, 'amm_plan_id', true ) ?: 'free' )
 		) );
 	}
 

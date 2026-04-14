@@ -89,23 +89,28 @@ class AMM_Admin_Settings {
 					<?php $ai_manager = new AMM_AI_Provider_Manager(); ?>
 					<tr valign="top">
 						<th scope="row">Gemini API Key</th>
-						<td><input type="password" name="amm_gemini_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_gemini_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_gemini_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_gemini_api_key') ); ?>" class="regular-text" />
+						<p class="description">Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">OpenAI API Key</th>
-						<td><input type="password" name="amm_openai_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_openai_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_openai_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_openai_api_key') ); ?>" class="regular-text" />
+						<p class="description">Required for GPT-4 and DALL-E 3. Get it from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Dashboard</a>.</p></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Claude API Key</th>
-						<td><input type="password" name="amm_claude_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_claude_api_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_claude_api_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_claude_api_key') ); ?>" class="regular-text" />
+						<p class="description">Get your API key from <a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a>.</p></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Secret Key</th>
-						<td><input type="password" name="amm_stripe_secret_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_stripe_secret_key') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_stripe_secret_key" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_stripe_secret_key') ); ?>" class="regular-text" />
+						<p class="description">Find your secret key in <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe API Keys</a>.</p></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Webhook Secret</th>
-						<td><input type="password" name="amm_stripe_webhook_secret" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_stripe_webhook_secret') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_stripe_webhook_secret" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_stripe_webhook_secret') ); ?>" class="regular-text" />
+						<p class="description">Create a webhook pointing to <code><?php echo rest_url('amm/v1/stripe-webhook'); ?></code> and get the signing secret.</p></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Stripe Starter Price ID</th>
@@ -129,7 +134,8 @@ class AMM_Admin_Settings {
 					</tr>
 					<tr valign="top">
 						<th scope="row">PayPal Client ID</th>
-						<td><input type="password" name="amm_paypal_client_id" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_paypal_client_id') ); ?>" class="regular-text" /></td>
+						<td><input type="password" name="amm_paypal_client_id" value="<?php echo esc_attr( $ai_manager->get_decrypted_option('amm_paypal_client_id') ); ?>" class="regular-text" />
+						<p class="description">Get this from <a href="https://developer.paypal.com/dashboard/applications" target="_blank">PayPal Developer Dashboard</a> (Apps & Credentials).</p></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">PayPal Client Secret</th>
@@ -250,6 +256,10 @@ class AMM_Admin_Settings {
 				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1; border-left: 5px solid #28a745;">
 					<strong>Monthly Recurring Revenue (MRR)</strong><br>
 					<span style="font-size:24px; color:#28a745;">$<?php echo number_format($stats['revenue_metrics']['mrr']); ?></span>
+				</div>
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1; border-left: 5px solid #007cba;">
+					<strong>Projected ARR</strong><br>
+					<span style="font-size:24px; color:#007cba;">$<?php echo number_format($stats['revenue_metrics']['arr']); ?></span>
 				</div>
 				<div style="background:#fff; padding:20px; border:1px solid #ddd; flex:1;">
 					<strong>Average Revenue Per User (ARPU)</strong><br>
