@@ -54,6 +54,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Affiliate Payout Request Endpoint
+		register_rest_route( $namespace, '/request-payout', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_payout_request' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Workspace Outputs Endpoint
 		register_rest_route( $namespace, '/outputs', array(
 			'methods'             => 'GET',
@@ -485,6 +492,30 @@ class AMM_REST_API {
 		$user_id = get_current_user_id();
 		$params = $request->get_json_params();
 		update_user_meta( $user_id, 'amm_target_persona', $params );
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle request for affiliate payout
+	 */
+	public function handle_payout_request() {
+		global $wpdb;
+		$user_id = get_current_user_id();
+
+		$aff_manager = new AMM_Affiliate_Manager();
+		$aff = $aff_manager->get_affiliate_data( $user_id );
+
+		if ( ! $aff ) return new WP_Error( 'not_found', 'Affiliate profile not found.' );
+
+		// Mark all pending referrals as 'requested'
+		$wpdb->update(
+			$wpdb->prefix . 'amm_referrals',
+			array( 'status' => 'requested' ),
+			array( 'affiliate_id' => $aff->id, 'status' => 'pending' )
+		);
+
+		AMM()->log_audit( $user_id, 'payout_requested', "User requested payout for affiliate commissions." );
+
 		return rest_ensure_response( array( 'success' => true ) );
 	}
 
@@ -1381,19 +1412,26 @@ class AMM_REST_API {
 		$results = array();
 		$prompt_engine = new AMM_Prompt_Engine();
 		$ai_manager = new AMM_AI_Provider_Manager();
+		$tracker = new AMM_Usage_Tracker();
 
 		if ( $mode === 'critique' && count($mind_ids) >= 2 ) {
 			// 1. Mind 1 creates
 			$p1 = $prompt_engine->prepare_prompts( $mind_ids[0], 'report', $current_output );
 			$r1 = $ai_manager->generate_response( $provider, $p1['system'], $p1['user'] );
+			if ( is_wp_error( $r1 ) ) return $r1;
+			$tracker->track_generation( $user_id );
 
 			// 2. Mind 2 audits
 			$p2 = $prompt_engine->prepare_prompts( $mind_ids[1], 'report', "AUDIT THIS STRATEGY FOR FLAWS AND IMPROVEMENTS:\n\n" . $r1 );
 			$r2 = $ai_manager->generate_response( $provider, $p2['system'], $p2['user'] );
+			if ( is_wp_error( $r2 ) ) return $r2;
+			$tracker->track_generation( $user_id );
 
 			// 3. Mind 1 finalizes
 			$p3 = $prompt_engine->prepare_prompts( $mind_ids[0], 'report', "HERE IS AN AUDIT OF YOUR PREVIOUS WORK. IMPROVE AND FINALIZE THE STRATEGY BASED ON THIS FEEDBACK:\n\nAUDIT:\n" . $r2 . "\n\nORIGINAL:\n" . $r1 );
 			$r3 = $ai_manager->generate_response( $provider, $p3['system'], $p3['user'] );
+			if ( is_wp_error( $r3 ) ) return $r3;
+			$tracker->track_generation( $user_id );
 
 			$current_output = $r3;
 			$results = array($r1, $r2, $r3);
@@ -1403,18 +1441,21 @@ class AMM_REST_API {
 				$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'] );
 				if ( ! is_wp_error( $response ) ) {
 					$results[] = array( 'mind_id' => $mind_id, 'content' => $response );
+					$tracker->track_generation( $user_id );
 				}
 			}
 			$current_output = "The Council has provided multiple distinct perspectives. See reflections below.";
 		} else {
 			foreach ( $mind_ids as $mind_id ) {
+				if ( empty($mind_id) ) continue;
 				$prompts = $prompt_engine->prepare_prompts( $mind_id, 'report', $current_output );
 				$response = $ai_manager->generate_response( $provider, $prompts['system'], $prompts['user'] );
 
-				if ( ! is_wp_error( $response ) ) {
-					$current_output = $response;
-					$results[] = array( 'mind_id' => $mind_id, 'content' => $response );
-				}
+				if ( is_wp_error( $response ) ) return $response;
+
+				$current_output = $response;
+				$results[] = array( 'mind_id' => $mind_id, 'content' => $response );
+				$tracker->track_generation( $user_id );
 			}
 		}
 
@@ -1488,14 +1529,17 @@ class AMM_REST_API {
 		$used = $tracker->get_current_month_usage( $user_id );
 		$limit = $tracker->get_plan_limit( $plan );
 		$last_audit = $wpdb->get_var( $wpdb->prepare( "SELECT description FROM {$wpdb->prefix}amm_audit_trail WHERE user_id = %d ORDER BY created_at DESC LIMIT 1", $user_id ) );
+		$persona = get_user_meta( $user_id, 'amm_target_persona', true ) ?: array('name' => 'Unknown', 'pain' => 'Unknown');
 
 		$system_prompt = "You are the AI Success Coach for the AI Multi-Mind Engine.
 		USER CONTEXT:
 		- Plan: " . strtoupper($plan) . "
 		- Credits: $used / $limit
 		- Last Activity: $last_audit
+		- Target Persona: {$persona['name']}
+		- Persona Pain Point: {$persona['pain']}
 
-		Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. Use their context (like low credits or specific last activity) to offer better advice.
+		Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. Use their Target Persona context to suggest specific minds (e.g., if their audience has pricing pain, suggest the Pricing Strategist).
 		Mention features like the 'Council' for sequential strategies, 'Context Pro' for file-based RAG, or the 'Media Engine' for visual assets when relevant.";
 
 		$ai_manager = new AMM_AI_Provider_Manager();

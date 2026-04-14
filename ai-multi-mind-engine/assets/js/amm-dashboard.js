@@ -297,6 +297,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         };
 
+    window.ammRequestPayout = function() {
+        const btn = document.getElementById('amm-request-payout-btn');
+        btn.innerText = 'Requesting...';
+        btn.disabled = true;
+        safeFetch('/request-payout', { method: 'POST' })
+            .then(data => {
+                if(data.success) {
+                    showNotice('💸 Payout request sent to Admin.');
+                    initApp();
+                }
+            });
+    };
+
+    window.ammQuickCopy = function(id) {
+        const o = window.ammOutputs.find(out => parseInt(out.id) === parseInt(id));
+        if(!o) return;
+        const dummy = document.createElement('textarea');
+        document.body.appendChild(dummy);
+        dummy.value = o.content;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        showNotice('📋 Strategy content copied to clipboard!');
+    };
+
     window.copyAffLink = function() {
         const link = document.getElementById('amm-aff-link');
         link.select();
@@ -368,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
                 '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Author</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
-                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}" data-author-id="${o.author_id}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.author}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick="ammEditById(${o.id})">✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}" data-author-id="${o.author_id}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.author}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick="ammEditById(${o.id})">✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammQuickCopy(${o.id})">📋 Copy</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
                 '</table>';
 
             document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -467,7 +492,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="text" id="amm-aff-link" value="${data.link}" readonly style="flex:1;">
                     <button class="amm-primary-btn" style="width:auto;" onclick="copyAffLink()">Copy Link</button>
                 </div>
-                <p>Earnings: $${data.commissions}</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <span>Earnings: <strong>$${data.commissions}</strong></span>
+                    <button class="amm-secondary-btn" id="amm-request-payout-btn" onclick="ammRequestPayout()">Request Payout</button>
+                </div>
                 <h4>Your Referrals</h4>`;
 
                 if(data.referrals && data.referrals.length) {

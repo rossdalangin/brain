@@ -17,8 +17,8 @@ class AMM_Prompt_Engine {
 		if ( ! $mind ) return new WP_Error( 'invalid_mind', 'The selected AI Mind is invalid.' );
 
 		$global_context = get_option( 'amm_global_system_context' );
-		$system_prompt = $global_context ? $global_context . "\n\n" : "";
-		$system_prompt .= $mind->get_system_prompt();
+		$system_prompt = "GENERAL PLATFORM RULES:\n" . ($global_context ?: "Always maintain a professional, high-authority tone.") . "\n\n";
+		$system_prompt .= "SPECIALIZED MIND ARCHITECTURE:\n" . $mind->get_system_prompt();
 		$system_prompt .= "\n\nREQUIRED OUTPUT TYPE: " . $this->get_output_type_instructions( $output_type );
 		$system_prompt .= "\n\nCRITICAL: The entire output MUST be written in {$language}.";
 
