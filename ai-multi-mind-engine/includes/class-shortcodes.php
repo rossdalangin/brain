@@ -263,8 +263,8 @@ class AMM_Shortcodes {
 				</div>
 			</aside>
 
-			<div id="amm-edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; padding:40px;">
-				<div class="amm-form-card" style="width:100%; max-width:800px; height:80%;">
+			<div id="amm-edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:flex-start; justify-content:center; padding:40px; overflow-y:auto;">
+				<div class="amm-form-card" style="width:100%; max-width:800px; min-height:80%; margin-top:20px; margin-bottom:20px;">
 					<h3>Edit Strategy</h3>
 					<textarea id="amm-edit-content" style="width:100%; height:calc(100% - 100px); margin-bottom:20px;"></textarea>
 					<div style="display:flex; gap:10px;">

@@ -322,6 +322,11 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotice('📋 Strategy content copied to clipboard!');
     };
 
+    window.signupAffiliate = function() {
+        safeFetch('/affiliate-signup', { method: 'POST' })
+            .then(data => { if(data.success) location.reload(); });
+    };
+
     window.copyAffLink = function() {
         const link = document.getElementById('amm-aff-link');
         link.select();
@@ -488,6 +493,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Affiliate
         safeFetch('/affiliate')
             .then(data => {
+                const info = document.getElementById('amm-affiliate-info');
+                if(!data.code) {
+                    info.innerHTML = `
+                        <div style="text-align:center; padding:40px;">
+                            <h3>Join our Affiliate Program! 💸</h3>
+                            <p>Help other consultants scale and earn 30% recurring commission.</p>
+                            <button onclick="signupAffiliate()" class="amm-primary-btn" style="width:auto;">Become an Affiliate</button>
+                        </div>
+                    `;
+                    return;
+                }
+
                 let html = `<div style="display:flex; gap:10px; margin-bottom:20px;">
                     <input type="text" id="amm-aff-link" value="${data.link}" readonly style="flex:1;">
                     <button class="amm-primary-btn" style="width:auto;" onclick="copyAffLink()">Copy Link</button>
@@ -503,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     html += '<p>No referrals yet. Share your link to start earning!</p>';
                 }
-                document.getElementById('amm-affiliate-info').innerHTML = html;
+                info.innerHTML = html;
             });
     }
     initApp();

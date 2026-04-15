@@ -63,6 +63,17 @@ class AMM_Stripe_Handler {
 			)
 		);
 
+		// Apply Affiliate Coupon if available
+		$aff_manager = new AMM_Affiliate_Manager();
+		$aff_id = get_user_meta( $user_id, 'amm_referrer_id', true );
+		if ( $aff_id ) {
+			global $wpdb;
+			$coupon = $wpdb->get_var( $wpdb->prepare( "SELECT affiliate_coupon FROM {$wpdb->prefix}amm_affiliates WHERE id = %d", $aff_id ) );
+			if ( $coupon ) {
+				$body['discounts'] = array( array( 'coupon' => $coupon ) );
+			}
+		}
+
 		$response = wp_remote_post( $url, array(
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $this->secret_key,

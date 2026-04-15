@@ -131,6 +131,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Affiliate Signup Endpoint
+		register_rest_route( $namespace, '/affiliate-signup', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_affiliate_signup' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Create Invite Endpoint
 		register_rest_route( $namespace, '/invite', array(
 			'methods'             => 'POST',
@@ -331,6 +338,20 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/admin/purge-data', array(
 			'methods'             => 'POST',
 			'callback'            => array( $this, 'handle_admin_purge' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+
+		// Admin Pay Affiliate Endpoint
+		register_rest_route( $namespace, '/admin/pay-affiliate', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_pay_affiliate' ),
+			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
+		));
+
+		// Admin Save Coupon Endpoint
+		register_rest_route( $namespace, '/admin/save-coupon', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_admin_save_coupon' ),
 			'permission_callback' => function() { return current_user_can( 'manage_options' ); },
 		));
 
@@ -568,6 +589,60 @@ class AMM_REST_API {
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}amm_usage" );
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}amm_audit_trail" );
 		$wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_type = 'ai_outputs'" );
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	/**
+	 * Handle marking an affiliate as paid and clearing their commission balance
+	 */
+	/**
+	 * Handle marking an affiliate as paid and clearing their commission balance
+	 */
+	/**
+	 * Handle saving a coupon to an affiliate
+	 */
+	public function handle_admin_save_coupon( $request ) {
+		global $wpdb;
+		$params = $request->get_json_params();
+		$aff_id = (int)$params['id'];
+		$coupon = sanitize_text_field( $params['coupon'] );
+
+		$wpdb->update(
+			$wpdb->prefix . 'amm_affiliates',
+			array( 'affiliate_coupon' => $coupon ),
+			array( 'id' => $aff_id )
+		);
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	public function handle_admin_pay_affiliate( $request ) {
+		global $wpdb;
+		$params = $request->get_json_params();
+		$aff_id = (int)$params['id'];
+		$amount = (float)$params['amount'];
+
+		// Mark all 'requested' and 'pending' referrals for this affiliate as 'paid'
+		$wpdb->update(
+			$wpdb->prefix . 'amm_referrals',
+			array( 'status' => 'paid' ),
+			array( 'affiliate_id' => $aff_id, 'status' => 'requested' )
+		);
+		$wpdb->update(
+			$wpdb->prefix . 'amm_referrals',
+			array( 'status' => 'paid' ),
+			array( 'affiliate_id' => $aff_id, 'status' => 'pending' )
+		);
+
+		// Clear the affiliate's total commission balance
+		$wpdb->update(
+			$wpdb->prefix . 'amm_affiliates',
+			array( 'total_commissions' => 0 ),
+			array( 'id' => $aff_id )
+		);
+
+		AMM()->log_audit( get_current_user_id(), 'affiliate_payout', "Admin paid $$amount to affiliate ID $aff_id" );
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
@@ -1131,6 +1206,19 @@ class AMM_REST_API {
 		}
 
 		return new WP_Error( 'invalid_token', 'Invalid or expired invitation token.', array( 'status' => 400 ) );
+	}
+
+	/**
+	 * Handle team invite
+	 */
+	/**
+	 * Handle user signing up as an affiliate
+	 */
+	public function handle_affiliate_signup() {
+		$user_id = get_current_user_id();
+		$aff_manager = new AMM_Affiliate_Manager();
+		$code = $aff_manager->register_affiliate( $user_id );
+		return rest_ensure_response( array( 'success' => true, 'code' => $code ) );
 	}
 
 	/**

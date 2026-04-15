@@ -307,6 +307,7 @@ class AI_Multi_Mind_Engine {
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			user_id bigint(20) NOT NULL,
 			affiliate_code varchar(50) NOT NULL,
+			affiliate_coupon varchar(50),
 			total_commissions decimal(10,2) DEFAULT 0.00 NOT NULL,
 			PRIMARY KEY  (id)
 		) $charset_collate;";

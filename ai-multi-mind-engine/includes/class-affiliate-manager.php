@@ -59,6 +59,17 @@ class AMM_Affiliate_Manager {
 	/**
 	 * Credit commission to an affiliate for a specific referred user
 	 */
+	/**
+	 * Get affiliate by their coupon code
+	 */
+	public function get_affiliate_by_coupon( $coupon_code ) {
+		global $wpdb;
+		return $wpdb->get_row( $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}amm_affiliates WHERE affiliate_coupon = %s",
+			$coupon_code
+		));
+	}
+
 	public function credit_referred_commission( $referred_user_id, $amount ) {
 		global $wpdb;
 		$aff_id = get_user_meta( $referred_user_id, 'amm_referrer_id', true );

@@ -307,11 +307,35 @@ class AMM_Admin_Settings {
 
 			<h3>Affiliate Network Management</h3>
 			<table class="wp-list-table widefat fixed striped">
-				<thead><tr><th>Referred User</th><th>Affiliate</th><th>Status</th><th>Commission</th><th>Action</th></tr></thead>
+				<thead><tr><th>Affiliate User</th><th>Referral Code</th><th>Coupon Code</th><th>Current Balance</th><th>Referral Count</th><th>Action</th></tr></thead>
 				<tbody>
 					<?php
 					global $wpdb;
-					$referrals = $wpdb->get_results( "SELECT r.*, u.user_email as referred_email, afu.display_name as affiliate_name FROM {$wpdb->prefix}amm_referrals r JOIN {$wpdb->prefix}amm_affiliates a ON r.affiliate_id = a.id JOIN wp_users u ON r.referred_user_id = u.ID JOIN wp_users afu ON a.user_id = afu.ID ORDER BY r.created_at DESC" );
+					$affiliates = $wpdb->get_results( "SELECT a.*, u.display_name FROM {$wpdb->prefix}amm_affiliates a JOIN wp_users u ON a.user_id = u.ID" );
+					foreach($affiliates as $a):
+						$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}amm_referrals WHERE affiliate_id = %d", $a->id ) );
+						$requested = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}amm_referrals WHERE affiliate_id = %d AND status = 'requested'", $a->id ) );
+					?>
+						<tr>
+							<td><?php echo esc_html($a->display_name); ?></td>
+							<td><code><?php echo esc_html($a->affiliate_code); ?></code></td>
+							<td><input type="text" class="amm-aff-coupon" data-id="<?php echo $a->id; ?>" value="<?php echo esc_attr($a->affiliate_coupon); ?>" placeholder="Stripe Coupon ID"></td>
+							<td><strong>$<?php echo number_format($a->total_commissions, 2); ?></strong> <?php if($requested) echo '<span style="color:red; font-size:10px;">(REQUESTED)</span>'; ?></td>
+							<td><?php echo (int)$count; ?></td>
+							<td>
+								<button type="button" class="button amm-pay-affiliate" data-id="<?php echo $a->id; ?>" data-amount="<?php echo $a->total_commissions; ?>">Log Payout</button>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+
+			<h3>Recent Referrals</h3>
+			<table class="wp-list-table widefat fixed striped">
+				<thead><tr><th>Referred User</th><th>Affiliate</th><th>Status</th><th>Commission</th></tr></thead>
+				<tbody>
+					<?php
+					$referrals = $wpdb->get_results( "SELECT r.*, u.user_email as referred_email, afu.display_name as affiliate_name FROM {$wpdb->prefix}amm_referrals r JOIN {$wpdb->prefix}amm_affiliates a ON r.affiliate_id = a.id JOIN wp_users u ON r.referred_user_id = u.ID JOIN wp_users afu ON a.user_id = afu.ID ORDER BY r.created_at DESC LIMIT 20" );
 					foreach($referrals as $r):
 					?>
 						<tr>
@@ -319,13 +343,6 @@ class AMM_Admin_Settings {
 							<td><?php echo esc_html($r->affiliate_name); ?></td>
 							<td><span class="status-<?php echo $r->status; ?>"><?php echo strtoupper($r->status); ?></span></td>
 							<td>$<?php echo number_format($r->commission_amount, 2); ?></td>
-							<td>
-								<?php if($r->status === 'pending'): ?>
-									<button type="button" class="button amm-pay-referral" data-id="<?php echo $r->id; ?>">Mark as Paid</button>
-								<?php else: ?>
-									✅ Paid
-								<?php endif; ?>
-							</td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
@@ -369,6 +386,35 @@ class AMM_Admin_Settings {
 		</div>
 		<script>
 		jQuery(document).ready(function($) {
+			$('.amm-aff-coupon').on('change', function() {
+				var id = $(this).data('id');
+				var coupon = $(this).val();
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/save-coupon" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) { xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>'); },
+					contentType: 'application/json',
+					data: JSON.stringify({ id: id, coupon: coupon }),
+					success: function() { alert('Coupon Saved!'); }
+				});
+			});
+
+			$('.amm-pay-affiliate').on('click', function() {
+				var btn = $(this);
+				var id = btn.data('id');
+				var amount = btn.data('amount');
+				if(!confirm('🚨 Have you already sent $' + amount + ' to this affiliate? \n\nThis will clear their balance and mark all referrals as paid.')) return;
+
+				$.ajax({
+					url: '<?php echo esc_url_raw( rest_url( "amm/v1/admin/pay-affiliate" ) ); ?>',
+					method: 'POST',
+					beforeSend: function(xhr) { xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>'); },
+					contentType: 'application/json',
+					data: JSON.stringify({ id: id, amount: amount }),
+					success: function() { alert('Payout Logged Successfully.'); location.reload(); }
+				});
+			});
+
 			$('#amm-purge-btn').on('click', function() {
 				if(!confirm('🚨 WARNING: This will delete ALL generated strategy data and reset usage for every user. This action cannot be undone. Proceed?')) return;
 				if(!confirm('Are you absolutely sure? Last chance.')) return;
