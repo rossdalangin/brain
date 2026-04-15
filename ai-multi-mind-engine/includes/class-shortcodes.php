@@ -590,7 +590,10 @@ class AMM_Shortcodes {
 					<h2>User Settings</h2>
 					<div class="amm-form-card">
 						<label>External Webhook URL (Zapier/Make)</label>
-						<input type="text" id="amm-set-webhook" placeholder="https://hooks.zapier.com/..." style="width:100%; margin-bottom:20px;">
+						<div style="display:flex; gap:10px; margin-bottom:20px;">
+							<input type="text" id="amm-set-webhook" placeholder="https://hooks.zapier.com/..." style="flex:1;">
+							<button id="amm-test-webhook-btn" class="amm-secondary-btn" style="width:120px;">Test Now</button>
+						</div>
 						<label>Company/Business Name</label>
 						<input type="text" id="amm-set-company" style="width:100%; margin-bottom:20px;">
 						<label>Default AI Mind</label>

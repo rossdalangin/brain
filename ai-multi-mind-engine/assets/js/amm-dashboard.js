@@ -1178,6 +1178,29 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsText(file);
     });
 
+    // Handle Test Webhook
+    document.getElementById('amm-test-webhook-btn').addEventListener('click', () => {
+        const url = document.getElementById('amm-set-webhook').value;
+        if(!url) return alert('Please enter a webhook URL first.');
+
+        const btn = document.getElementById('amm-test-webhook-btn');
+        btn.innerText = 'Sending...';
+        btn.disabled = true;
+
+        safeFetch('/test-webhook', {
+            method: 'POST',
+            body: JSON.stringify({ webhook_url: url })
+        }).then(data => {
+            if(data.success) alert('Success! Test payload sent to your webhook.');
+            btn.innerText = 'Test Now';
+            btn.disabled = false;
+        }).catch(err => {
+            alert('Failed to send test: ' + err.message);
+            btn.innerText = 'Test Now';
+            btn.disabled = false;
+        });
+    });
+
     // Handle Save Settings
     document.getElementById('amm-save-settings-btn').addEventListener('click', () => {
         safeFetch('/update-settings', {

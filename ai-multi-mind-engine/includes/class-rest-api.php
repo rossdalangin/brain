@@ -250,6 +250,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Test Webhook Endpoint
+		register_rest_route( $namespace, '/test-webhook', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_test_webhook' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Usage History Endpoint
 		register_rest_route( $namespace, '/usage-history', array(
 			'methods'             => 'GET',
@@ -1072,6 +1079,41 @@ class AMM_REST_API {
 	}
 
 	/**
+	 * Handle User Webhook Testing
+	 */
+	public function handle_test_webhook( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$webhook_url = esc_url_raw( $params['webhook_url'] ?? get_user_meta( $user_id, 'amm_external_webhook_url', true ) );
+
+		if ( ! $webhook_url ) {
+			return new WP_Error( 'missing_url', 'No webhook URL provided.' );
+		}
+
+		$response = wp_remote_post( $webhook_url, array(
+			'method'  => 'POST',
+			'headers' => array( 'Content-Type' => 'application/json' ),
+			'body'    => json_encode( array(
+				'source'    => 'AI Multi-Mind SaaS Engine',
+				'event'     => 'webhook_test',
+				'user_id'   => $user_id,
+				'timestamp' => current_time( 'mysql' ),
+				'message'   => 'Congratulations! Your external automation is correctly linked.',
+				'payload'   => array( 'status' => 'success', 'test' => true )
+			)),
+		));
+
+		if ( is_wp_error( $response ) ) return $response;
+
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( $code >= 200 && $code < 300 ) {
+			return rest_ensure_response( array( 'success' => true, 'message' => 'Test payload sent successfully!' ) );
+		} else {
+			return new WP_Error( 'webhook_fail', "Webhook returned status code: $code" );
+		}
+	}
+
+	/**
 	 * Get billing history for the user
 	 */
 	public function get_billing_history() {
@@ -1488,6 +1530,12 @@ class AMM_REST_API {
 
 		if ( ! in_array( $plan_id, array( 'pro', 'agency' ) ) ) {
 			return new WP_Error( 'rest_forbidden', 'The Mind Council is a PRO feature.', array( 'status' => 403 ) );
+		}
+
+		// Check Limits
+		$tracker = new AMM_Usage_Tracker();
+		if ( ! $tracker->can_user_generate( $user_id ) ) {
+			return new WP_Error( 'limit_reached', 'Monthly credit limit reached.', array( 'status' => 403 ) );
 		}
 
 		$params = $request->get_json_params();

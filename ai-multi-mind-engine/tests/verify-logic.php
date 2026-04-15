@@ -18,7 +18,13 @@ function wp_remote_post($url, $args) { return array('body' => json_encode(array(
 function wp_remote_retrieve_body($res) { return $res['body']; }
 function is_wp_error($res) { return $res instanceof WP_Error; }
 function wp_insert_post($args) { echo "POST INSERTED: " . $args['post_title'] . "\n"; return 123; }
-function rest_ensure_response($data) { return $data; }
+function rest_ensure_response($data) {
+    return new class($data) {
+        public $data;
+        public function __construct($d) { $this->data = $d; }
+        public function get_data() { return $this->data; }
+    };
+}
 
 class WP_Error {
     public function __construct($c, $m) { $this->c = $c; $this->m = $m; }
@@ -72,6 +78,10 @@ echo "\n--- Testing Usage Tracker ---\n";
 $tracker = new AMM_Usage_Tracker();
 echo "Can generate? " . ($tracker->can_user_generate(1) ? 'Yes' : 'No') . "\n";
 $tracker->track_generation(1);
+
+if (!function_exists('get_posts')) { function get_posts($a) { return []; } }
+if (!function_exists('get_page_by_path')) { function get_page_by_path($p, $o, $t) { return null; } }
+if (!function_exists('wp_get_post_terms')) { function wp_get_post_terms($p, $t, $a) { return []; } }
 
 echo "\n--- Testing REST API (Mock) ---\n";
 $api = new AMM_REST_API();
