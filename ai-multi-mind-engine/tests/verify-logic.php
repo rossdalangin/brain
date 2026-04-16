@@ -26,6 +26,10 @@ function rest_ensure_response($data) {
     };
 }
 
+if (!function_exists('get_posts')) { function get_posts($a) { return []; } }
+if (!function_exists('wp_get_post_terms')) { function wp_get_post_terms($p, $t, $a) { return []; } }
+if (!function_exists('get_post')) { function get_post($i) { return null; } }
+
 class WP_Error {
     public function __construct($c, $m) { $this->c = $c; $this->m = $m; }
     public function get_error_message() { return $this->m; }
@@ -78,10 +82,6 @@ echo "\n--- Testing Usage Tracker ---\n";
 $tracker = new AMM_Usage_Tracker();
 echo "Can generate? " . ($tracker->can_user_generate(1) ? 'Yes' : 'No') . "\n";
 $tracker->track_generation(1);
-
-if (!function_exists('get_posts')) { function get_posts($a) { return []; } }
-if (!function_exists('get_page_by_path')) { function get_page_by_path($p, $o, $t) { return null; } }
-if (!function_exists('wp_get_post_terms')) { function wp_get_post_terms($p, $t, $a) { return []; } }
 
 echo "\n--- Testing REST API (Mock) ---\n";
 $api = new AMM_REST_API();

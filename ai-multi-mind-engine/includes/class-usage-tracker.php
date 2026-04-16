@@ -62,6 +62,13 @@ class AMM_Usage_Tracker {
 	 * Increment usage for a user (or their team owner)
 	 */
 	public function track_generation( $user_id ) {
+		$this->adjust_credits( $user_id, 1 );
+	}
+
+	/**
+	 * Adjust credits by a specific amount (supports negative for refunds/topups)
+	 */
+	public function adjust_credits( $user_id, $amount ) {
 		global $wpdb;
 		$billing_user_id = $this->get_billing_user_id( $user_id );
 		$month = date( 'Y-m' );
@@ -75,14 +82,14 @@ class AMM_Usage_Tracker {
 
 		if ( $exists ) {
 			$wpdb->query( $wpdb->prepare(
-				"UPDATE $table SET credits_used = credits_used + 1 WHERE id = %d",
-				$exists
+				"UPDATE $table SET credits_used = credits_used + %d WHERE id = %d",
+				(int)$amount, $exists
 			));
 		} else {
 			$wpdb->insert( $table, array(
-				'user_id'      => $user_id,
+				'user_id'      => $billing_user_id,
 				'month'        => $month,
-				'credits_used' => 1,
+				'credits_used' => (int)$amount,
 			));
 		}
 	}

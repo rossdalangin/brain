@@ -159,6 +159,20 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Update Folder Endpoint
+		register_rest_route( $namespace, '/update-folder', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_update_folder' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Delete Folder Endpoint
+		register_rest_route( $namespace, '/delete-folder', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_delete_folder' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Billing History Endpoint
 		register_rest_route( $namespace, '/billing-history', array(
 			'methods'             => 'GET',
@@ -873,8 +887,27 @@ class AMM_REST_API {
 		$user_id = get_current_user_id();
 
 		$post = get_post( $post_id );
-		if ( ! $post || (int)$post->post_author !== $user_id ) {
-			return new WP_Error( 'forbidden', 'You do not own this output.', array( 'status' => 403 ) );
+		if ( ! $post ) return new WP_Error( 'not_found', 'Output not found.' );
+
+		// Team Permission Check
+		$is_authorized = (int)$post->post_author === $user_id;
+		if ( ! $is_authorized ) {
+			$team_manager = new AMM_Team_Manager();
+			$teams = $team_manager->get_user_teams( $user_id );
+			foreach ( $teams as $team ) {
+				$members = $this->get_team_member_ids( $team->id );
+				if ( in_array( (int)$post->post_author, $members ) ) {
+					$perms = $team_manager->get_member_permissions( $team->id, $user_id );
+					if ( $team->role === 'admin' || in_array( 'can_view_workspace', $perms ) ) {
+						$is_authorized = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( ! $is_authorized ) {
+			return new WP_Error( 'forbidden', 'You do not have permission to share this output.', array( 'status' => 403 ) );
 		}
 
 		$is_public = get_post_meta( $post_id, 'amm_is_public', true ) === 'yes';
@@ -1072,9 +1105,28 @@ class AMM_REST_API {
 	public function get_pricing_plans() {
 		$tracker = new AMM_Usage_Tracker();
 		return rest_ensure_response( array(
-			array( 'id' => 'starter', 'name' => 'Starter', 'price' => '$' . get_option('amm_plan_starter_price', 19), 'credits' => $tracker->get_plan_limit('starter') ),
-			array( 'id' => 'pro', 'name' => 'Pro', 'price' => '$' . get_option('amm_plan_pro_price', 49), 'credits' => $tracker->get_plan_limit('pro'), 'featured' => true ),
-			array( 'id' => 'agency', 'name' => 'Agency', 'price' => '$' . get_option('amm_plan_agency_price', 199), 'credits' => $tracker->get_plan_limit('agency') ),
+			array(
+				'id' => 'starter',
+				'name' => 'Starter',
+				'price' => '$' . get_option('amm_plan_starter_price', 19),
+				'credits' => $tracker->get_plan_limit('starter'),
+				'features' => array('50+ Core AI Minds', 'Standard Ignite Engine', 'Basic Workspace', 'Email Support')
+			),
+			array(
+				'id' => 'pro',
+				'name' => 'Pro',
+				'price' => '$' . get_option('amm_plan_pro_price', 49),
+				'credits' => $tracker->get_plan_limit('pro'),
+				'featured' => true,
+				'features' => array('All Starter Features', 'Mind Council Collaboration', 'Media Engine (Images)', 'Custom Mind Creator', 'Context Pro (RAG)')
+			),
+			array(
+				'id' => 'agency',
+				'name' => 'Agency',
+				'price' => '$' . get_option('amm_plan_agency_price', 199),
+				'credits' => $tracker->get_plan_limit('agency'),
+				'features' => array('All PRO Features', 'Team Management', 'Agency White-Labeling', 'Priority API Access', 'Dedicated Account Manager')
+			),
 		));
 	}
 
@@ -1303,8 +1355,27 @@ class AMM_REST_API {
 		$content = $params['content'];
 
 		$post = get_post( $post_id );
-		if ( ! $post || (int)$post->post_author !== $user_id ) {
-			return new WP_Error( 'forbidden', 'Unauthorized.', array( 'status' => 403 ) );
+		if ( ! $post ) return new WP_Error( 'not_found', 'Output not found.' );
+
+		// Team Permission Check
+		$is_authorized = (int)$post->post_author === $user_id;
+		if ( ! $is_authorized ) {
+			$team_manager = new AMM_Team_Manager();
+			$teams = $team_manager->get_user_teams( $user_id );
+			foreach ( $teams as $team ) {
+				$members = $this->get_team_member_ids( $team->id );
+				if ( in_array( (int)$post->post_author, $members ) ) {
+					$perms = $team_manager->get_member_permissions( $team->id, $user_id );
+					if ( $team->role === 'admin' || in_array( 'can_generate', $perms ) ) { // If they can generate, they can update team strategy
+						$is_authorized = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( ! $is_authorized ) {
+			return new WP_Error( 'forbidden', 'You do not have permission to update this output.', array( 'status' => 403 ) );
 		}
 
 		wp_update_post( array(
@@ -1349,8 +1420,27 @@ class AMM_REST_API {
 		$user_id = get_current_user_id();
 
 		$post = get_post( $post_id );
-		if ( ! $post || (int)$post->post_author !== $user_id ) {
-			return new WP_Error( 'forbidden', 'Unauthorized.', array( 'status' => 403 ) );
+		if ( ! $post ) return new WP_Error( 'not_found', 'Output not found.' );
+
+		// Team Permission Check
+		$is_authorized = (int)$post->post_author === $user_id;
+		if ( ! $is_authorized ) {
+			$team_manager = new AMM_Team_Manager();
+			$teams = $team_manager->get_user_teams( $user_id );
+			foreach ( $teams as $team ) {
+				$members = $this->get_team_member_ids( $team->id );
+				if ( in_array( (int)$post->post_author, $members ) ) {
+					$perms = $team_manager->get_member_permissions( $team->id, $user_id );
+					if ( $team->role === 'admin' || in_array( 'can_view_workspace', $perms ) ) {
+						$is_authorized = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( ! $is_authorized ) {
+			return new WP_Error( 'forbidden', 'You do not have permission to duplicate this output.', array( 'status' => 403 ) );
 		}
 
 		$new_id = wp_insert_post( array(
@@ -1471,7 +1561,7 @@ class AMM_REST_API {
 		if ( is_wp_error( $image_url ) ) return $image_url;
 
 		// Track usage (x5 for images)
-		for($i=0; $i<5; $i++) $tracker->track_generation( $user_id );
+		$tracker->adjust_credits( $user_id, 5 );
 
 		// Save to Workspace
 		$output_id = wp_insert_post( array(
@@ -1530,12 +1620,6 @@ class AMM_REST_API {
 
 		if ( ! in_array( $plan_id, array( 'pro', 'agency' ) ) ) {
 			return new WP_Error( 'rest_forbidden', 'The Mind Council is a PRO feature.', array( 'status' => 403 ) );
-		}
-
-		// Check Limits
-		$tracker = new AMM_Usage_Tracker();
-		if ( ! $tracker->can_user_generate( $user_id ) ) {
-			return new WP_Error( 'limit_reached', 'Monthly credit limit reached.', array( 'status' => 403 ) );
 		}
 
 		$params = $request->get_json_params();
@@ -1626,6 +1710,27 @@ class AMM_REST_API {
 		if ( is_wp_error( $term ) ) return $term;
 
 		return rest_ensure_response( array( 'success' => true, 'term_id' => $term['term_id'] ) );
+	}
+
+	public function handle_update_folder( $request ) {
+		$params = $request->get_json_params();
+		$id = (int)$params['id'];
+		$name = sanitize_text_field( $params['name'] );
+
+		$term = wp_update_term( $id, 'amm_folder', array( 'name' => $name ) );
+		if ( is_wp_error( $term ) ) return $term;
+
+		return rest_ensure_response( array( 'success' => true ) );
+	}
+
+	public function handle_delete_folder( $request ) {
+		$params = $request->get_json_params();
+		$id = (int)$params['id'];
+
+		$res = wp_delete_term( $id, 'amm_folder' );
+		if ( is_wp_error( $res ) ) return $res;
+
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**
@@ -1933,6 +2038,14 @@ class AMM_REST_API {
 	/**
 	 * Get user stats and subscription info
 	 */
+	private function get_team_member_ids( $team_id ) {
+		global $wpdb;
+		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare(
+			"SELECT user_id FROM {$wpdb->prefix}amm_team_members WHERE team_id = %d",
+			$team_id
+		) ) );
+	}
+
 	public function get_user_data() {
 		global $wpdb;
 		$user_id = get_current_user_id();

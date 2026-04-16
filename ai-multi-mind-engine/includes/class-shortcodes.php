@@ -476,6 +476,7 @@ class AMM_Shortcodes {
 							<button id="amm-bulk-delete-btn" class="amm-secondary-btn" style="background:#ff4444; color:#fff;">Delete Selected</button>
 							<button id="amm-bulk-move-btn" class="amm-secondary-btn" style="background:#007cba; color:#fff;">Move to Folder</button>
 							<button id="amm-new-folder-btn" class="amm-secondary-btn">+ New Folder</button>
+							<button onclick="ammManageFolders()" class="amm-secondary-btn" title="Rename or Delete Folders">⚙️ Folders</button>
 						</div>
 					</div>
 					<div id="amm-workspace-list" class="amm-form-card">Loading saved outputs...</div>

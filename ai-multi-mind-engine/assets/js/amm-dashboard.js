@@ -380,6 +380,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.ammOutputs = outputs;
                     renderWorkspace();
                 });
+
+            // Refresh folder filter
+            safeFetch('/folders').then(folders => {
+                const filter = document.getElementById('amm-workspace-folder-filter');
+                if (filter) {
+                    const current = filter.value;
+                    filter.innerHTML = '<option value="">All Folders</option>' +
+                        folders.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+                    filter.value = current;
+                }
+            });
         }
 
         function renderWorkspace() {
@@ -458,9 +469,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('amm-plans-grid').innerHTML = plans.map(p => `
                     <div class="amm-plan-card ${p.featured ? 'featured' : ''}">
                         <h4>${p.name}</h4>
-                        <p>${p.price}/mo</p>
-                        <p style="font-size:12px; color:#888;">${p.credits} Credits / mo</p>
-                        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                        <p style="font-size:24px; font-weight:800; margin:10px 0;">${p.price}<span style="font-size:14px; color:#888;">/mo</span></p>
+                        <p style="font-size:12px; color:#007cba; font-weight:bold; margin-bottom:15px;">${p.credits} Credits / mo</p>
+                        <ul style="text-align:left; font-size:11px; margin-bottom:20px; padding-left:20px;">
+                            ${(p.features || []).map(f => `<li>${f}</li>`).join('')}
+                        </ul>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-top:auto;">
                             <button onclick="ammCheckout('${p.id}', 'stripe')" class="amm-primary-btn">Pay with Stripe</button>
                             <button onclick="ammCheckout('${p.id}', 'paypal')" class="amm-secondary-btn" style="background:#ffc439; color:#000;">Pay with PayPal</button>
                         </div>
@@ -549,7 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
         safeFetch('/save-persona', {
             method: 'POST',
             body: JSON.stringify(persona)
-        }).then(data => { if(data.success) alert('Audience Context Saved!'); });
+        }).then(data => { if(data.success) showNotice('Audience Context Saved!'); });
     });
 
     // Image Generation Logic
@@ -613,7 +627,7 @@ document.addEventListener('DOMContentLoaded', function() {
         safeFetch('/save-preset', {
             method: 'POST',
             body: JSON.stringify({ name, mind_ids, mode })
-        }).then(data => { if(data.success) { alert('Preset Saved!'); loadPresets(); } });
+        }).then(data => { if(data.success) { showNotice('Preset Saved!'); loadPresets(); } });
     });
 
     // Basic HTML Sanitizer for AI content
@@ -708,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
         safeFetch('/feedback', {
             method: 'POST',
             body: JSON.stringify({ post_id: id, rating: rating })
-        }).then(data => { if(data.success) alert('Feedback recorded. Thank you!'); });
+        }).then(data => { if(data.success) showNotice('Feedback recorded. Thank you!'); });
     };
 
     // Share Logic
@@ -943,11 +957,29 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ name })
         }).then(data => {
             if(data.success) {
-                alert('Folder Created!');
+                showNotice('Folder Created!');
                 refreshWorkspace();
             }
         });
     });
+
+    window.ammManageFolders = function() {
+        safeFetch('/folders').then(folders => {
+            if(!folders.length) return alert('No folders to manage.');
+            const list = folders.map(f => `${f.id}: ${f.name}`).join('\n');
+            const action = prompt('Enter Folder ID to manage, followed by action (e.g. "5:delete" or "5:rename")\n\n' + list);
+            if(!action || !action.includes(':')) return;
+
+            const [id, cmd] = action.split(':');
+            if(cmd === 'delete') {
+                if(!confirm('Delete this folder? (Strategies will not be deleted)')) return;
+                safeFetch('/delete-folder', { method: 'POST', body: JSON.stringify({ id }) }).then(() => refreshWorkspace());
+            } else if(cmd === 'rename') {
+                const newName = prompt('New name:');
+                if(newName) safeFetch('/update-folder', { method: 'POST', body: JSON.stringify({ id, name: newName }) }).then(() => refreshWorkspace());
+            }
+        });
+    };
 
     // Handle Refine Prompt
     document.getElementById('amm-refine-btn').addEventListener('click', () => {
@@ -1040,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 logo: document.getElementById('amm-branding-logo').value,
                 color: document.getElementById('amm-branding-color').value
             })
-        }).then(data => { if(data.success) alert('Branding Updated!'); });
+        }).then(data => { if(data.success) showNotice('Branding Updated!'); });
     });
 
     // Handle Remove Member
@@ -1179,27 +1211,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle Test Webhook
-    document.getElementById('amm-test-webhook-btn').addEventListener('click', () => {
-        const url = document.getElementById('amm-set-webhook').value;
-        if(!url) return alert('Please enter a webhook URL first.');
+    if (document.getElementById('amm-test-webhook-btn')) {
+        document.getElementById('amm-test-webhook-btn').addEventListener('click', () => {
+            const url = document.getElementById('amm-set-webhook').value;
+            if(!url) return alert('Please enter a webhook URL first.');
 
-        const btn = document.getElementById('amm-test-webhook-btn');
-        btn.innerText = 'Sending...';
-        btn.disabled = true;
+            const btn = document.getElementById('amm-test-webhook-btn');
+            btn.innerText = 'Sending...';
+            btn.disabled = true;
 
-        safeFetch('/test-webhook', {
-            method: 'POST',
-            body: JSON.stringify({ webhook_url: url })
-        }).then(data => {
-            if(data.success) alert('Success! Test payload sent to your webhook.');
-            btn.innerText = 'Test Now';
-            btn.disabled = false;
-        }).catch(err => {
-            alert('Failed to send test: ' + err.message);
-            btn.innerText = 'Test Now';
-            btn.disabled = false;
+            safeFetch('/test-webhook', {
+                method: 'POST',
+                body: JSON.stringify({ webhook_url: url })
+            }).then(data => {
+                if(data.success) alert('Success! Test payload sent to your webhook.');
+                btn.innerText = 'Test Now';
+                btn.disabled = false;
+            }).catch(err => {
+                alert('Failed to send test: ' + err.message);
+                btn.innerText = 'Test Now';
+                btn.disabled = false;
+            });
         });
-    });
+    }
 
     // Handle Save Settings
     document.getElementById('amm-save-settings-btn').addEventListener('click', () => {
