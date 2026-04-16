@@ -265,12 +265,18 @@ class AMM_Shortcodes {
 			</aside>
 
 			<div id="amm-edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:flex-start; justify-content:center; padding:40px; overflow-y:auto;">
-				<div class="amm-form-card" style="width:100%; max-width:800px; min-height:80%; margin-top:20px; margin-bottom:20px;">
-					<h3>Edit Strategy</h3>
-					<textarea id="amm-edit-content" style="width:100%; height:calc(100% - 100px); margin-bottom:20px;"></textarea>
-					<div style="display:flex; gap:10px;">
-						<button id="amm-save-edit-btn" class="amm-primary-btn" style="flex:1;">Save Changes</button>
-						<button onclick="document.getElementById('amm-edit-modal').style.display='none'" class="amm-secondary-btn">Cancel</button>
+				<div class="amm-form-card" style="width:100%; max-width:800px; min-height:80%; margin-top:20px; margin-bottom:20px; display:flex; flex-direction:column;">
+					<h3>Rich Strategy Editor</h3>
+					<div class="amm-editor-toolbar" style="margin-bottom:10px; display:flex; gap:5px; background:#eee; padding:5px; border-radius:8px;">
+						<button type="button" onclick="execEditor('bold')" class="amm-secondary-btn"><strong>B</strong></button>
+						<button type="button" onclick="execEditor('italic')" class="amm-secondary-btn"><em>I</em></button>
+						<button type="button" onclick="execEditor('insertUnorderedList')" class="amm-secondary-btn">• List</button>
+						<button type="button" onclick="execEditor('formatBlock', 'H3')" class="amm-secondary-btn">H3</button>
+					</div>
+					<div id="amm-edit-content" contenteditable="true" style="flex:1; background:#fff; border:1px solid #ddd; border-radius:8px; padding:20px; overflow-y:auto; min-height:300px; outline:none; white-space:pre-wrap;"></div>
+					<div style="display:flex; gap:10px; margin-top:20px;">
+						<button id="amm-save-edit-btn" class="amm-primary-btn" style="flex:1;">Save Strategy</button>
+						<button onclick="document.getElementById('amm-edit-modal').style.display='none'" class="amm-secondary-btn">Discard</button>
 					</div>
 				</div>
 			</div>
@@ -507,6 +513,11 @@ class AMM_Shortcodes {
 					</div>
 
 					<div id="amm-team-list" class="amm-form-card" style="margin-bottom:20px;">No team members found.</div>
+
+					<div id="amm-team-performance-container" style="margin-bottom:20px; display:none;">
+						<h3>Member Performance (This Month)</h3>
+						<div id="amm-team-performance" class="amm-grid-layout" style="grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));"></div>
+					</div>
 
 					<div id="amm-team-activity-container" style="margin-bottom:20px;">
 						<h3>Team Activity Feed</h3>

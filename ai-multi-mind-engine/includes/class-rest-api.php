@@ -257,6 +257,13 @@ class AMM_REST_API {
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
+		// Trigger Webhook Endpoint
+		register_rest_route( $namespace, '/trigger-webhook', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'handle_manual_webhook' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
 		// Pricing Plans Endpoint
 		register_rest_route( $namespace, '/plans', array(
 			'methods'             => 'GET',
@@ -317,6 +324,13 @@ class AMM_REST_API {
 		register_rest_route( $namespace, '/team-activity', array(
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'get_team_activity' ),
+			'permission_callback' => array( $this, 'check_auth' ),
+		));
+
+		// Team Performance Endpoint
+		register_rest_route( $namespace, '/team-performance', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_team_performance' ),
 			'permission_callback' => array( $this, 'check_auth' ),
 		));
 
@@ -1150,6 +1164,31 @@ class AMM_REST_API {
 				'features' => array('All PRO Features', 'Team Management', 'Agency White-Labeling', 'Priority API Access', 'Dedicated Account Manager')
 			),
 		));
+	}
+
+	/**
+	 * Handle Manual Strategy Webhook Trigger
+	 */
+	public function handle_manual_webhook( $request ) {
+		$user_id = get_current_user_id();
+		$params = $request->get_json_params();
+		$post_id = (int)$params['post_id'];
+
+		$post = get_post( $post_id );
+		if ( ! $post || (int)$post->post_author !== $user_id ) {
+			return new WP_Error( 'forbidden', 'Unauthorized.', array( 'status' => 403 ) );
+		}
+
+		$webhook_manager = new AMM_Webhook_Manager();
+		$webhook_manager->push_to_webhook( $user_id, array(
+			'event'       => 'manual_trigger',
+			'post_id'     => $post_id,
+			'title'       => $post->post_title,
+			'content'     => $post->post_content,
+			'triggered_at' => current_time( 'mysql' )
+		));
+
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	/**
@@ -1991,12 +2030,33 @@ class AMM_REST_API {
 			$user = get_userdata( $a->post_author );
 			$data[] = array(
 				'title' => $a->post_title,
-				'user'  => $user->display_name,
+				'user'  => $user ? $user->display_name : 'Unknown',
 				'date'  => get_the_date( 'Y-m-d H:i', $a->ID )
 			);
 		}
 
 		return rest_ensure_response( $data );
+	}
+
+	public function get_team_performance( $request ) {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		$team_id = (int)$request->get_param('team_id');
+
+		// Verify ownership
+		$owner = $wpdb->get_var( $wpdb->prepare( "SELECT owner_id FROM {$wpdb->prefix}amm_teams WHERE id = %d", $team_id ) );
+		if ( (int)$owner !== $user_id ) return new WP_Error( 'forbidden', 'Only team owners can view performance.', array( 'status' => 403 ) );
+
+		$members = $wpdb->get_results( $wpdb->prepare(
+			"SELECT m.user_id, u.display_name,
+			 (SELECT SUM(credits_used) FROM {$wpdb->prefix}amm_usage WHERE user_id = m.user_id AND month = %s) as usage_count
+			 FROM {$wpdb->prefix}amm_team_members m
+			 JOIN wp_users u ON m.user_id = u.ID
+			 WHERE m.team_id = %d",
+			date('Y-m'), $team_id
+		));
+
+		return rest_ensure_response( $members );
 	}
 
 	/**

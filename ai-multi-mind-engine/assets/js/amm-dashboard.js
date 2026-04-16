@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             workspaceList.innerHTML = '<table style="width:100%; text-align:left;">' +
                 '<tr><th><input type="checkbox" id="amm-select-all"></th><th>Date</th><th>Author</th><th>Title</th><th>Folders</th><th>Actions</th></tr>' +
-                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}" data-author-id="${o.author_id}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.author}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick="ammEditById(${o.id})">✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammQuickCopy(${o.id})">📋 Copy</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
+                outputs.map(o => `<tr data-folders="${o.folders.join(',')}" data-public="${o.is_public ? 'yes' : 'no'}" data-author-id="${o.author_id}"><td><input type="checkbox" class="amm-out-check" value="${o.id}"></td><td>${o.date}</td><td>${o.author}</td><td>${o.title} ${o.is_public ? '<span style="color:green; font-size:10px;">(SHARED)</span>' : ''}</td><td>${o.folders.join(', ') || '-'}</td><td><button class="amm-secondary-btn" onclick="ammEditById(${o.id})">✏️ Edit</button> <button class="amm-secondary-btn" onclick="ammDeepDive(${o.id})">🤿 SOP</button> <button class="amm-secondary-btn" onclick="ammPushAutomation(${o.id})">⚡ Push</button> <button class="amm-secondary-btn" onclick="ammQuickCopy(${o.id})">📋 Copy</button> <button class="amm-secondary-btn" onclick="ammDuplicate(${o.id})">👯 Duplicate</button> <button class="amm-secondary-btn" onclick="ammShare(${o.id})">🔗 ${o.is_public ? 'Unshare' : 'Share'}</button> <button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'up')">👍</button><button class="amm-secondary-btn" onclick="ammFeedback(${o.id}, 'down')">👎</button></td></tr>`).join('') +
                 '</table>';
 
             document.getElementById('amm-select-all').addEventListener('change', (e) => {
@@ -428,6 +428,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(teams.length) {
                     if(controls) controls.style.display = 'block';
                     window.ammActiveTeamId = teams[0].id;
+
+                    // Fetch Performance if admin
+                    const perfContainer = document.getElementById('amm-team-performance-container');
+                    if (perfContainer && teams[0].role === 'admin') {
+                        perfContainer.style.display = 'block';
+                        safeFetch('/team-performance?team_id=' + teams[0].id).then(members => {
+                            document.getElementById('amm-team-performance').innerHTML = members.map(m => `
+                                <div class="amm-form-card" style="text-align:center; padding:15px;">
+                                    <strong>${m.display_name}</strong><br>
+                                    <span style="font-size:24px; color:#007cba;">${m.usage_count || 0}</span><br>
+                                    <span style="font-size:10px; color:#888;">Strategies</span>
+                                </div>
+                            `).join('');
+                        });
+                    }
                     document.getElementById('amm-team-list').innerHTML = teams.map(t => `
                         <div style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px;">
                             <strong>${t.team_name}</strong> (${t.role})
@@ -717,6 +732,43 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Deep Dive Logic (Recursive Thinking)
+    window.ammDeepDive = function(id) {
+        const o = window.ammOutputs.find(x => parseInt(x.id) === parseInt(id));
+        if(!o) return;
+
+        showNotice('Initiating Deep Dive: Generating Implementation SOP...');
+        document.querySelector('[data-tab=generate]').click();
+        const outputBox = document.getElementById('amm-output');
+        outputBox.innerText = 'Deep Diving into: ' + o.title + '...';
+
+        safeFetch('/generate', {
+            method: 'POST',
+            body: JSON.stringify({
+                mind_id: 'sop_architect',
+                output_type: 'sop',
+                user_input: `CREATE A DETAILED STEP-BY-STEP IMPLEMENTATION SOP FOR THIS STRATEGY:\n\n${o.content}`
+            })
+        }).then(data => {
+            if(data.content) {
+                outputBox.innerText = data.content;
+                showNotice('✅ Deep Dive Complete! SOP Generated.');
+                refreshWorkspace();
+            }
+        });
+    };
+
+    // Manual Webhook Logic
+    window.ammPushAutomation = function(id) {
+        showNotice('Pushing intelligence to external automation...');
+        safeFetch('/trigger-webhook', {
+            method: 'POST',
+            body: JSON.stringify({ post_id: id })
+        }).then(data => {
+            if(data.success) showNotice('🚀 Strategy sent to your webhook successfully!');
+        });
+    };
+
     // Feedback Logic
     window.ammFeedback = function(id, rating) {
         safeFetch('/feedback', {
@@ -788,36 +840,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Edit Logic
+    window.execEditor = function(cmd, val = null) {
+        document.execCommand(cmd, false, val);
+        document.getElementById('amm-edit-content').focus();
+    };
+
     window.ammEditById = function(id) {
         const o = window.ammOutputs.find(out => parseInt(out.id) === parseInt(id));
         if(!o) return;
         window.ammActiveEditId = o.id;
-        document.getElementById('amm-edit-content').value = o.content;
+        document.getElementById('amm-edit-content').innerHTML = o.content;
         document.getElementById('amm-edit-modal').style.display = 'flex';
     };
 
-    // Auto-save logic for editor
+    // Auto-save logic for rich editor
     let autoSaveTimer;
     document.getElementById('amm-edit-content').addEventListener('input', () => {
         clearTimeout(autoSaveTimer);
         const status = document.getElementById('amm-save-edit-btn');
         status.innerText = 'Drafting...';
         autoSaveTimer = setTimeout(() => {
-            const content = document.getElementById('amm-edit-content').value;
+            const content = document.getElementById('amm-edit-content').innerHTML;
             safeFetch('/update-output', {
                 method: 'POST',
                 body: JSON.stringify({ post_id: window.ammActiveEditId, content })
             }).then(data => {
                 if(data.success) {
                     status.innerText = 'Saved (Auto)';
-                    setTimeout(() => status.innerText = 'Save Changes', 2000);
+                    setTimeout(() => status.innerText = 'Save Strategy', 2000);
                 }
             });
         }, 3000);
     });
 
     document.getElementById('amm-save-edit-btn').addEventListener('click', () => {
-        const content = document.getElementById('amm-edit-content').value;
+        const content = document.getElementById('amm-edit-content').innerHTML;
         safeFetch('/update-output', {
             method: 'POST',
             body: JSON.stringify({ post_id: window.ammActiveEditId, content })
@@ -1335,7 +1392,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (supportToggle) {
         supportToggle.addEventListener('click', () => {
-            supportChat.style.display = supportChat.style.display === 'none' ? 'flex' : 'none';
+            const isOpen = supportChat.style.display === 'flex';
+            supportChat.style.display = isOpen ? 'none' : 'flex';
+            if (!isOpen && supportMessages.children.length === 1) {
+                // Proactive Greeting
+                setTimeout(() => {
+                    const coachDiv = document.createElement('div');
+                    coachDiv.style = 'background:#f0f0f0; padding:10px; border-radius:8px; margin-bottom:10px;';
+                    coachDiv.textContent = "Pro Tip: I can help you craft $100M offers or optimize your Brunson funnels. What are you building today?";
+                    supportMessages.appendChild(coachDiv);
+                    supportMessages.scrollTop = supportMessages.scrollHeight;
+                }, 1000);
+            }
         });
     }
 
