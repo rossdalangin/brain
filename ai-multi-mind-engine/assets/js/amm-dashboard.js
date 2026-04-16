@@ -1235,6 +1235,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Economics Calculator Logic
+    window.calculateEconomics = function() {
+        const arpu = parseFloat(document.getElementById('amm-econ-arpu').value);
+        const churn = parseFloat(document.getElementById('amm-econ-churn').value) / 100;
+        const cac = parseFloat(document.getElementById('amm-econ-cac').value);
+
+        if (churn === 0) { alert('Churn cannot be 0 for calculation.'); return; }
+
+        const ltv = arpu / churn;
+        const ratio = ltv / cac;
+        const payback = cac / arpu;
+
+        document.getElementById('amm-res-ltv').innerText = '$' + ltv.toFixed(2);
+        document.getElementById('amm-res-ratio').innerText = ratio.toFixed(2) + 'x';
+        document.getElementById('amm-res-payback').innerText = payback.toFixed(1) + ' months';
+
+        const verdict = document.getElementById('amm-econ-verdict');
+        if (ratio >= 3) {
+            verdict.innerText = '✅ UNLIMITED SCALE: Your unit economics are elite. Pour more into acquisition.';
+            verdict.style.background = '#e8f5e9'; verdict.style.color = '#2e7d32';
+        } else if (ratio >= 1) {
+            verdict.innerText = '⚠️ CAUTION: You are profitable but scaling will be slow. Focus on LTV or lower CAC.';
+            verdict.style.background = '#fff3e0'; verdict.style.color = '#ef6c00';
+        } else {
+            verdict.innerText = '🚨 DANGER: You are losing money on every customer. Fix the offer before scaling.';
+            verdict.style.background = '#ffebee'; verdict.style.color = '#c62828';
+        }
+
+        document.getElementById('amm-economics-results').style.display = 'block';
+    };
+
+    document.getElementById('amm-econ-ai-btn').addEventListener('click', () => {
+        const arpu = document.getElementById('amm-econ-arpu').value;
+        const churn = document.getElementById('amm-econ-churn').value;
+        const cac = document.getElementById('amm-econ-cac').value;
+        const output = document.getElementById('amm-economics-ai-output');
+
+        output.style.display = 'block';
+        output.innerText = 'Consulting the Billion-Dollar Strategist...';
+
+        safeFetch('/generate', {
+            method: 'POST',
+            body: JSON.stringify({
+                mind_id: 'strategist',
+                output_type: 'report',
+                user_input: `Analyze these unit economics: ARPU=$${arpu}, Churn=${churn}%, CAC=$${cac}. Provide 3 actionable steps to hit 5x LTV/CAC ratio.`
+            })
+        }).then(data => { if(data.content) output.innerText = data.content; });
+    });
+
     // Handle Save Settings
     document.getElementById('amm-save-settings-btn').addEventListener('click', () => {
         safeFetch('/update-settings', {

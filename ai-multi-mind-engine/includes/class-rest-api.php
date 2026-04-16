@@ -483,6 +483,28 @@ class AMM_REST_API {
 	public function handle_get_presets() {
 		$user_id = get_current_user_id();
 		$presets = get_user_meta( $user_id, 'amm_council_presets', true ) ?: array();
+
+		// Add System Defaults if user has none
+		if ( empty( $presets ) ) {
+			$presets = array(
+				array(
+					'name' => '🚀 The Scale Team (CEO + Growth + Sales)',
+					'mind_ids' => array('ceo', 'growth_hacker', 'sales_closer'),
+					'mode' => 'sequence'
+				),
+				array(
+					'name' => '🎯 Offer Optimizer (Offer Creator + Strategist)',
+					'mind_ids' => array('offer_creator', 'strategist'),
+					'mode' => 'critique'
+				),
+				array(
+					'name' => '🧠 Multi-Angle Brainstorm',
+					'mind_ids' => array('ceo', 'strategist', 'funnel_builder', 'copywriter'),
+					'mode' => 'brainstorm'
+				)
+			);
+		}
+
 		return rest_ensure_response( $presets );
 	}
 
@@ -1772,7 +1794,7 @@ class AMM_REST_API {
 		$last_audit = $wpdb->get_var( $wpdb->prepare( "SELECT description FROM {$wpdb->prefix}amm_audit_trail WHERE user_id = %d ORDER BY created_at DESC LIMIT 1", $user_id ) );
 		$persona = get_user_meta( $user_id, 'amm_target_persona', true ) ?: array('name' => 'Unknown', 'pain' => 'Unknown');
 
-		$system_prompt = "You are the AI Success Coach for the AI Multi-Mind Engine.
+		$system_prompt = "You are the Master AI Success Coach. You have deep expertise in the Alex Hormozi ($100M Offers/Leads) and Russell Brunson (DotCom Secrets/Funnels) frameworks.
 		USER CONTEXT:
 		- Plan: " . strtoupper($plan) . "
 		- Credits: $used / $limit
@@ -1780,7 +1802,8 @@ class AMM_REST_API {
 		- Target Persona: {$persona['name']}
 		- Persona Pain Point: {$persona['pain']}
 
-		Your goal is to help users get the most value out of our 50+ business minds. Be encouraging, strategic, and concise. Use their Target Persona context to suggest specific minds (e.g., if their audience has pricing pain, suggest the Pricing Strategist).
+		Your goal is to help users get 10x value out of the 50+ Minds. Suggest using the 'Offer Creator' for Hormozi-style grand slam offers or 'Funnel Builder' for Brunson-style sales processes.
+		Always relate your advice back to their Target Persona. Be strategic, high-energy, and concise.
 		Mention features like the 'Council' for sequential strategies, 'Context Pro' for file-based RAG, or the 'Media Engine' for visual assets when relevant.";
 
 		$ai_manager = new AMM_AI_Provider_Manager();

@@ -249,6 +249,7 @@ class AMM_Shortcodes {
 					<a href="#" class="amm-nav-item" data-tab="workspace" title="Manage, search, and export your generated intelligence.">📁 My Workspace</a>
 					<a href="#" class="amm-nav-item" data-tab="team" title="Invite your team and share intelligence outputs.">👥 Team Hub</a>
 					<a href="#" class="amm-nav-item" data-tab="persona" title="Define who you are solving problems for.">🎯 Audience</a>
+					<a href="#" class="amm-nav-item" data-tab="economics" title="Analyze your business unit economics like a billion-dollar founder.">📊 Economics</a>
 					<a href="#" class="amm-nav-item" data-tab="media" title="Generate high-end visual assets using DALL-E 3.">🎨 Media Engine</a>
 					<a href="#" class="amm-nav-item" data-tab="affiliate">💸 Affiliates</a>
 					<a href="#" class="amm-nav-item" data-tab="billing">💳 Billing</a>
@@ -531,6 +532,35 @@ class AMM_Shortcodes {
 				<section id="tab-affiliate" class="amm-tab-content">
 					<h2>Affiliate Program</h2>
 					<div id="amm-affiliate-info" class="amm-form-card">Loading your data...</div>
+				</section>
+
+				<!-- Economics Tab -->
+				<section id="tab-economics" class="amm-tab-content">
+					<h2>Billion-Dollar Unit Economics</h2>
+					<p>Analyze your LTV, CAC, and Churn to ensure your business is scalable and profitable.</p>
+					<div class="amm-grid-layout" style="grid-template-columns: 1fr 1fr; gap:20px;">
+						<div class="amm-form-card">
+							<h3>Revenue Inputs</h3>
+							<label>Avg. Monthly Subscription ($)</label>
+							<input type="number" id="amm-econ-arpu" value="49" style="width:100%; margin-bottom:10px;">
+							<label>Monthly Churn Rate (%)</label>
+							<input type="number" id="amm-econ-churn" value="5" style="width:100%; margin-bottom:10px;">
+							<label>Customer Acquisition Cost ($)</label>
+							<input type="number" id="amm-econ-cac" value="150" style="width:100%; margin-bottom:10px;">
+							<button onclick="calculateEconomics()" class="amm-primary-btn">Calculate Metrics</button>
+						</div>
+						<div class="amm-form-card" id="amm-economics-results" style="display:none; background:#f0f8ff;">
+							<h3>Strategic Metrics</h3>
+							<div style="font-size:14px; line-height:2;">
+								<strong>Lifetime Value (LTV):</strong> <span id="amm-res-ltv" style="color:#007cba; font-weight:800;">-</span><br>
+								<strong>LTV / CAC Ratio:</strong> <span id="amm-res-ratio" style="font-weight:800;">-</span><br>
+								<strong>Payback Period:</strong> <span id="amm-res-payback" style="font-weight:800;">-</span>
+							</div>
+							<div id="amm-econ-verdict" style="margin-top:15px; padding:10px; border-radius:8px; font-size:12px; font-weight:bold;"></div>
+							<button id="amm-econ-ai-btn" class="amm-secondary-btn" style="margin-top:15px; width:100%;">Get AI Scaling Advice</button>
+						</div>
+					</div>
+					<div id="amm-economics-ai-output" class="amm-output-box" style="margin-top:20px; display:none;"></div>
 				</section>
 
 				<!-- Persona Tab -->
