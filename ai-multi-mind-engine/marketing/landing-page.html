@@ -3,41 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Multi-Mind | Elite Thinking Engine</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap">
+    <title>AI Multi-Mind | Fire Yourself From the Grind</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
     <style>
-        body { font-family: 'Inter', sans-serif; margin: 0; line-height: 1.6; color: #333; }
-        .hero { padding: 100px 20px; text-align: center; background: #fcfcfc; }
-        .container { max-width: 1000px; margin: auto; }
-        .badge { background: #e1f5fe; color: #039be5; padding: 8px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; }
-        h1 { font-size: 56px; font-weight: 800; margin: 30px 0; }
-        .primary-btn { background: #007cba; color: #fff; padding: 20px 40px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 20px; display: inline-block; box-shadow: 0 10px 30px rgba(0,124,186,0.3); }
-        .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; padding: 80px 20px; }
-        .card { background: #fff; border: 1px solid #eee; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        :root { --primary: #007cba; --dark: #1a1a1a; --light: #fcfcfc; --text: #333; }
+        body { font-family: 'Inter', sans-serif; margin: 0; line-height: 1.6; color: var(--text); background: var(--light); }
+        .container { max-width: 1100px; margin: auto; padding: 0 20px; }
+
+        /* Hero Section */
+        .hero { padding: 100px 20px; text-align: center; background: linear-gradient(180deg, #fff 0%, #f4faff 100%); }
+        .badge { background: #e1f5fe; color: #039be5; padding: 8px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { font-size: 64px; font-weight: 800; margin: 30px 0; line-height: 1.1; color: var(--dark); }
+        h1 span { color: var(--primary); }
+        .subheadline { font-size: 24px; color: #666; max-width: 800px; margin: 0 auto 50px; }
+        .cta-btn { background: var(--primary); color: #fff; padding: 22px 45px; border-radius: 12px; text-decoration: none; font-weight: 800; font-size: 22px; display: inline-block; box-shadow: 0 15px 35px rgba(0,124,186,0.3); transition: transform 0.2s, box-shadow 0.2s; }
+        .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,124,186,0.4); }
+
+        /* Trust Strip */
+        .trust-strip { background: #fff; padding: 40px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; text-align: center; }
+        .trust-grid { display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; }
+        .trust-item { font-weight: 700; color: #888; font-size: 16px; }
+        .trust-item span { color: var(--primary); display: block; font-size: 24px; }
+
+        /* Path Section */
+        .section-padding { padding: 100px 0; }
+        h2 { font-size: 42px; font-weight: 800; text-align: center; margin-bottom: 60px; }
+        .path-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+        .path-card { text-align: center; }
+        .step-num { width: 50px; height: 50px; background: var(--primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-weight: 800; font-size: 20px; }
+
+        /* Evidence Section */
+        .evidence { background: var(--dark); color: #fff; padding: 100px 20px; }
+        .testimonial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .testimonial-card { background: #252525; padding: 40px; border-radius: 20px; border: 1px solid #333; }
+        .testimonial-card p { font-style: italic; color: #ccc; }
+        .author { margin-top: 20px; font-weight: 700; color: var(--primary); }
+
+        /* Comparison Table */
+        .gap-table { width: 100%; border-collapse: collapse; margin-top: 40px; background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .gap-table th, .gap-table td { padding: 25px; text-align: left; border-bottom: 1px solid #eee; }
+        .gap-table th { background: #f9f9f9; font-weight: 800; }
+        .highlight { color: var(--primary); font-weight: 800; }
+        .danger { color: #d33; font-weight: 800; }
+
+        /* Edge Section */
+        .edge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .edge-item { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #eee; display: flex; align-items: flex-start; gap: 15px; }
+        .edge-item strong { display: block; color: var(--primary); margin-bottom: 5px; }
+
+        /* FAQ Section */
+        .faq-container { max-width: 800px; margin: auto; }
+        .faq-item { margin-bottom: 30px; }
+        .faq-item strong { font-size: 18px; display: block; margin-bottom: 10px; }
+
+        /* Footer CTA */
+        .footer-cta { text-align: center; padding: 120px 20px; background: #f4faff; border-top: 1px solid #e1f5fe; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 40px; }
+            .path-grid, .edge-grid { grid-template-columns: 1fr; }
+            .trust-grid { gap: 30px; }
+        }
     </style>
 </head>
 <body>
-    <section class="hero">
+    <header class="hero">
         <div class="container">
-            <span class="badge">Built by Consultants, for Consultants</span>
-            <h1>Access Elite Business Minds <span style="color:#007cba;">On Demand.</span></h1>
-            <p style="font-size: 20px; color: #666; margin-bottom: 50px;">Stop building strategies alone. Assemble your Council of 50+ Specialized AI Minds today.</p>
-            <a href="#" class="primary-btn">Start My Free Journey</a>
+            <span class="badge">The Death of the "Lone Wolf" Grind</span>
+            <h1>Fire Yourself and Assemble Your <span>Billion-Dollar Council.</span></h1>
+            <p class="subheadline">Stop guessing. Stop grinding 80 hours a week. Access 50+ specialized business minds trained in the exact frameworks used by the titans.</p>
+            <a href="#" class="cta-btn">YES! BUILD MY AUTHORITY ENGINE</a>
+        </div>
+    </header>
+
+    <section class="trust-strip">
+        <div class="container">
+            <div class="trust-grid">
+                <div class="trust-item"><span>60s</span> Setup Time</div>
+                <div class="trust-item"><span>50+</span> Elite Minds</div>
+                <div class="trust-item"><span>0</span> Tech Skills Req.</div>
+                <div class="trust-item"><span>100%</span> Private Data</div>
+            </div>
         </div>
     </section>
-    <section class="container features">
-        <div class="card">
-            <h3>Framework-First AI</h3>
-            <p>Minds trained in Hormozi, Brunson, and Schwartz frameworks—not just generic chat.</p>
-        </div>
-        <div class="card">
-            <h3>The Mind Council</h3>
-            <p>Sequence and Critique modes allow AI to build, audit, and refine your strategies.</p>
-        </div>
-        <div class="card">
-            <h3>Context Pro</h3>
-            <p>Securely upload client data for hyper-specific strategic insights that close deals.</p>
+
+    <section class="container section-padding">
+        <h2>The 3-Step Path to Dominance</h2>
+        <div class="path-grid">
+            <div class="path-card">
+                <div class="step-num">1</div>
+                <h3>Summon the Council</h3>
+                <p>Pick your team. CEO, Growth Hacker, or Offer Creator. They work for you 24/7.</p>
+            </div>
+            <div class="path-card">
+                <div class="step-num">2</div>
+                <h3>Ignite the Engine</h3>
+                <p>Provide your context. Watch as the minds deliberate and build your strategy in real-time.</p>
+            </div>
+            <div class="path-card">
+                <div class="step-num">3</div>
+                <h3>Scale Your Empire</h3>
+                <p>Export your Billion-Dollar Blueprint and let your team execute while you enjoy freedom.</p>
+            </div>
         </div>
     </section>
+
+    <section class="evidence">
+        <div class="container">
+            <h2 style="color:#fff;">Transformation Stories</h2>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <p>"I spent weeks on my offer and failed. The Offer Creator Mind built a Grand Slam Offer in 45 seconds. I closed $50k that weekend."</p>
+                    <div class="author">Sarah J., Consultant</div>
+                </div>
+                <div class="testimonial-card">
+                    <p>"I was the bottleneck. Now my team uses the Mind Council to build client roadmaps while I'm at the gym. Revenue doubled."</p>
+                    <div class="author">Mike T., Agency Owner</div>
+                </div>
+                <div class="testimonial-card">
+                    <p>"Generic AI sounded like a robot. Context Pro uploaded my interviews and now my emails read like I'm in my customer's head."</p>
+                    <div class="author">David L., E-com Founder</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container section-padding">
+        <h2>What is Inaction Costing You?</h2>
+        <table class="gap-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th class="highlight">AI Multi-Mind</th>
+                    <th>DIY Headache</th>
+                    <th>Doing Nothing</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Speed to Market</td>
+                    <td class="highlight">Instantly (60s)</td>
+                    <td>40+ Hours</td>
+                    <td>Never</td>
+                </tr>
+                <tr>
+                    <td>Expertise Level</td>
+                    <td class="highlight">Elite Council</td>
+                    <td>Your Guess</td>
+                    <td>Status Quo</td>
+                </tr>
+                <tr>
+                    <td>Frameworks</td>
+                    <td class="highlight">Hormozi/Brunson</td>
+                    <td>None</td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td>Real Monthly Cost</td>
+                    <td class="highlight">Peanuts</td>
+                    <td>Your Sanity</td>
+                    <td class="danger">Your Future</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="container section-padding">
+        <h2>The 8 Reasons You Cannot Say No</h2>
+        <div class="edge-grid">
+            <div class="edge-item">
+                <div><strong>Fire Yourself</strong> Stop doing $10/hr tasks. Focus on $10k/hr decisions.</div>
+            </div>
+            <div class="edge-item">
+                <div><strong>Hidden Prompt Layer</strong> Follow elite frameworks you won't find anywhere else.</div>
+            </div>
+            <div class="edge-item">
+                <div><strong>Mind Council</strong> Have your Strategist audit your Copywriter in one click.</div>
+            </div>
+            <div class="edge-item">
+                <div><strong>Context Pro (RAG)</strong> The AI learns *your* business from your own private data.</div>
+            </div>
+            <div class="edge-item">
+                <div><strong>Magic BFF</strong> Persistent memory. The more you use it, the smarter it gets.</div>
+            </div>
+            <div class="edge-item">
+                <div><strong>Billion-Dollar Metrics</strong> Built-in LTV/CAC calculator tells you when to scale.</div>
+            </div>
+            <div class="edge-item">
+                <div><strong>Deep Dive SOPs</strong> Convert high-level strategy into step-by-step checklists instantly.</div>
+            </div>
+            <div class="edge-item">
+                <div><strong>Affiliate Network</strong> The tool pays for itself when you share it with others.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container section-padding">
+        <h2>Objection Obliterator (FAQ)</h2>
+        <div class="faq-container">
+            <div class="faq-item">
+                <strong>Will this work for my specific niche?</strong>
+                <p>Yes. Human psychology is universal. Whether you sell luxury watches or local plumbing, our frameworks close deals.</p>
+            </div>
+            <div class="faq-item">
+                <strong>I've tried ChatGPT and it was 'meh'. Why is this different?</strong>
+                <p>ChatGPT is a generalist. We are specialists. It's the difference between a random guy and a world-class surgeon.</p>
+            </div>
+            <div class="faq-item">
+                <strong>I don't have enough time.</strong>
+                <p>That is exactly why you need this. We give you back 39 hours a week by automating the heavy lifting.</p>
+            </div>
+            <div class="faq-item">
+                <strong>Is the ROI real?</strong>
+                <p>One "Grand Slam Offer" is worth 100x the cost of this engine. The math is undeniable.</p>
+            </div>
+            <div class="faq-item">
+                <strong>What if I want to change things later?</strong>
+                <p>You own the strategy. Edit, duplicate, or export it. You are the Architect.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-cta">
+        <div class="container">
+            <h2>The Fork in the Road</h2>
+            <p style="font-size: 20px; max-width: 700px; margin: 0 auto 40px;">You can go back to the Lone Wolf Grind and hope for a miracle. Or you can summon the Council and build your empire. The choice is yours.</p>
+            <a href="#" class="cta-btn">YES! I WANT THE COUNCIL NOW</a>
+            <p style="margin-top: 30px; font-size: 14px; color: #888;">Limited seats available for the Founding Members plan.</p>
+        </div>
+    </footer>
 </body>
 </html>
