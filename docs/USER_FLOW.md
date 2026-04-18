@@ -1,42 +1,28 @@
-# AI Multi-Mind SaaS Engine - User Flows
+# 🧭 AI Multi-Mind SaaS Engine - User "Quest" Flows
 
-## 1. Onboarding Flow
-1. User lands on landing page.
-2. Clicks "Start for Free".
-3. Redirected to WP Registration/Login.
-4. After login, redirected to `/dashboard/`.
-5. Shown a 3-step "Tour" of how to select a Mind and generate their first output.
+## 🗺️ The Path to Power
+We view our users not as "traffic," but as **Visionaries on a Quest**. Our user flows are designed to remove friction and accelerate the time-to-value (TTV).
 
-## 2. AI Generation Flow
-1. User navigates to "Generate".
-2. Selects "Elite CEO" Mind.
-3. Selects "Business Plan" as Output Type.
-4. Enters "Scaling a boutique coffee chain to 10 locations" in the request box.
-5. Clicks "Ignite Mind".
-6. System checks:
-    - User is logged in?
-    - User has active subscription?
-    - User has remaining credits?
-7. REST API called: `POST /amm/v1/generate`.
-8. Provider Manager calls Gemini/OpenAI with compiled prompts.
-9. Output returned to UI.
-10. Usage Tracker increments `credits_used`.
-11. User clicks "Save to Workspace".
+## 1. The Entrance (Onboarding)
+- **Phase A**: Landing Page (The Hook) -> "Join the Council" button.
+- **Phase B**: Rapid Registration (WP native or SSO).
+- **Phase C**: The 30-Second Tour (Highlighting the Mind Library and the Credit Meter).
 
-## 3. Subscription Upgrade Flow
-1. User hits credit limit or clicks "Upgrade".
-2. User selects "Pro Plan".
-3. Stripe Handler creates Checkout Session.
-4. User redirected to Stripe.
-5. Successful payment.
-6. Stripe Webhook sends `checkout.session.completed`.
-7. `wp_amm_subscriptions` table updated.
-8. User redirected back to Dashboard with "Success" notification.
-9. Premium Minds unlocked instantly.
+## 2. The Incantation (Generation)
+1. User enters the **Command Dashboard**.
+2. Selects the **"Growth Hacker"** Mind.
+3. Inputs their business context (e.g., "A SaaS for local gyms").
+4. Clicks **"Ignite Mind"**.
+5. **Backend Magic**: The system checks credentials -> Injects Hormozi/Brunson frameworks -> Calls AI -> Streams Output.
+6. User achieves "First Success" and saves the output to the workspace.
 
-## 4. Team Management (Agency Flow)
-1. Agency Owner goes to "Settings > Team".
-2. Enters email of team member.
-3. Invites sent via email.
-4. Team member accepts and joins the shared workspace.
-5. Team member can see/edit outputs created by the Owner (if permissions allow).
+## 3. The Expansion (Upsell)
+1. User hits a credit limit or clicks an "Agency" Mind.
+2. **The Paywall**: A high-conversion modal showing the **Value Stack** of the higher tier.
+3. **Stripe Checkout**: Seamless one-click upgrade.
+4. **Immediate Gratification**: Limits are lifted and new Minds are unlocked instantly.
+
+## 4. The Collaboration (Team Growth)
+- Agency owners invite members via the **Team Hub**.
+- Members join, inheritance of the owner's credits and permissions happens automatically.
+- Team creates a "Shared Strategy" in the workspace, fostering viral loops within organizations.

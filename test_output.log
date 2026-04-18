@@ -1,0 +1,21 @@
+--- Testing Prompt Engine ---
+System Prompt length: 812
+
+--- Testing AI Provider Manager (Mock) ---
+AI Error: Gemini API key missing.
+
+--- Testing Usage Tracker ---
+DB INSERT into wp_amm_usage
+Can generate? Yes
+DB INSERT into wp_amm_usage
+
+--- Testing REST API (Mock) ---
+DB INSERT into wp_amm_usage
+AUDIT LOGGED: generation_failed
+WP_Error Object
+(
+    [c] => missing_key
+    [m] => Gemini API key missing.
+)
+
+Verification Complete!

@@ -1,31 +1,42 @@
-# AI Multi-Mind SaaS Engine - Setup & Developer Guide
+# 🚀 AI Multi-Mind SaaS Engine - Command Center Deployment Guide
 
-## 🚀 Quick Start Setup
+## 🛠️ The 5-Minute "Money-Printing" Setup
 
-1. **Install the Plugin**: Upload the `ai-multi-mind-engine` folder to your `/wp-content/plugins/` directory and activate it.
-2. **Configure API Keys**: Navigate to `AI SaaS Settings` in the WP Admin.
-    - Input your **Gemini**, **OpenAI**, and/or **Claude** API keys.
-    - Set your default provider.
-3. **Setup Billing (Stripe)**:
-    - Input your Stripe Secret Key and Webhook Secret.
-    - Create your products/prices in the Stripe Dashboard and copy the Price IDs into the plugin settings.
-    - Point your Stripe Webhook to `https://yourdomain.com/wp-json/amm/v1/stripe-webhook` (ensure you've updated the REST API logic or created a dedicated endpoint).
-4. **Deploy the Dashboard**: Create a new page in WordPress and add the `[amm_dashboard]` shortcode.
-5. **Add AI Minds**: Use the `AI Minds` menu in the WP sidebar to add custom personas using the Meta Box configuration.
+Follow these steps to deploy your AI empire. This isn't just a plugin; it's the core of your new SaaS business.
 
-## 🛠 Developer Info
+### 1. Activating the Intelligence Core
+1.  Upload the `ai-multi-mind-engine` folder to `/wp-content/plugins/`.
+2.  Activate it. Upon activation, the engine will automatically forge 11 high-performance SQL tables—your system's "Digital Vault."
 
-### Custom Tables
-The plugin creates 6 custom tables upon activation for subscriptions, usage, teams, and affiliates. See `docs/DATABASE.md` for details.
+### 2. Plugging in the Brains (API Keys)
+Navigate to **AI SaaS Settings** in the Admin Sidebar.
+-   **AES-256 Encryption**: Your keys are secured.
+-   **Multi-Provider Strategy**: Input keys for Gemini (Default), OpenAI, or Claude.
+-   *Pro Tip*: Always keep at least two providers active for maximum reliability and uptime.
 
-### REST API Namespace
-All endpoints are under `wp-json/amm/v1/`.
-- `POST /generate`: The core engine endpoint.
-- `GET /user`: Fetches current plan and usage stats.
-- `GET /minds`: Fetches the dynamic library of minds.
+### 3. Setting Up the Toll Booth (Payments)
+Go to the **Fintech Tab** in Settings.
+-   **Stripe**: Input your keys and Webhook Secret.
+-   **PayPal**: Add your Client ID for secondary redundancy.
+-   **The Pricing Table**: Copy your Stripe Price IDs into our plan mapper. This connects your dashboard buttons directly to recurring revenue.
 
-### Adding New Core Minds
-To add a permanent core mind, create a new class in `includes/minds/` extending `AMM_Mind_Base` and register it in `includes/class-prompt-engine.php` and `includes/class-rest-api.php`.
+### 4. Deploying the Command Dashboard
+Create a new WordPress Page (e.g., `/dashboard/`).
+-   Add the shortcode: `[amm_dashboard]`
+-   *The Result*: A modern, dark-mode, high-conversion workspace where your customers will spend hours building their businesses.
 
-### Scaling to Headless
-The architecture is 100% decoupled. You can build a React/Next.js frontend that communicates exclusively via the REST API, using the built-in Nonce or JWT for authentication.
+### 5. Final Launch Check
+-   [ ] Are Webhooks active? (Critical for instant access)
+-   [ ] Is the "Mind Council" logic firing?
+-   [ ] Are credit limits enforced?
+
+## 🧑‍💻 Developer's Strategic Notes
+
+### The REST-First Engine
+The entire dashboard communicates via the `wp-json/amm/v1/` namespace. This means you can swap the WordPress frontend for a custom React/Next.js app without touching a single line of backend logic.
+
+### Extending the Council
+Want to add a new "Mind"? Don't just edit files. Use the **Mind Factory** (CPT) to define new personas with custom thinking frameworks. Your business is as flexible as your imagination.
+
+### High-Performance Logs
+Check `wp-content/uploads/amm-logs/` for the **Strategic Audit Trail**. This logs every AI call, error, and credit transaction for deep-dive optimization.
